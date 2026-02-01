@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import PreparationRitual from './PreparationRitual.tsx';
+import { useToast } from '../context/ToastContext.tsx';
 
 interface GatekeeperProps {
   children: React.ReactNode;
@@ -8,6 +9,7 @@ interface GatekeeperProps {
 
 export const Gatekeeper: React.FC<GatekeeperProps> = ({ children }) => {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+  const { whisper } = useToast();
 
   useEffect(() => {
     const checkKey = async () => {
@@ -18,6 +20,7 @@ export const Gatekeeper: React.FC<GatekeeperProps> = ({ children }) => {
       if (isDev) {
         console.warn("Gatekeeper: Development mode detected. Bypassing AI Studio key check.");
         setHasApiKey(true);
+        // Optional: Whisper dev mode active
         return;
       }
 
@@ -46,11 +49,14 @@ export const Gatekeeper: React.FC<GatekeeperProps> = ({ children }) => {
         await (window as any).aistudio.openSelectKey();
         // Assuming success if the modal opens/closes, though strict check happens on re-render/api call
         setHasApiKey(true);
+        whisper("Authorization Granted", "The Forge is open.", "success");
       } else {
          console.error("Cannot select key: window.aistudio is undefined.");
+         whisper("Ritual Failed", "The authorization portal (AI Studio) is unreachable.", "error");
       }
     } catch (e) {
       console.error("Key selection flow error", e);
+      whisper("Authorization Error", "Key selection was interrupted.", "error");
     }
   };
 

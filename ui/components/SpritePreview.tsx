@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimationSettings, Skeleton, SliceData, GeneratedArt } from '../../domain/entities';
 import { imageProcessingService } from '../../data/imageProcessingService';
+import { useForgeCanvas } from '../hooks/useForgeCanvas';
 
 interface SpritePreviewProps {
   activeArt: GeneratedArt;
@@ -18,8 +19,6 @@ interface SpritePreviewProps {
   isGenerating?: boolean;
 }
 
-type Tool = 'none' | 'pencil' | 'eraser';
-
 const SpritePreview: React.FC<SpritePreviewProps> = ({ 
   activeArt, settings, style, isBatch, onUpdateArt, onUpdateSettings, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, sliceData, isGenerating 
 }) => {
@@ -28,18 +27,21 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   const [lightingMode, setLightingMode] = useState(false);
   const [skeletonMode, setSkeletonMode] = useState(false);
   const [sliceMode, setSliceMode] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 256, y: 256 });
-  const [tool, setTool] = useState<Tool>('none');
-  const [brushColor, setBrushColor] = useState('#ffffff');
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const normalMapRef = useRef<HTMLImageElement | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const spacePressed = useRef(false);
+
+  // Hook for canvas interactions
+  const { 
+    canvasRef, containerRef, mousePos, isPanning, tool, setTool, brushColor, setBrushColor,
+    handleWheel, handleMouseDown, handleMouseMove, handleMouseUp 
+  } = useForgeCanvas({
+    settings,
+    updateSettings: onUpdateSettings,
+    imageUrl,
+    onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl })
+  });
 
   // Load Main Image
   useEffect(() => {
@@ -305,135 +307,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomSpeed = 0.1;
-    const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
-    const newZoom = Math.min(Math.max(settings.zoom + delta, 0.25), 4);
-    
-    if (newZoom === settings.zoom) return;
-
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) * (512 / rect.width);
-    const mouseY = (e.clientY - rect.top) * (512 / rect.height);
-    
-    const factor = newZoom / settings.zoom;
-    const newPanX = mouseX - factor * (mouseX - settings.panOffset.x);
-    const newPanY = mouseY - factor * (mouseY - settings.panOffset.y);
-    
-    onUpdateSettings({ 
-        zoom: newZoom, 
-        panOffset: { x: newPanX, y: newPanY } 
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (512 / rect.width);
-    const y = (e.clientY - rect.top) * (512 / rect.height);
-    
-    setMousePos({ x, y });
-
-    if (isPanning) {
-        const dx = e.clientX - lastPanPos.x;
-        const dy = e.clientY - lastPanPos.y;
-        onUpdateSettings({
-            panOffset: {
-                x: settings.panOffset.x + dx,
-                y: settings.panOffset.y + dy
-            }
-        });
-        setLastPanPos({ x: e.clientX, y: e.clientY });
-        return;
-    }
-
-    if (isDrawing && tool !== 'none') {
-      executeDrawAction(x, y);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && spacePressed.current)) {
-      setIsPanning(true);
-      setLastPanPos({ x: e.clientX, y: e.clientY });
-      return;
-    }
-    if (tool !== 'none') {
-      setIsDrawing(true);
-      executeDrawAction(mousePos.x, mousePos.y);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsPanning(false);
-    if (isDrawing) {
-      setIsDrawing(false);
-      persistEdits();
-    }
-  };
-
-  const executeDrawAction = (mouseX: number, mouseY: number) => {
-    const img = imageRef.current;
-    if (!img) return;
-
-    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
-    const ratio = frameW / frameH;
-    let baseW, baseH;
-    if (ratio > 1) { baseW = 512; baseH = 512 / ratio; } 
-    else { baseH = 512; baseW = 512 * ratio; }
-    
-    const dw = Math.round(baseW * settings.zoom);
-    const dh = Math.round(baseH * settings.zoom);
-    const dx = Math.floor((512 - dw) / 2) + settings.panOffset.x;
-    const dy = Math.floor((512 - dh) / 2) + settings.panOffset.y;
-
-    const relX = mouseX - dx;
-    const relY = mouseY - dy;
-
-    if (relX < 0 || relX >= dw || relY < 0 || relY >= dh) return;
-
-    const sw = img.width / settings.cols;
-    const sh = img.height / settings.rows;
-    const frameX = (currentFrame % settings.cols) * sw;
-    const frameY = Math.floor(currentFrame / settings.cols) * sh;
-
-    const normX = relX / dw;
-    const normY = relY / dh;
-
-    const sourceX = Math.floor(frameX + (normX * sw));
-    const sourceY = Math.floor(frameY + (normY * sh));
-
-    const editCanvas = document.createElement('canvas');
-    editCanvas.width = img.width;
-    editCanvas.height = img.height;
-    const eCtx = editCanvas.getContext('2d');
-    if (!eCtx) return;
-    eCtx.drawImage(img, 0, 0);
-    
-    const brushSize = Math.max(1, Math.round(img.width / (settings.cols * frameW)));
-    if (tool === 'pencil') {
-      eCtx.fillStyle = brushColor;
-      eCtx.fillRect(sourceX - brushSize / 2, sourceY - brushSize / 2, brushSize, brushSize);
-    } else if (tool === 'eraser') {
-      eCtx.clearRect(sourceX - brushSize / 2, sourceY - brushSize / 2, brushSize, brushSize);
-    }
-
-    const updatedImg = new Image();
-    updatedImg.onload = () => {
-       imageRef.current = updatedImg;
-       renderFrame(currentFrame);
-    };
-    updatedImg.src = editCanvas.toDataURL('image/png');
-  };
-
-  const persistEdits = () => {
-     if (imageRef.current) {
-        onUpdateArt({ ...activeArt, imageUrl: imageRef.current.src });
-     }
-  };
-
   useEffect(() => {
     let interval: number | undefined;
     if (settings.isPlaying && tool === 'none') {
@@ -461,8 +334,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       <div 
         ref={containerRef}
         className={`relative flex-1 bg-[#020202] flex items-center justify-center overflow-hidden group border border-[#292524] shadow-inner ${isPanning ? 'cursor-grabbing' : spacePressed.current ? 'cursor-grab' : ''}`}
-        onMouseMove={handleMouseMove}
-        onMouseDown={handleMouseDown}
+        onMouseMove={(e) => handleMouseMove(e, currentFrame, imageRef.current)}
+        onMouseDown={(e) => handleMouseDown(e, spacePressed.current, currentFrame, imageRef.current)}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}

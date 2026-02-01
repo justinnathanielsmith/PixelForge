@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AnimationSettings } from '../../domain/entities';
 import { RESOLUTION_PRESETS } from '../../domain/constants';
+import { useToast } from '../context/ToastContext';
 
 interface SettingsPanelProps {
   settings: AnimationSettings;
@@ -27,6 +28,7 @@ const CodexSection = ({ title, icon, children, isOpen = false }: { title: string
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings, onGeneratePalette }) => {
   const [palettePrompt, setPalettePrompt] = useState('');
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
+  const { whisper } = useToast();
 
   const updateSetting = (key: keyof AnimationSettings, value: any) => {
     setSettings({ [key]: value });
@@ -41,6 +43,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings, on
 
   const handleClearPalette = () => {
     setSettings({ customPalette: null });
+    whisper("Palette Purged", "Custom colors returned to the void.", "info");
   };
 
   return (
