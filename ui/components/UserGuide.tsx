@@ -15,7 +15,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
              <span className="text-2xl">📜</span>
              <div>
                <h2 className="fantasy-font text-lg text-amber-500 uppercase tracking-widest leading-none">The Arcane Grimoire</h2>
-               <span className="text-[10px] text-stone-500 font-mono">v1.2.5-stable • Gemini 3 Pro Vision</span>
+               <span className="text-[10px] text-stone-500 font-mono">v1.3.0-stable • Gemini 3 Pro Vision</span>
              </div>
            </div>
            <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
@@ -63,13 +63,19 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                  <h4 className="fantasy-font text-sm text-amber-500">3. Asset Mode</h4>
                  <ul className="text-sm space-y-1 text-stone-400 ml-2">
                     <li><strong className="text-stone-300">SINGLE:</strong> Large static portrait.</li>
-                    <li><strong className="text-stone-300">SHEET:</strong> 4x4 animation grid.</li>
+                    <li><strong className="text-stone-300">SHEET:</strong> 4x4 animation grid. Automatically selected for Armory/VFX.</li>
                  </ul>
                </div>
                <div className="space-y-2">
                  <h4 className="fantasy-font text-sm text-amber-500">4. Entity Essence</h4>
-                 <p className="text-sm">Helps the AI understand anatomy: <span className="text-stone-300">HERO, FOE, TILE, PROP, SCENE</span>.</p>
-                 <p className="text-xs text-stone-500 ml-2 mt-1">• Select <strong className="text-emerald-500">AUTOTILE</strong> to generate a 3x3 layout suitable for 9-slice terrain bitmasking.</p>
+                 <p className="text-sm">Helps the AI understand anatomy and layout rules:</p>
+                 <ul className="text-xs text-stone-400 ml-2 mt-1 space-y-1">
+                   <li><strong className="text-stone-300">HERO / FOE:</strong> Character sprites.</li>
+                   <li><strong className="text-stone-300">ARMORY (⚔️):</strong> Generates a 4x4 grid of 16 <em>unique</em> icon variations.</li>
+                   <li><strong className="text-stone-300">AMMO (☄️):</strong> Rotational projectiles.</li>
+                   <li><strong className="text-stone-300">FX (✨):</strong> Particle bursts (Ignition → Dissipation).</li>
+                   <li><strong className="text-emerald-500">AUTOTILE:</strong> 3x3 layout for terrain bitmasking.</li>
+                 </ul>
                </div>
             </div>
           </section>
@@ -85,7 +91,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                   <li><span className="text-sky-400 font-bold">Vector Rite (📐):</span> Sharpening filter for "fuzzy" upscaled edges.</li>
                   <li><span className="text-amber-500 font-bold">Consistency (🔄):</span> Diffusion tech to reduce animation flicker.</li>
                   <li><span className="text-purple-400 font-bold">Breeding (🧬):</span> Generates 4 unique design variations (2x2).</li>
-                  <li><span className="text-emerald-500 font-bold">Void Key:</span> Removes magenta/green backgrounds.</li>
+                  <li><span className="text-emerald-500 font-bold">Void Key:</span> Removes magenta backgrounds. Now supports deep shadow protection.</li>
                   <li><span className="text-stone-300 font-bold">Seamless:</span> Tiles image 3x3 to check looping.</li>
                </ul>
             </div>

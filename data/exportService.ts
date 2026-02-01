@@ -1,3 +1,4 @@
+
 import { AnimationSettings, PixelStyle, GeneratedArt } from '../domain/entities';
 import { imageProcessingService } from './imageProcessingService';
 
@@ -56,6 +57,11 @@ export class ExportService {
 
   async exportMobileBundle(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
     const blob = await this.runWorkerTask('EXPORT_MOBILE', { art, settings });
+    return URL.createObjectURL(blob);
+  }
+  
+  async exportLittleKTAtlas(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
+    const blob = await this.runWorkerTask('EXPORT_ATLAS', { art, settings });
     return URL.createObjectURL(blob);
   }
 

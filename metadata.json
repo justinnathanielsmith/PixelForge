@@ -1,5 +1,5 @@
 {
   "name": "PixelForge Retro Art Lab",
-  "description": "A professional-grade pixel art generator and animator powered by Gemini. Create sprite sheets, individual characters, and preview animations for retro game development.",
+  "description": "A professional-grade pixel art generator and animator powered by Gemini. Create sprite sheets, individual characters, icon sets, VFX, and preview animations for retro game development.",
   "requestFramePermissions": []
 }

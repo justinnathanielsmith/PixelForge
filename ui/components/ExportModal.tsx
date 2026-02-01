@@ -1,22 +1,38 @@
+
 import React, { useState, useMemo } from 'react';
 import { GeneratedArt, AnimationSettings } from '../../domain/entities';
 import { generateAsepriteMetadata } from '../../utils/asepriteFormatter.ts';
+import { generateKotlinFleksCode } from '../../utils/codeGenerator.ts';
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeArt: GeneratedArt | null;
   settings: AnimationSettings;
-  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile') => void;
+  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas') => void;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
-  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile'>('gif');
+  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code'>('gif');
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   const asepritePreview = useMemo(() => {
     if (!activeArt) return null;
     return generateAsepriteMetadata(activeArt, settings);
   }, [activeArt, settings]);
+
+  const codePreview = useMemo(() => {
+    if (!activeArt) return null;
+    return generateKotlinFleksCode(activeArt, settings);
+  }, [activeArt, settings]);
+
+  const handleCopyCode = () => {
+    if (codePreview) {
+      navigator.clipboard.writeText(codePreview);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -29,13 +45,13 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
           </div>
           
           <div className="flex bg-[#0a0807] border-b border-[#44403c] overflow-x-auto custom-scrollbar">
-             {(['gif', 'png', 'video', 'aseprite', 'mobile'] as const).map(tab => (
+             {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code'] as const).map(tab => (
                 <button 
                   key={tab} 
                   onClick={() => setExportTab(tab)}
                   className={`px-6 py-3 text-[10px] fantasy-font uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${exportTab === tab ? 'bg-[#1c1917] text-amber-500 border-t-2 border-amber-600' : 'text-stone-600 hover:text-stone-400'}`}
                 >
-                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab}
+                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab === 'code' ? 'Code (Kotlin)' : tab === 'atlas' ? 'Atlas (LittleKT)' : tab}
                 </button>
              ))}
           </div>
@@ -115,6 +131,55 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                       </div>
                   </div>
                </div>
+             ) : exportTab === 'atlas' ? (
+                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                   <div className="bg-purple-950/20 border border-purple-900/40 p-4 rounded space-y-3">
+                      <div className="flex items-center gap-3">
+                         <span className="text-2xl">🗺️</span>
+                         <div>
+                            <h3 className="fantasy-font text-xs text-purple-400 uppercase tracking-wide">LittleKT Texture Atlas</h3>
+                            <p className="text-[10px] text-stone-500 italic">Packed ZIP containing Sprite Sheet (PNG) and Atlas Definition (JSON).</p>
+                         </div>
+                      </div>
+                      <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                        <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Usage in Kotlin</h4>
+                        <div className="bg-black/80 border border-stone-800 p-2 rounded font-mono text-[9px] text-stone-400">
+                           <p className="mb-1 text-purple-400">val atlas = resourcesVfs["{activeArt?.prompt.substring(0,10).replace(/\s/g,'_')}.json"].readAtlas()</p>
+                           <p className="text-stone-500">// Access regions by name (e.g., 'idle_0', 'icon_5')</p>
+                           <p>val sprite = atlas["{activeArt?.category === 'icon_set' ? 'icon_0' : 'idle_0'}"]</p>
+                        </div>
+                      </div>
+                   </div>
+                   <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Region Naming Protocol</h4>
+                      <ul className="text-[9px] text-stone-400 space-y-1 ml-2 list-disc">
+                         <li><strong className="text-purple-400">Icon Sets:</strong> icon_0, icon_1, icon_2...</li>
+                         <li><strong className="text-purple-400">Characters:</strong> action_0, action_1 (e.g., walk_0, attack_0)</li>
+                         <li><strong className="text-purple-400">Generic:</strong> frame_0, frame_1...</li>
+                      </ul>
+                   </div>
+                </div>
+             ) : exportTab === 'code' ? (
+                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                  <div className="bg-orange-950/20 border border-orange-900/40 p-4 rounded space-y-3">
+                      <div className="flex items-center gap-3">
+                          <span className="text-2xl">💻</span>
+                          <div>
+                              <h3 className="fantasy-font text-xs text-orange-400 uppercase tracking-wide">Kotlin / Fleks Manifest</h3>
+                              <p className="text-[10px] text-stone-500 italic">LittleKT + Fleks ECS entity definition.</p>
+                          </div>
+                      </div>
+                      <div className="bg-black/80 border border-stone-800 p-3 rounded font-mono text-[10px] text-stone-400 overflow-x-auto whitespace-pre custom-scrollbar">
+                          {codePreview}
+                      </div>
+                  </div>
+                  <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Integration Instructions</h4>
+                      <p className="text-[9px] text-stone-400 italic leading-tight">
+                        This snippet defines a World Entity compatible with Fleks ECS. Ensure your asset is loaded into the `resources` object with the generated name before invoking this builder.
+                      </p>
+                  </div>
+                </div>
              ) : (
                <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300 text-center">
                   <div className="flex justify-center bg-[#020202] p-4 border border-[#292524] rounded aspect-square max-w-[300px] mx-auto overflow-hidden">
@@ -132,12 +197,22 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
              {exportTab === 'aseprite' && (
                 <button onClick={() => onExport('png')} className="flex-1 py-4 bg-sky-900 text-sky-100 fantasy-font text-xs font-bold border border-sky-600 uppercase transition-all hover:bg-sky-800">1. Download PNG</button>
              )}
-             <button 
-                onClick={() => onExport(exportTab)} 
-                className="flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
-             >
-                {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : `Begin ${exportTab.toUpperCase()} Download`}
-             </button>
+             
+             {exportTab === 'code' ? (
+                <button 
+                  onClick={handleCopyCode}
+                  className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] ${copyFeedback ? 'bg-green-700 text-white border border-green-500' : 'bg-orange-700 text-white border border-orange-600 hover:bg-orange-600'}`}
+                >
+                  {copyFeedback ? '✨ Copied to Clipboard' : 'Copy Snippet to Clipboard'}
+                </button>
+             ) : (
+                <button 
+                    onClick={() => onExport(exportTab as any)} 
+                    className="flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+                >
+                    {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : `Begin ${exportTab.toUpperCase()} Download`}
+                </button>
+             )}
           </div>
        </div>
     </div>

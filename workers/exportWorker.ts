@@ -126,6 +126,86 @@ self.onmessage = async (e: MessageEvent) => {
         self.postMessage({ type: 'SUCCESS', payload: content });
         break;
       }
+      
+      case 'EXPORT_ATLAS': {
+        const { art, settings } = payload;
+        const img = await processor.loadImage(art.imageUrl);
+        const { cols, rows, targetResolution } = settings;
+        
+        // 1. Generate Full Sheet PNG
+        const baseWidth = targetResolution * cols;
+        const baseHeight = targetResolution * rows;
+        const baseCanvas = processor.createCanvas(baseWidth, baseHeight);
+        const ctx = baseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+        ctx.imageSmoothingEnabled = false;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const frameIndex = r * cols + c;
+            const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style);
+            ctx.drawImage(frameCanvas, c * targetResolution, r * targetResolution);
+          }
+        }
+        
+        const pngBlob = await (baseCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+        
+        // 2. Generate JSON Atlas definition
+        const frames: any = {};
+        const safeName = art.prompt.replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 20) || 'asset';
+        const imageName = `${safeName}.png`;
+        
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+             // Naming Logic
+             let regionName = '';
+             if (art.category === 'icon_set') {
+                const index = r * cols + c;
+                regionName = `icon_${index}`;
+             } else {
+                let action = 'idle';
+                if (art.actions && art.actions.length > 0) {
+                   // If multi-sheet, assume row maps to action index
+                   if (art.type === 'multi-sheet' || (art.actions.length === rows)) {
+                      action = art.actions[r % art.actions.length];
+                   } else {
+                      action = art.actions[0];
+                   }
+                }
+                const index = (art.type === 'multi-sheet') ? c : (r * cols + c);
+                regionName = `${action}_${index}`;
+             }
+
+             frames[regionName] = {
+                frame: { x: c * targetResolution, y: r * targetResolution, w: targetResolution, h: targetResolution },
+                rotated: false,
+                trimmed: false,
+                spriteSourceSize: { x: 0, y: 0, w: targetResolution, h: targetResolution },
+                sourceSize: { w: targetResolution, h: targetResolution }
+             };
+          }
+        }
+        
+        const atlasJson = {
+           frames,
+           meta: {
+              app: "Arcane Pixel Forge",
+              version: "1.0",
+              image: imageName,
+              format: "RGBA8888",
+              size: { w: baseWidth, h: baseHeight },
+              scale: "1"
+           }
+        };
+
+        // 3. Zip it up
+        const zip = new JSZip();
+        zip.file(imageName, pngBlob);
+        zip.file(`${safeName}.json`, JSON.stringify(atlasJson, null, 2));
+        
+        const content = await zip.generateAsync({ type: 'blob' });
+        self.postMessage({ type: 'SUCCESS', payload: content });
+        break;
+      }
 
       default:
         self.postMessage({ type: 'ERROR', payload: 'Unknown task type' });

@@ -107,7 +107,7 @@ export class PixelForgeOrchestrator {
   async exportAsset(
     art: GeneratedArt,
     settings: AnimationSettings,
-    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile'
+    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas'
   ): Promise<string> {
     switch (mode) {
       case 'png':
@@ -120,6 +120,8 @@ export class PixelForgeOrchestrator {
         return await exportService.exportAsepriteData(art, settings);
       case 'mobile':
         return await exportService.exportMobileBundle(art, settings);
+      case 'atlas':
+        return await exportService.exportLittleKTAtlas(art, settings);
       default:
         throw new Error("DOMAIN_ERROR: Unknown export medium.");
     }

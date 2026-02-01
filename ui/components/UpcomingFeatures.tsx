@@ -8,6 +8,16 @@ interface UpcomingFeaturesProps {
 const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
   const activeFeatures = [
     { 
+      title: "The Armory", 
+      desc: "Batch generate 16 unique items/icons in a single 4x4 grid.", 
+      icon: "⚔️"
+    },
+    { 
+      title: "VFX Weaver", 
+      desc: "Particle system generation with ignition-dissipation lifecycles.", 
+      icon: "✨"
+    },
+    { 
       title: "Neural Color Ramps", 
       desc: "Procedural palette generation based on material physics (wood, metal, slimes).", 
       icon: "🎨"
@@ -64,7 +74,7 @@ const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
              <span className="text-2xl">🧪</span>
              <div>
                <h2 className="fantasy-font text-sm text-emerald-500 uppercase tracking-widest leading-none">The Lab Manifesto</h2>
-               <span className="text-[10px] text-stone-500 font-mono">v1.2.5-stable • Research Roadmap</span>
+               <span className="text-[10px] text-stone-500 font-mono">v1.3.0-stable • Research Roadmap</span>
              </div>
            </div>
            <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
