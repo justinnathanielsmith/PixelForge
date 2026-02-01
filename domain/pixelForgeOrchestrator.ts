@@ -97,6 +97,10 @@ export class PixelForgeOrchestrator {
     return updatedArt;
   }
 
+  async forgePalette(prompt: string): Promise<{r: number, g: number, b: number}[]> {
+    return await pixelGenService.generatePalette(prompt);
+  }
+
   async exportAsset(
     art: GeneratedArt,
     settings: AnimationSettings,

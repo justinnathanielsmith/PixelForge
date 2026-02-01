@@ -246,6 +246,52 @@ export class PixelGenService {
       throw error;
     }
   }
+
+  async generatePalette(prompt: string): Promise<{r: number, g: number, b: number}[]> {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const model = 'gemini-3-flash-preview';
+
+    const systemPrompt = `
+      TASK: Generate a color palette based on a material description.
+      OUTPUT: JSON Array of RGB objects.
+      CONSTRAINT: Create a coherent gradient/ramp useful for pixel art shading (dark to light).
+      COUNT: 4 to 8 colors.
+    `;
+
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: {
+          parts: [{ text: `${systemPrompt}\nDESCRIPTION: ${prompt}` }]
+        },
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                r: { type: Type.NUMBER },
+                g: { type: Type.NUMBER },
+                b: { type: Type.NUMBER }
+              },
+              required: ["r", "g", "b"]
+            }
+          }
+        }
+      });
+
+      if (response.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw new Error("Palette generation refused due to safety.");
+      }
+
+      const json = JSON.parse(response.text || "[]");
+      return json;
+    } catch (error) {
+      console.error("PALETTE_EXCEPTION:", error);
+      throw error;
+    }
+  }
 }
 
 export const pixelGenService = new PixelGenService();

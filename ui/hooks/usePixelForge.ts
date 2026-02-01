@@ -10,7 +10,7 @@ import {
   PixelForgeIntent
 } from '../../domain/entities';
 
-const DEFAULT_SETTINGS: AnimationSettings = {
+export const DEFAULT_SETTINGS: AnimationSettings = {
   rows: 4, cols: 4, fps: 8, isPlaying: true, showGuides: false, tiledPreview: false, 
   targetResolution: 32, paletteLock: false, autoTransparency: true, chromaTolerance: 5, batchMode: false, zoom: 1.0, 
   onionSkin: false, hue: 0, saturation: 100, contrast: 100, brightness: 100,
@@ -18,10 +18,11 @@ const DEFAULT_SETTINGS: AnimationSettings = {
   vectorRite: false,
   gifRepeat: 0,
   gifDither: false,
-  gifDisposal: 2
+  gifDisposal: 2,
+  customPalette: null
 };
 
-const getSystemDefaults = (style: PixelStyle) => {
+export const getSystemDefaults = (style: PixelStyle) => {
   switch (style) {
     case '8-bit': return { hue: 0, saturation: 85, contrast: 125, brightness: 110 };
     case '16-bit': return { hue: 0, saturation: 110, contrast: 100, brightness: 100 };
@@ -31,7 +32,7 @@ const getSystemDefaults = (style: PixelStyle) => {
   }
 };
 
-function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeIntent): PixelForgeState {
+export function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeIntent): PixelForgeState {
   switch (intent.type) {
     case 'SET_PROMPT': return { ...state, prompt: intent.payload };
     case 'SET_SPRITE_SHEET': return { ...state, isSpriteSheet: intent.payload };
@@ -220,6 +221,15 @@ export const usePixelForge = () => {
     }
   }, [state.activeArt, state.isExporting]);
 
+  const generatePalette = useCallback(async (prompt: string) => {
+    try {
+      const palette = await orchestrator.forgePalette(prompt);
+      dispatch({ type: 'UPDATE_SETTINGS', payload: { customPalette: palette, paletteLock: true } });
+    } catch (error) {
+      console.error("Palette generation failed", error);
+    }
+  }, []);
+
   const exportAsset = useCallback(async (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile') => {
     if (!state.activeArt || state.isExporting) return;
     dispatch({ type: 'SET_EXPORTING', payload: true });
@@ -240,5 +250,19 @@ export const usePixelForge = () => {
     }
   }, [state.activeArt, state.animationSettings, state.isExporting]);
 
-  return { state, dispatch, actions: { generateArt, handleImageUpload, handleProjectImport, exportProject, exportAsset, generateNormalMap, generateSkeleton }, refs: { fileInputRef, projectInputRef } };
+  return { 
+    state, 
+    dispatch, 
+    actions: { 
+      generateArt, 
+      handleImageUpload, 
+      handleProjectImport, 
+      exportProject, 
+      exportAsset, 
+      generateNormalMap, 
+      generateSkeleton,
+      generatePalette 
+    }, 
+    refs: { fileInputRef, projectInputRef } 
+  };
 };

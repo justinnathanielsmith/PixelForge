@@ -1,15 +1,31 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { AnimationSettings } from '../../domain/entities';
 import { RESOLUTION_PRESETS } from '../../domain/constants';
 
 interface SettingsPanelProps {
   settings: AnimationSettings;
   setSettings: (newSettings: Partial<AnimationSettings>) => void;
+  onGeneratePalette: (prompt: string) => Promise<void>;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings }) => {
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings, onGeneratePalette }) => {
+  const [palettePrompt, setPalettePrompt] = useState('');
+  const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
+
   const updateSetting = (key: keyof AnimationSettings, value: any) => {
     setSettings({ [key]: value });
+  };
+
+  const handleGeneratePalette = async () => {
+    if (!palettePrompt.trim()) return;
+    setIsGeneratingPalette(true);
+    await onGeneratePalette(palettePrompt);
+    setIsGeneratingPalette(false);
+  };
+
+  const handleClearPalette = () => {
+    setSettings({ customPalette: null });
   };
 
   return (
@@ -155,6 +171,47 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings }) 
                 {settings.paletteLock ? 'Palette Locked' : 'Unlock Colors'}
             </button>
          </div>
+         
+         {/* Neural Color Ramps */}
+         <div className="bg-[#0c0a09] p-2 border border-stone-800 rounded space-y-2">
+            <h4 className="text-[9px] fantasy-font text-stone-500 uppercase">Neural Color Ramps</h4>
+            <div className="flex gap-1">
+              <input 
+                type="text" 
+                value={palettePrompt} 
+                onChange={(e) => setPalettePrompt(e.target.value)} 
+                placeholder='e.g. "Toxic Slime", "Rusty Metal"'
+                className="flex-1 bg-black/50 border border-stone-700 text-[10px] p-1 text-stone-300 focus:border-red-500 outline-none fantasy-input"
+              />
+              <button 
+                onClick={handleGeneratePalette} 
+                disabled={isGeneratingPalette || !palettePrompt.trim()}
+                className="px-2 bg-red-900/30 border border-red-800 text-red-400 text-[10px] hover:bg-red-900/60 uppercase font-bold disabled:opacity-50"
+              >
+                {isGeneratingPalette ? '...' : 'Synthesize'}
+              </button>
+            </div>
+            
+            {settings.customPalette && (
+              <div className="space-y-2 pt-1 border-t border-stone-800">
+                <div className="flex flex-wrap gap-0.5">
+                  {settings.customPalette.map((c, i) => (
+                    <div 
+                      key={i} 
+                      className="w-4 h-4 rounded-sm border border-black/20" 
+                      style={{ backgroundColor: `rgb(${c.r}, ${c.g}, ${c.b})` }} 
+                      title={`rgb(${c.r}, ${c.g}, ${c.b})`}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[8px] text-stone-500">Active Ramp</span>
+                  <button onClick={handleClearPalette} className="text-[8px] text-red-500 hover:text-red-300 uppercase">Clear</button>
+                </div>
+              </div>
+            )}
+         </div>
+
          <div className="space-y-3 px-1">
             <div className="space-y-1">
                 <div className="flex justify-between terminal-font text-[9px] text-stone-500">

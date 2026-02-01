@@ -1,3 +1,4 @@
+
 import { AnimationSettings } from '../domain/entities';
 import { CHROMA_KEY } from '../domain/constants';
 import gifenc from 'gifenc';
@@ -85,38 +86,57 @@ export class ImageProcessingService {
       }
     }
 
-    // Hardware Palette Emulation (Quantization)
+    // Hardware Palette Emulation (Quantization) or Neural Palette Application
     if (settings.paletteLock && typeof quantize === 'function' && typeof applyPalette === 'function') {
       const { data } = imageData;
-      let colorCount = 256;
-      switch (style) {
-        case '8-bit':
-        case 'gameboy':
-            colorCount = 4;
-            break;
-        case '16-bit':
-            colorCount = 16;
-            break;
-        case 'hi-bit':
-            colorCount = 64;
-            break;
-        default:
-            colorCount = 32;
+      let palette: number[][] | null = null;
+
+      // 1. Check for Neural Custom Palette
+      if (settings.customPalette && settings.customPalette.length > 0) {
+        palette = settings.customPalette.map(c => [c.r, c.g, c.b]);
+      } else {
+        // 2. Default Hardware Palettes
+        let colorCount = 256;
+        switch (style) {
+          case '8-bit':
+          case 'gameboy':
+              colorCount = 4;
+              break;
+          case '16-bit':
+              colorCount = 16;
+              break;
+          case 'hi-bit':
+              colorCount = 64;
+              break;
+          default:
+              colorCount = 32;
+        }
+        try {
+           palette = quantize(data, { colors: colorCount });
+        } catch (e) {
+           console.warn("Alchemy error: Quantization failed", e);
+        }
       }
 
-      try {
-        const palette = quantize(data, { colors: colorCount });
-        const index = applyPalette(data, palette);
-        for (let i = 0; i < index.length; i++) {
-          const color = palette[index[i]];
-          const offset = i * 4;
-          data[offset] = color[0];
-          data[offset + 1] = color[1];
-          data[offset + 2] = color[2];
-          data[offset + 3] = color[3];
+      if (palette) {
+        try {
+          // If custom palette is used, we might want to preserve transparency if not explicitly in palette?
+          // gifenc applyPalette maps to nearest color.
+          const index = applyPalette(data, palette);
+          for (let i = 0; i < index.length; i++) {
+            const color = palette[index[i]];
+            const offset = i * 4;
+            // Only overwrite if original alpha was not fully transparent (handled by Chroma Key above)
+            if (data[offset + 3] > 0) {
+              data[offset] = color[0];
+              data[offset + 1] = color[1];
+              data[offset + 2] = color[2];
+              data[offset + 3] = 255; // Ensure full opacity for mapped colors
+            }
+          }
+        } catch (e) {
+           console.warn("Alchemy error: Palette application failed", e);
         }
-      } catch (e) {
-        console.warn("Alchemy error: Quantization failed", e);
       }
     }
 

@@ -73,7 +73,8 @@ export interface AnimationSettings {
   vectorRite: boolean;
   gifRepeat: number; 
   gifDither: boolean; 
-  gifDisposal: number; 
+  gifDisposal: number;
+  customPalette?: { r: number; g: number; b: number }[];
 }
 
 export interface PixelForgeState {

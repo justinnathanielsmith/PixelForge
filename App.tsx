@@ -188,7 +188,11 @@ const App: React.FC = () => {
                 </div>
                 <div className="md:col-span-5">
                    <div className="fantasy-card h-full p-5 bg-[#1c1917] border-[#44403c] overflow-y-auto max-h-[600px] custom-scrollbar">
-                      <SettingsPanel settings={animationSettings} setSettings={(s) => dispatch({ type: 'UPDATE_SETTINGS', payload: s })} />
+                      <SettingsPanel 
+                        settings={animationSettings} 
+                        setSettings={(s) => dispatch({ type: 'UPDATE_SETTINGS', payload: s })} 
+                        onGeneratePalette={actions.generatePalette} 
+                      />
                    </div>
                 </div>
              </div>

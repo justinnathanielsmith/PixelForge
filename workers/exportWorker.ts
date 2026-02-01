@@ -1,3 +1,4 @@
+
 import gifenc from 'gifenc';
 import JSZip from 'jszip';
 import { ImageProcessingService } from '../data/imageProcessingService';
@@ -18,13 +19,20 @@ self.onmessage = async (e: MessageEvent) => {
         const totalFrames = cols * rows;
 
         let targetColors = 256;
+        let palette: number[][] | null = null;
+
+        // Custom Palette Priority
         if (settings.paletteLock) {
-          switch(style) {
-            case '8-bit':
-            case 'gameboy': targetColors = 4; break;
-            case '16-bit': targetColors = 16; break;
-            case 'hi-bit': targetColors = 64; break;
-          }
+           if (settings.customPalette && settings.customPalette.length > 0) {
+              palette = settings.customPalette.map((c: any) => [c.r, c.g, c.b]);
+           } else {
+              switch(style) {
+                case '8-bit':
+                case 'gameboy': targetColors = 4; break;
+                case '16-bit': targetColors = 16; break;
+                case 'hi-bit': targetColors = 64; break;
+              }
+           }
         }
 
         for (let i = 0; i < totalFrames; i++) {
@@ -32,11 +40,15 @@ self.onmessage = async (e: MessageEvent) => {
           const ctx = frameCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
           const { data } = ctx.getImageData(0, 0, targetResolution, targetResolution);
           
-          const palette = quantize(data, { colors: targetColors });
-          const index = applyPalette(data, palette);
+          let framePalette = palette;
+          if (!framePalette) {
+             framePalette = quantize(data, { colors: targetColors });
+          }
+          
+          const index = applyPalette(data, framePalette);
             
           gif.writeFrame(index, targetResolution, targetResolution, { 
-            palette, 
+            palette: framePalette, 
             delay: 1000 / fps,
             repeat: 0,
             transparent: true,
