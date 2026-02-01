@@ -132,8 +132,8 @@ const AppContent: React.FC = () => {
 
         <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 relative min-h-0">
           
-          {/* --- LEFT COLUMN: INPUTS & CONFIG --- */}
-          <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pt-4 pb-12 lg:h-[calc(100vh-120px)]">
+          {/* --- LEFT COLUMN: INPUTS ONLY --- */}
+          <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pt-6 pb-12 lg:h-[calc(100vh-120px)]">
             
             {/* 1. The Grimoire (Prompt & Core Types) */}
             <section className="fantasy-card p-4 relative shrink-0">
@@ -212,17 +212,6 @@ const AppContent: React.FC = () => {
                  </button>
               </form>
             </section>
-
-            {/* 2. Dimensions & Grid Configuration (Inputs) */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2 px-1 opacity-70">
-                    <span className="w-8 h-[1px] bg-stone-700"></span>
-                    <h3 className="fantasy-font text-[10px] text-stone-500 uppercase tracking-widest">Arcane Configuration</h3>
-                    <span className="flex-1 h-[1px] bg-stone-700"></span>
-                </div>
-                <CodexDimensions settings={animationSettings} setSettings={updateSettings} />
-                <CodexGrid settings={animationSettings} setSettings={updateSettings} />
-            </div>
           </div>
 
           {/* --- RIGHT COLUMN: PREVIEW & POST-PROCESS --- */}
@@ -280,36 +269,40 @@ const AppContent: React.FC = () => {
                 </div>
              )}
 
-             {/* 3. Controls & Post-Processing (Split Grid) */}
+             {/* 3. History Bar - Full Width for Mobile Access */}
+             <div className="w-full bg-black/20 p-2 border border-stone-800/50 rounded flex gap-2 overflow-x-auto h-24 items-center custom-scrollbar relative group/history shrink-0">
+                  <button 
+                    onClick={() => setShowGallery(true)}
+                    className="absolute right-2 top-2 z-10 w-6 h-6 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
+                    title="Expand Gallery"
+                  >
+                    ↖️
+                  </button>
+                  {history.length === 0 ? (
+                    <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[9px] tracking-widest">History is empty...</div>
+                  ) : (
+                    history.map(art => (
+                      <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
+                          <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+                      </button>
+                    ))
+                  )}
+              </div>
+
+             {/* 4. Configuration Grid (Unified Post-Process) */}
              <div className="grid md:grid-cols-2 gap-4 pb-4">
+                <div className="space-y-4">
+                    <CodexDimensions settings={animationSettings} setSettings={updateSettings} />
+                    <CodexGrid settings={animationSettings} setSettings={updateSettings} />
+                </div>
+                
                 <div className="space-y-4">
                     <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50">
                         <CodexChronometry settings={animationSettings} setSettings={updateSettings} />
                     </div>
-                    
-                    {/* History Bar moved here for better mobile flow */}
-                    <div className="w-full bg-black/20 p-2 border border-stone-800/50 rounded flex gap-2 overflow-x-auto h-24 items-center custom-scrollbar relative group/history">
-                        <button 
-                          onClick={() => setShowGallery(true)}
-                          className="absolute right-2 top-2 z-10 w-6 h-6 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
-                          title="Expand Gallery"
-                        >
-                          ↖️
-                        </button>
-                        {history.length === 0 ? (
-                          <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[9px] tracking-widest">History is empty...</div>
-                        ) : (
-                          history.map(art => (
-                            <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
-                                <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
-                            </button>
-                          ))
-                        )}
+                    <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50 h-fit">
+                        <CodexAlchemy settings={animationSettings} setSettings={updateSettings} onGeneratePalette={actions.generatePalette} />
                     </div>
-                </div>
-                
-                <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50 h-fit">
-                    <CodexAlchemy settings={animationSettings} setSettings={updateSettings} onGeneratePalette={actions.generatePalette} />
                 </div>
              </div>
 
@@ -355,23 +348,6 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const [params, setParams] = useState(new URLSearchParams(window.location.search));
-  
-  useEffect(() => {
-     const handlePopState = () => {
-        setParams(new URLSearchParams(window.location.search));
-     };
-     window.addEventListener('popstate', handlePopState);
-     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const isMobileView = params.get('view') === 'mobile';
-  const artId = params.get('id');
-
-  if (isMobileView && artId) {
-     return <MobileViewer artId={artId} />;
-  }
-
   return (
     <ToastProvider>
       <AppContent />
