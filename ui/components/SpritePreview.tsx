@@ -9,6 +9,7 @@ interface SpritePreviewProps {
   style: string;
   isBatch?: boolean;
   onUpdateArt: (updatedArt: GeneratedArt) => void;
+  onUpdateSettings: (newSettings: Partial<AnimationSettings>) => void;
   normalMapUrl?: string;
   onGenerateNormalMap?: () => void;
   skeleton?: Skeleton;
@@ -20,7 +21,7 @@ interface SpritePreviewProps {
 type Tool = 'none' | 'pencil' | 'eraser';
 
 const SpritePreview: React.FC<SpritePreviewProps> = ({ 
-  activeArt, settings, style, isBatch, onUpdateArt, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, sliceData, isGenerating 
+  activeArt, settings, style, isBatch, onUpdateArt, onUpdateSettings, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, sliceData, isGenerating 
 }) => {
   const imageUrl = activeArt.imageUrl;
   const [currentFrame, setCurrentFrame] = useState(0);
@@ -31,11 +32,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   const [tool, setTool] = useState<Tool>('none');
   const [brushColor, setBrushColor] = useState('#ffffff');
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const normalMapRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const spacePressed = useRef(false);
 
   // Load Main Image
   useEffect(() => {
@@ -62,6 +66,26 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       setLightingMode(false);
     }
   }, [normalMapUrl]);
+
+  // Keyboard Listeners for Space Pan
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement).tagName !== 'TEXTAREA' && (e.target as HTMLElement).tagName !== 'INPUT') {
+        spacePressed.current = true;
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        spacePressed.current = false;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const drawCheckerboard = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const size = 16;
@@ -94,28 +118,23 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     }
 
     // --- GEOMETRY CALCULATION (Aspect Ratio Aware) ---
-    // The canvas is 512x512. We need to fit the frame into this box based on zoom and aspect ratio.
     const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
-    
-    // Scale factor based on zoom and filling the 512 box relatively
     const ratio = frameW / frameH;
     
-    // Calculate base dimensions that fit within 512x512
     let baseW, baseH;
     if (ratio > 1) {
-       // Wide
        baseW = 512;
        baseH = 512 / ratio;
     } else {
-       // Tall or Square
        baseH = 512;
        baseW = 512 * ratio;
     }
 
     const dw = Math.round(baseW * settings.zoom);
     const dh = Math.round(baseH * settings.zoom);
-    const dx = Math.floor((canvas.width - dw) / 2);
-    const dy = Math.floor((canvas.height - dh) / 2);
+    // Include Pan Offset
+    const dx = Math.floor((canvas.width - dw) / 2) + settings.panOffset.x;
+    const dy = Math.floor((canvas.height - dh) / 2) + settings.panOffset.y;
 
     // --- NORMAL MAP LIGHTING RENDERER ---
     if (lightingMode && normalMapRef.current && !settings.tiledPreview && !isBatch) {
@@ -142,17 +161,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
          if (colorData && normalData) {
             const data = colorData.data;
             const normals = normalData.data;
-            
             const relX = mousePos.x - dx;
             const relY = mousePos.y - dy;
-            
-            // Map mouse to sprite coordinates
             const spriteMouseX = (relX / dw) * frameW;
             const spriteMouseY = (relY / dh) * frameH;
             
             const lightColor = { r: 255, g: 245, b: 220 }; 
             const ambient = 0.25;
-            const zDistance = 30 * (frameW / 64); // Scale Z with resolution
+            const zDistance = 30 * (frameW / 64);
             const falloff = 100 * (frameW / 64); 
 
             for (let i = 0; i < data.length; i += 4) {
@@ -182,12 +198,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     } else {
        // --- STANDARD RENDERER ---
        const processedFrame = imageProcessingService.processFrame(img, frame, settings, style);
-       
-       if (!settings.autoTransparency && (settings.showGuides || settings.tiledPreview)) {
-          ctx.fillStyle = '#0a0807';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-       }
-       
        const totalFrames = settings.rows * settings.cols;
        if (settings.onionSkin && !settings.tiledPreview && totalFrames > 1 && !isBatch) {
           const prevFrameIdx = (frame - 1 + totalFrames) % totalFrames;
@@ -202,15 +212,12 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     if (skeletonMode && skeleton && !settings.tiledPreview && !isBatch) {
       drawSkeleton(ctx, skeleton, dx, dy, dw, dh);
     }
-
     if (sliceMode && sliceData && !settings.tiledPreview && !isBatch) {
       drawSliceGuides(ctx, sliceData, dx, dy, dw, dh, frameW);
     }
-
     if (settings.showGuides && !settings.tiledPreview) {
       drawGuides(ctx, canvas.width, canvas.height);
     }
-
   }, [settings, style, drawCheckerboard, lightingMode, skeletonMode, sliceMode, mousePos, isBatch, skeleton, sliceData]);
 
   const drawSkeleton = (ctx: CanvasRenderingContext2D, skeleton: Skeleton, dx: number, dy: number, dw: number, dh: number) => {
@@ -262,36 +269,18 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1;
-
-    // Center Guides
-    ctx.beginPath();
-    ctx.moveTo(width / 2, 0);
-    ctx.lineTo(width / 2, height);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, height / 2);
-    ctx.lineTo(width, height / 2);
-    ctx.stroke();
-
-    // Sprite Sheet Grid
+    ctx.beginPath(); ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2); ctx.stroke();
     if (settings.cols > 1 || settings.rows > 1) {
       const colWidth = width / settings.cols;
       const rowHeight = height / settings.rows;
-
       ctx.setLineDash([2, 4]);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-
       for (let c = 1; c < settings.cols; c++) {
-        ctx.beginPath();
-        ctx.moveTo(c * colWidth, 0);
-        ctx.lineTo(c * colWidth, height);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(c * colWidth, 0); ctx.lineTo(c * colWidth, height); ctx.stroke();
       }
       for (let r = 1; r < settings.rows; r++) {
-        ctx.beginPath();
-        ctx.moveTo(0, r * rowHeight);
-        ctx.lineTo(width, r * rowHeight);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, r * rowHeight); ctx.lineTo(width, r * rowHeight); ctx.stroke();
       }
     }
     ctx.restore();
@@ -300,8 +289,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   const drawStandardFrame = (ctx: CanvasRenderingContext2D, source: HTMLCanvasElement | OffscreenCanvas, settings: AnimationSettings, dx: number, dy: number, dw: number, dh: number) => {
     if (settings.tiledPreview) {
       const tileSize = Math.round((ctx.canvas.width / 3) * settings.zoom);
-      const startX = Math.floor((ctx.canvas.width - tileSize) / 2);
-      const startY = Math.floor((ctx.canvas.height - tileSize) / 2);
+      const startX = Math.floor((ctx.canvas.width - tileSize) / 2) + settings.panOffset.x;
+      const startY = Math.floor((ctx.canvas.height - tileSize) / 2) + settings.panOffset.y;
       for (let x = -1; x <= 1; x++) {
         for (let y = -1; y <= 1; y++) {
           ctx.drawImage(source as any, 0, 0, (source as any).width, (source as any).height, startX + (x * tileSize), startY + (y * tileSize), tileSize, tileSize);
@@ -316,16 +305,49 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // FIX: Use canvasRef for mapping instead of containerRef to handle object-contain and non-square ratios correctly
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const zoomSpeed = 0.1;
+    const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+    const newZoom = Math.min(Math.max(settings.zoom + delta, 0.25), 4);
+    
+    if (newZoom === settings.zoom) return;
+
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * (512 / rect.width);
+    const mouseY = (e.clientY - rect.top) * (512 / rect.height);
     
-    // Calculate normalized coordinates in the 512x512 buffer space
+    const factor = newZoom / settings.zoom;
+    const newPanX = mouseX - factor * (mouseX - settings.panOffset.x);
+    const newPanY = mouseY - factor * (mouseY - settings.panOffset.y);
+    
+    onUpdateSettings({ 
+        zoom: newZoom, 
+        panOffset: { x: newPanX, y: newPanY } 
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (512 / rect.width);
     const y = (e.clientY - rect.top) * (512 / rect.height);
     
     setMousePos({ x, y });
+
+    if (isPanning) {
+        const dx = e.clientX - lastPanPos.x;
+        const dy = e.clientY - lastPanPos.y;
+        onUpdateSettings({
+            panOffset: {
+                x: settings.panOffset.x + dx,
+                y: settings.panOffset.y + dy
+            }
+        });
+        setLastPanPos({ x: e.clientX, y: e.clientY });
+        return;
+    }
 
     if (isDrawing && tool !== 'none') {
       executeDrawAction(x, y);
@@ -333,6 +355,11 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 1 || (e.button === 0 && spacePressed.current)) {
+      setIsPanning(true);
+      setLastPanPos({ x: e.clientX, y: e.clientY });
+      return;
+    }
     if (tool !== 'none') {
       setIsDrawing(true);
       executeDrawAction(mousePos.x, mousePos.y);
@@ -340,6 +367,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   };
 
   const handleMouseUp = () => {
+    setIsPanning(false);
     if (isDrawing) {
       setIsDrawing(false);
       persistEdits();
@@ -350,7 +378,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     const img = imageRef.current;
     if (!img) return;
 
-    // Use current dynamic dimensions
     const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
     const ratio = frameW / frameH;
     let baseW, baseH;
@@ -359,18 +386,16 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     
     const dw = Math.round(baseW * settings.zoom);
     const dh = Math.round(baseH * settings.zoom);
-    const dx = Math.floor((512 - dw) / 2);
-    const dy = Math.floor((512 - dh) / 2);
+    const dx = Math.floor((512 - dw) / 2) + settings.panOffset.x;
+    const dy = Math.floor((512 - dh) / 2) + settings.panOffset.y;
 
     const relX = mouseX - dx;
     const relY = mouseY - dy;
 
     if (relX < 0 || relX >= dw || relY < 0 || relY >= dh) return;
 
-    // Map to original image source pixel
     const sw = img.width / settings.cols;
     const sh = img.height / settings.rows;
-    
     const frameX = (currentFrame % settings.cols) * sw;
     const frameY = Math.floor(currentFrame / settings.cols) * sh;
 
@@ -385,11 +410,9 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     editCanvas.height = img.height;
     const eCtx = editCanvas.getContext('2d');
     if (!eCtx) return;
-
     eCtx.drawImage(img, 0, 0);
     
     const brushSize = Math.max(1, Math.round(img.width / (settings.cols * frameW)));
-
     if (tool === 'pencil') {
       eCtx.fillStyle = brushColor;
       eCtx.fillRect(sourceX - brushSize / 2, sourceY - brushSize / 2, brushSize, brushSize);
@@ -424,9 +447,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
   useEffect(() => {
     requestAnimationFrame(() => renderFrame(currentFrame));
-  }, [currentFrame, renderFrame, mousePos, lightingMode, skeletonMode, sliceMode]);
+  }, [currentFrame, renderFrame, mousePos, lightingMode, skeletonMode, sliceMode, settings.panOffset]);
 
-  // --- CALCULATE CURSOR GEOMETRY FOR RENDER ---
   const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
   const ratio = frameW / frameH;
   let baseW, baseH;
@@ -438,11 +460,13 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     <div className="flex flex-col gap-2 w-full h-full">
       <div 
         ref={containerRef}
-        className="relative flex-1 bg-[#020202] flex items-center justify-center overflow-hidden group border border-[#292524] shadow-inner"
+        className={`relative flex-1 bg-[#020202] flex items-center justify-center overflow-hidden group border border-[#292524] shadow-inner ${isPanning ? 'cursor-grabbing' : spacePressed.current ? 'cursor-grab' : ''}`}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {/* EDIT TOOLBAR */}
         <div className="absolute left-3 top-3 flex flex-col gap-2 z-50">
@@ -470,20 +494,24 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                 />
              </div>
            )}
+           <button 
+             onClick={() => onUpdateSettings({ zoom: 1, panOffset: { x: 0, y: 0 } })} 
+             className="w-10 h-10 flex items-center justify-center rounded border bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 transition-all"
+             title="Reset View"
+           >
+             <span className="text-lg">🎯</span>
+           </button>
         </div>
 
-        {/* WRAPPER FOR CANVAS AND OVERLAYS - Ensures coordinate syncing */}
         <div className="relative inline-block" style={{ width: 'fit-content', height: 'fit-content' }}>
-          
           <canvas 
             ref={canvasRef} 
             width={512} 
             height={512} 
-            className={`max-w-full max-h-full object-contain image-pixelated z-0 ${tool !== 'none' ? 'cursor-none' : 'cursor-crosshair'}`} 
+            className={`max-w-full max-h-full object-contain image-pixelated z-0 ${tool !== 'none' && !spacePressed.current ? 'cursor-none' : isPanning ? 'cursor-grabbing' : spacePressed.current ? 'cursor-grab' : 'cursor-crosshair'}`} 
             style={{ imageRendering: 'pixelated' }} 
           />
 
-          {/* LIGHTING SOURCE CURSOR */}
           {lightingMode && (
             <div 
               className="absolute pointer-events-none z-50 w-24 h-24 rounded-full"
@@ -496,8 +524,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
             />
           )}
 
-          {/* CUSTOM CURSOR FOR DRAWING */}
-          {tool !== 'none' && (
+          {tool !== 'none' && !spacePressed.current && (
              <div 
               className={`absolute pointer-events-none z-[60] border border-white mix-blend-difference`}
               style={{ 
@@ -513,7 +540,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
           {settings.tiledPreview && <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]" />}
         </div>
         
-        {/* INTERACTION HUB */}
         {!isBatch && (
            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3 z-40">
               {!normalMapUrl ? (

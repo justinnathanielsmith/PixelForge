@@ -65,6 +65,7 @@ export interface AnimationSettings {
   chromaTolerance: number;
   batchMode: boolean;
   zoom: number;
+  panOffset: { x: number; y: number };
   onionSkin: boolean;
   hue: number;
   saturation: number;
@@ -106,6 +107,7 @@ export type PixelForgeIntent =
   | { type: 'SUMMON_FAILURE'; payload: string }
   | { type: 'SET_ACTIVE_ART'; payload: GeneratedArt }
   | { type: 'UPDATE_ART'; payload: GeneratedArt }
+  | { type: 'DELETE_ART'; payload: string }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AnimationSettings> }
   | { type: 'SET_INSPIRATION'; payload: { url: string; data: string; mimeType: string; isRefining?: boolean } | null }
   | { type: 'SET_EXPORTING'; payload: boolean }

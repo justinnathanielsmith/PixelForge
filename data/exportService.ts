@@ -1,6 +1,7 @@
 
 import { AnimationSettings, PixelStyle, GeneratedArt } from '../domain/entities';
 import { imageProcessingService } from './imageProcessingService';
+import { generateAsepriteMetadata } from '../utils/asepriteFormatter';
 
 export class ExportService {
   private worker: Worker | null = null;
@@ -67,69 +68,8 @@ export class ExportService {
   }
 
   async exportAsepriteData(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
-    const { cols, rows, fps } = settings;
-    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
-    const frameDuration = Math.round(1000 / fps);
-    
-    const frames: Record<string, any> = {};
-    const primaryAction = art.actions && art.actions.length > 0 ? art.actions[0] : 'none';
-    const frameTags = [
-      {
-        name: primaryAction !== 'none' ? primaryAction.toUpperCase() : "STATIC_ENTITY",
-        from: 0,
-        to: (cols * rows) - 1,
-        direction: "forward"
-      }
-    ];
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const i = r * cols + c;
-        const key = `${art.category}_${art.id}_${i}.png`;
-        frames[key] = {
-          frame: { x: c * frameW, y: r * frameH, w: frameW, h: frameH },
-          rotated: false,
-          trimmed: false,
-          spriteSourceSize: { x: 0, y: 0, w: frameW, h: frameH },
-          sourceSize: { w: frameW, h: frameH },
-          duration: frameDuration
-        };
-      }
-    }
-
-    const slices = art.sliceData ? [
-      {
-        name: "9slice",
-        color: "#0000ff",
-        keys: [
-          {
-            frame: 0,
-            bounds: { 
-              x: art.sliceData.left, 
-              y: art.sliceData.top, 
-              w: frameW - (art.sliceData.left + art.sliceData.right), 
-              h: frameH - (art.sliceData.top + art.sliceData.bottom) 
-            }
-          }
-        ]
-      }
-    ] : [];
-
-    const data = {
-      frames,
-      meta: {
-        app: "Arcane Pixel Forge",
-        version: "1.0",
-        image: `pxl_flux_${art.id}.png`,
-        format: "RGBA8888",
-        size: { w: frameW * cols, h: frameH * rows },
-        scale: "1",
-        frameTags,
-        slices
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const metadata = generateAsepriteMetadata(art, settings);
+    const blob = new Blob([metadata], { type: 'application/json' });
     return URL.createObjectURL(blob);
   }
 

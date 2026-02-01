@@ -1,28 +1,65 @@
+
 import { GeneratedArt, AnimationSettings } from '../domain/entities';
+import { imageProcessingService } from '../data/imageProcessingService';
 
 export function generateAsepriteMetadata(art: GeneratedArt, settings: AnimationSettings): string {
-  const { cols, rows, targetResolution, fps } = settings;
+  const { cols, rows, fps } = settings;
+  const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
   const frameDuration = Math.round(1000 / fps);
   const frames: Record<string, any> = {};
   
-  const artActions = art.actions || ['none'];
-  
-  const frameTags = artActions.map((act, idx) => ({
-    name: act.toUpperCase(),
-    from: idx * cols,
-    to: (idx + 1) * cols - 1,
-    direction: "forward"
-  }));
+  let frameTags: any[] = [];
+
+  if (art.type === 'batch') {
+    // BUG-11 Fix: For batch/breeding mode, define 4 distinct variations
+    frameTags = [
+      { name: "VAR_1", from: 0, to: 0, direction: "forward" },
+      { name: "VAR_2", from: 1, to: 1, direction: "forward" },
+      { name: "VAR_3", from: 2, to: 2, direction: "forward" },
+      { name: "VAR_4", from: 3, to: 3, direction: "forward" }
+    ];
+  } else {
+    const artActions = art.actions || ['none'];
+    frameTags = artActions.map((act, idx) => ({
+      name: act.toUpperCase(),
+      from: idx * cols,
+      to: (idx + 1) * cols - 1,
+      direction: "forward"
+    }));
+  }
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const i = r * cols + c;
-      frames[`${art.category}_${art.id}_${i}.png`] = {
-        frame: { x: c * targetResolution, y: r * targetResolution, w: targetResolution, h: targetResolution },
+      const key = `${art.category}_${art.id}_${i}.png`;
+      frames[key] = {
+        frame: { x: c * frameW, y: r * frameH, w: frameW, h: frameH },
+        rotated: false,
+        trimmed: false,
+        spriteSourceSize: { x: 0, y: 0, w: frameW, h: frameH },
+        sourceSize: { w: frameW, h: frameH },
         duration: frameDuration
       };
     }
   }
+
+  const slices = art.sliceData ? [
+    {
+      name: "9slice",
+      color: "#0000ff",
+      keys: [
+        {
+          frame: 0,
+          bounds: { 
+            x: art.sliceData.left, 
+            y: art.sliceData.top, 
+            w: frameW - (art.sliceData.left + art.sliceData.right), 
+            h: frameH - (art.sliceData.top + art.sliceData.bottom) 
+          }
+        }
+      ]
+    }
+  ] : [];
 
   return JSON.stringify({
     frames,
@@ -30,7 +67,11 @@ export function generateAsepriteMetadata(art: GeneratedArt, settings: AnimationS
       app: "Arcane Pixel Forge",
       version: "1.0",
       image: `pxl_flux_${art.id}.png`,
-      frameTags
+      format: "RGBA8888",
+      size: { w: frameW * cols, h: frameH * rows },
+      scale: "1",
+      frameTags,
+      slices
     }
   }, null, 2);
 }

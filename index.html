@@ -9,16 +9,49 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                void: '#0c0a09',
+                gold: '#d97706',
+                parchment: '#f5f5dc',
+                mana: '#0ea5e9',
+                blood: '#991b1b',
+                moss: '#065f46',
+                arcane: {
+                  950: '#0c0a09',
+                  900: '#1c1917',
+                  800: '#292524',
+                  700: '#44403c',
+                  600: '#57534e',
+                }
+              },
+              boxShadow: {
+                'fantasy': '4px 4px 0 0 #000',
+                'fantasy-inner': 'inset 2px 2px 0 0 #000',
+              }
+            }
+          }
+        }
+    </script>
     <style>
         :root {
-            --fantasy-gold: #d97706;
+            --color-void: #0c0a09;
+            --color-gold: #d97706;
+            --color-parchment: #f5f5dc;
+            --color-mana: #0ea5e9;
+            --color-blood: #991b1b;
+            --color-moss: #065f46;
+            --fantasy-gold: var(--color-gold);
             --fantasy-bg: #1c1917;
-            --fantasy-parchment: #f5f5dc;
+            --fantasy-parchment: var(--color-parchment);
         }
 
         body {
             font-family: 'Crimson Text', serif;
-            background-color: #0c0a09;
+            background-color: var(--color-void);
             color: #d6d3d1;
             overflow-x: hidden;
             background-image: 
@@ -39,9 +72,9 @@
         }
 
         .fantasy-card {
-            background-color: #1c1917; /* Stone 900 */
-            border: 2px solid #57534e; /* Stone 600 */
-            box-shadow: 4px 4px 0 0 #0f0e0e;
+            background-color: var(--fantasy-bg);
+            border: 2px solid #57534e; 
+            box-shadow: 4px 4px 0 0 #000;
             position: relative;
         }
         
@@ -54,15 +87,15 @@
         }
 
         .fantasy-input {
-            background-color: #0c0a09;
+            background-color: var(--color-void);
             border: 2px solid #44403c;
-            color: #fbbf24; /* Amber 400 */
+            color: #fbbf24;
             font-family: 'VT323', monospace;
             box-shadow: inset 2px 2px 0 0 #000;
         }
         .fantasy-input:focus {
             outline: none;
-            border-color: #d97706; /* Amber 600 */
+            border-color: var(--color-gold);
         }
 
         .fantasy-btn {
@@ -95,7 +128,7 @@
             -webkit-appearance: none;
             height: 16px;
             width: 10px;
-            background: #d97706; /* Amber */
+            background: var(--color-gold);
             cursor: pointer;
             border: 1px solid #78350f;
             margin-top: -6px; 
@@ -117,11 +150,11 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0c0a09;
+            background: var(--color-void);
         }
         ::-webkit-scrollbar-thumb {
             background: #44403c;
-            border: 1px solid #0c0a09;
+            border: 1px solid var(--color-void);
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #78350f;

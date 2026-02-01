@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { GeneratedArt, AnimationSettings } from '../../domain/entities';
 import { generateAsepriteMetadata } from '../../utils/asepriteFormatter.ts';
 import { generateKotlinFleksCode } from '../../utils/codeGenerator.ts';
+import { useToast } from '../context/ToastContext';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ interface ExportModalProps {
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
   const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code'>('gif');
-  const [copyFeedback, setCopyFeedback] = useState(false);
+  const { whisper } = useToast();
 
   const asepritePreview = useMemo(() => {
     if (!activeArt) return null;
@@ -29,8 +30,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
   const handleCopyCode = () => {
     if (codePreview) {
       navigator.clipboard.writeText(codePreview);
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2000);
+      whisper("Snippet Inscribed", "Kotlin/Fleks code copied to clipboard.", "success");
     }
   };
 
@@ -201,9 +201,9 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
              {exportTab === 'code' ? (
                 <button 
                   onClick={handleCopyCode}
-                  className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] ${copyFeedback ? 'bg-green-700 text-white border border-green-500' : 'bg-orange-700 text-white border border-orange-600 hover:bg-orange-600'}`}
+                  className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] bg-orange-700 text-white border border-orange-600 hover:bg-orange-600`}
                 >
-                  {copyFeedback ? '✨ Copied to Clipboard' : 'Copy Snippet to Clipboard'}
+                  Copy Snippet to Clipboard
                 </button>
              ) : (
                 <button 

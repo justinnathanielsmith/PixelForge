@@ -22,6 +22,11 @@ export class PixelRepository {
     return await this.getHistory();
   }
 
+  async deleteArt(id: string): Promise<GeneratedArt[]> {
+    await pixelDB.deleteArt(id);
+    return await this.getHistory();
+  }
+
   async saveSession(state: Partial<PixelForgeState>): Promise<void> {
     if (state.animationSettings) {
       await pixelDB.putSessionValue(STORAGE_KEYS.SETTINGS, state.animationSettings);

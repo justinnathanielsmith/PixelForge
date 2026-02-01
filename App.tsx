@@ -9,10 +9,14 @@ import UpcomingFeatures from './ui/components/UpcomingFeatures.tsx';
 import UserGuide from './ui/components/UserGuide.tsx';
 import { Gatekeeper } from './ui/components/Gatekeeper.tsx';
 import ExportModal from './ui/components/ExportModal.tsx';
+import GalleryModal from './ui/components/GalleryModal.tsx';
+import { ToastProvider } from './ui/context/ToastContext.tsx';
+import { ToastContainer } from './ui/components/Toast.tsx';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const { state, dispatch, actions, refs } = usePixelForge();
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [showManifesto, setShowManifesto] = useState(false);
   
@@ -212,6 +216,7 @@ const App: React.FC = () => {
                                 style={activeArt.style} 
                                 isBatch={activeArt.type === 'batch'}
                                 onUpdateArt={(updatedArt) => dispatch({ type: 'UPDATE_ART', payload: updatedArt })}
+                                onUpdateSettings={(updatedSettings) => dispatch({ type: 'UPDATE_SETTINGS', payload: updatedSettings })}
                                 normalMapUrl={activeArt.normalMapUrl}
                                 onGenerateNormalMap={actions.generateNormalMap}
                                 skeleton={activeArt.skeleton}
@@ -241,7 +246,14 @@ const App: React.FC = () => {
              </div>
              
              {/* History Bar */}
-             <section className="w-full shrink-0 bg-black/20 p-3 border border-stone-800/50 rounded flex gap-4 overflow-x-auto h-32 items-center custom-scrollbar pb-4 mb-4 md:mb-0">
+             <section className="w-full shrink-0 bg-black/20 p-3 border border-stone-800/50 rounded flex gap-4 overflow-x-auto h-32 items-center custom-scrollbar pb-4 mb-4 md:mb-0 relative group/history">
+                <button 
+                  onClick={() => setShowGallery(true)}
+                  className="absolute right-3 top-3 z-10 w-8 h-8 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
+                  title="Expand Gallery"
+                >
+                  ↖️
+                </button>
                 {history.length === 0 ? (
                   <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[10px] tracking-widest">History is empty...</div>
                 ) : (
@@ -265,12 +277,30 @@ const App: React.FC = () => {
             settings={animationSettings}
             onExport={actions.exportAsset}
           />
+
+          <GalleryModal 
+            isOpen={showGallery}
+            onClose={() => setShowGallery(false)}
+            history={history}
+            activeArtId={activeArt?.id}
+            onSelect={(art) => { dispatch({ type: 'SET_ACTIVE_ART', payload: art }); setShowGallery(false); }}
+            onDelete={actions.deleteArt}
+          />
         </main>
         
         {/* Mobile Spacer to avoid navigation chrome */}
         <div className="h-24 md:hidden shrink-0" />
       </div>
+      <ToastContainer />
     </Gatekeeper>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 };
 
