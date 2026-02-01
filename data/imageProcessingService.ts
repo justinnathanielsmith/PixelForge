@@ -5,43 +5,62 @@ import gifenc from 'gifenc';
 const { quantize, applyPalette } = gifenc;
 
 export class ImageProcessingService {
-  async loadImage(src: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("VRAM_LOAD_ERROR"));
-      img.src = src;
-    });
+  async loadImage(src: string): Promise<HTMLImageElement | ImageBitmap> {
+    if (typeof window === 'undefined') {
+      // Worker environment
+      const response = await fetch(src);
+      const blob = await response.blob();
+      return await createImageBitmap(blob);
+    } else {
+      // Main thread
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("VRAM_LOAD_ERROR"));
+        img.src = src;
+      });
+    }
+  }
+
+  createCanvas(width: number, height: number): HTMLCanvasElement | OffscreenCanvas {
+    if (typeof OffscreenCanvas !== 'undefined') {
+      return new OffscreenCanvas(width, height);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
   }
 
   processFrame(
-    source: HTMLImageElement | HTMLCanvasElement,
+    source: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
     frameIndex: number,
     settings: AnimationSettings,
     style: string
-  ): HTMLCanvasElement {
+  ): HTMLCanvasElement | OffscreenCanvas {
     const { cols, rows, targetResolution } = settings;
     const sw = source.width / cols;
     const sh = source.height / rows;
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    // Create a fresh canvas for every frame to prevent race conditions 
-    // between background exports and real-time previews.
-    const canvas = document.createElement('canvas');
-    canvas.width = targetResolution;
-    canvas.height = targetResolution;
-    
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const canvas = this.createCanvas(targetResolution, targetResolution);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     if (!ctx) return canvas;
 
     ctx.imageSmoothingEnabled = false;
     
-    // Apply visual filters via CSS filters on the context
-    ctx.filter = `hue-rotate(${settings.hue}deg) saturate(${settings.saturation}%) contrast(${settings.contrast}%) brightness(${settings.brightness}%)`;
-    ctx.drawImage(source, sx, sy, sw, sh, 0, 0, targetResolution, targetResolution);
-    ctx.filter = 'none';
+    // Apply visual filters via CSS filters on the context (Note: OffscreenCanvas might not support filter in all browsers, but we check)
+    if ('filter' in ctx) {
+      (ctx as any).filter = `hue-rotate(${settings.hue}deg) saturate(${settings.saturation}%) contrast(${settings.contrast}%) brightness(${settings.brightness}%)`;
+    }
+    
+    ctx.drawImage(source as any, sx, sy, sw, sh, 0, 0, targetResolution, targetResolution);
+    
+    if ('filter' in ctx) {
+      (ctx as any).filter = 'none';
+    }
 
     let imageData = ctx.getImageData(0, 0, targetResolution, targetResolution);
 
@@ -53,17 +72,13 @@ export class ImageProcessingService {
     // Chroma Key Transparency
     if (settings.autoTransparency) {
       const { data } = imageData;
-      // Convert 0-50% tolerance to a Manhattan distance threshold
       const threshold = (settings.chromaTolerance || 5) * 4; 
       
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-        
-        // Manhattan distance to target Chroma Key
         const dist = Math.abs(r - CHROMA_KEY.RGB.r) + Math.abs(g - CHROMA_KEY.RGB.g) + Math.abs(b - CHROMA_KEY.RGB.b);
-        
         if (dist <= threshold) {
           data[i + 3] = 0;
         }
@@ -118,19 +133,14 @@ export class ImageProcessingService {
         const i = (y * width + x) * 4;
         const alpha = temp[i + 3];
 
-        // Pixel-snapping: Force alpha to binary states to eliminate AI-generated "soft" edges
         if (alpha > 0 && alpha < 255) {
-          if (alpha > 140) { // Threshold for snapping to opaque
+          if (alpha > 140) {
             data[i + 3] = 255;
-            
-            // HALO CORRECTION: Pull color from already opaque neighbors
-            // This prevents "fringe" colors (background bleed) from becoming solid.
             let rSum = 0, gSum = 0, bSum = 0, count = 0;
             for (let dy = -1; dy <= 1; dy++) {
               for (let dx = -1; dx <= 1; dx++) {
                 if (dx === 0 && dy === 0) continue;
                 const ni = ((y + dy) * width + (x + dx)) * 4;
-                // Only consider original opaque pixels for color source
                 if (temp[ni + 3] > 220) {
                   rSum += temp[ni];
                   gSum += temp[ni + 1];
@@ -139,19 +149,16 @@ export class ImageProcessingService {
                 }
               }
             }
-            
             if (count > 0) {
               data[i] = Math.round(rSum / count);
               data[i + 1] = Math.round(gSum / count);
               data[i + 2] = Math.round(bSum / count);
             }
           } else {
-            // Snap to fully transparent
             data[i + 3] = 0;
           }
         }
 
-        // Noise Reduction: Remove isolated floating pixels
         const isIsolated = this.isPixelIsolated(temp, x, y, width, height);
         if (isIsolated) {
           data[i + 3] = 0;
@@ -172,7 +179,7 @@ export class ImageProcessingService {
         const ny = y + dy;
         if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
           const ni = (ny * w + nx) * 4;
-          if (data[ni + 3] > 100) neighbors++; // Slightly more robust neighbor check
+          if (data[ni + 3] > 100) neighbors++;
         }
       }
     }

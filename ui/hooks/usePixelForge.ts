@@ -90,6 +90,14 @@ function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeIntent): Pi
         history: intent.payload,
         activeArt: state.activeArt || (intent.payload.length > 0 ? intent.payload[0] : null)
       };
+    case 'IMPORT_PROJECT':
+      return {
+        ...state,
+        history: intent.payload.history,
+        prompt: intent.payload.prompt,
+        animationSettings: intent.payload.settings || state.animationSettings,
+        activeArt: intent.payload.history.length > 0 ? intent.payload.history[0] : null
+      };
     default: return state;
   }
 }
@@ -116,6 +124,7 @@ export const usePixelForge = () => {
 
   const [state, dispatch] = useReducer(pixelForgeReducer, getInitialState());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const projectInputRef = useRef<HTMLInputElement>(null);
 
   // Persistence Ritual: Small settings to LocalStorage
   useEffect(() => {
@@ -140,6 +149,33 @@ export const usePixelForge = () => {
       dispatch({ type: 'SET_INSPIRATION', payload: { url: URL.createObjectURL(file), data: result.split(',')[1], mimeType: file.type } });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleProjectImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const result = await orchestrator.importProjectFile(reader.result as string);
+        dispatch({ type: 'IMPORT_PROJECT', payload: result });
+      } catch (err) {
+        console.error("Project import failure", err);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const exportProject = async () => {
+    try {
+      const url = await orchestrator.exportProjectFile();
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `project_${Date.now()}.forge`;
+      link.click();
+    } catch (err) {
+      console.error("Project export failure", err);
+    }
   };
 
   const generateArt = async (e: React.FormEvent) => {
@@ -204,5 +240,5 @@ export const usePixelForge = () => {
     }
   }, [state.activeArt, state.animationSettings, state.isExporting]);
 
-  return { state, dispatch, actions: { generateArt, handleImageUpload, exportAsset, generateNormalMap, generateSkeleton }, refs: { fileInputRef } };
+  return { state, dispatch, actions: { generateArt, handleImageUpload, handleProjectImport, exportProject, exportAsset, generateNormalMap, generateSkeleton }, refs: { fileInputRef, projectInputRef } };
 };

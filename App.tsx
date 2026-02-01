@@ -43,10 +43,16 @@ const App: React.FC = () => {
                   </div>
                </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <div className="flex border border-stone-800 rounded-sm overflow-hidden h-7">
+                <button onClick={() => refs.projectInputRef.current?.click()} className="px-3 text-[9px] fantasy-font text-stone-400 hover:text-white hover:bg-stone-800 transition-all border-r border-stone-800 uppercase tracking-widest">Import .forge</button>
+                <button onClick={actions.exportProject} className="px-3 text-[9px] fantasy-font text-stone-400 hover:text-white hover:bg-stone-800 transition-all uppercase tracking-widest">Export .forge</button>
+                <input ref={refs.projectInputRef} type="file" accept=".forge" onChange={actions.handleProjectImport} className="hidden" />
+              </div>
+              <div className="w-px h-6 bg-stone-800 mx-2" />
               <button onClick={() => setShowManifesto(true)} className="text-[9px] fantasy-font text-emerald-500 hover:text-emerald-400 uppercase tracking-widest border border-emerald-900/50 bg-emerald-950/20 px-3 py-1 rounded transition-all">🧪 Lab Manifesto</button>
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
-              <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Switch Key</button>
+              <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
           </div>
         </header>
@@ -144,10 +150,11 @@ const App: React.FC = () => {
                          ) : (
                            activeArt && (
                              <SpritePreview 
-                                imageUrl={activeArt.imageUrl} 
+                                activeArt={activeArt} 
                                 settings={animationSettings} 
                                 style={activeArt.style} 
                                 isBatch={activeArt.type === 'batch'}
+                                onUpdateArt={(updatedArt) => dispatch({ type: 'UPDATE_ART', payload: updatedArt })}
                                 normalMapUrl={activeArt.normalMapUrl}
                                 onGenerateNormalMap={actions.generateNormalMap}
                                 skeleton={activeArt.skeleton}

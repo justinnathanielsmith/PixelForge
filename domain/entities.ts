@@ -108,4 +108,5 @@ export type PixelForgeIntent =
   | { type: 'SET_INSPIRATION'; payload: { url: string; data: string; mimeType: string; isRefining?: boolean } | null }
   | { type: 'SET_EXPORTING'; payload: boolean }
   | { type: 'PIN_DESIGN'; payload: GeneratedArt }
-  | { type: 'SET_HISTORY'; payload: GeneratedArt[] };
+  | { type: 'SET_HISTORY'; payload: GeneratedArt[] }
+  | { type: 'IMPORT_PROJECT'; payload: { history: GeneratedArt[], settings: AnimationSettings | null, prompt: string } };

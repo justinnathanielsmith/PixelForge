@@ -126,6 +126,16 @@ export class PixelForgeOrchestrator {
   persistSession(state: Partial<PixelForgeState>): void {
     pixelRepository.saveSession(state);
   }
+
+  async exportProjectFile(): Promise<string> {
+    const data = await pixelRepository.exportProject();
+    const blob = new Blob([data], { type: 'application/json' });
+    return URL.createObjectURL(blob);
+  }
+
+  async importProjectFile(json: string): Promise<{ history: GeneratedArt[], settings: AnimationSettings | null, prompt: string }> {
+    return await pixelRepository.importProject(json);
+  }
 }
 
 export const orchestrator = new PixelForgeOrchestrator();
