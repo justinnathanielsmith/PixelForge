@@ -1,3 +1,4 @@
+
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction } from "./entities";
 import { CHROMA_KEY } from "./constants";
 
@@ -36,10 +37,24 @@ export const getCategoryDirective = (category: AssetCategory, perspectiveText: s
       STYLE: Clear 9-slice structure. Ensure corners do not exceed 25% of the total width/height.
     `;
   }
+  if (category === 'tileset_bitmask') {
+    return `
+      SUBJECT: Terrain Autotile Bitmask Source (3x3 Blob).
+      FOCUS: Creating a seamless terrain patch that can be sliced into corners, edges, and center for auto-tiling.
+      REQUIREMENT:
+      - Form a complete 3x3 block of terrain (island).
+      - Row 1: Top-Left Convex Corner, Top Edge, Top-Right Convex Corner.
+      - Row 2: Left Edge, Center Solid Fill, Right Edge.
+      - Row 3: Bottom-Left Convex Corner, Bottom Edge, Bottom-Right Convex Corner.
+      - Edges must connect perfectly to form a solid shape.
+      - Background must be ${CHROMA_KEY.LABEL}.
+    `;
+  }
   return `SUBJECT: ${category} sprite. ${perspectiveText}`;
 };
 
 export const getLayoutInstruction = (
+  category: AssetCategory,
   isBatch: boolean, 
   isSpriteSheet: boolean, 
   actions: AnimationAction[], 
@@ -48,6 +63,10 @@ export const getLayoutInstruction = (
   if (isBatch) {
     return "LAYOUT: 2x2 grid containing 4 distinct design variations of the same prompt.";
   } 
+
+  if (category === 'tileset_bitmask') {
+    return "LAYOUT: 3x3 GRID (9 tiles). Tightly packed. \n- Row 1: Corner-TL, Edge-T, Corner-TR\n- Row 2: Edge-L, Center-Fill, Edge-R\n- Row 3: Corner-BL, Edge-B, Corner-BR";
+  }
   
   if (isSpriteSheet && actions.length > 0) {
     if (actions.length === 1) {
@@ -90,7 +109,7 @@ export const assembleForgePrompt = (params: {
   const stylePersona = getStylePersona(params.style);
   const perspectiveText = getPerspectiveText(params.perspective);
   const categoryDirective = getCategoryDirective(params.category, perspectiveText);
-  const layoutInstruction = getLayoutInstruction(params.isBatch, params.isSpriteSheet, params.actions, params.temporalStability);
+  const layoutInstruction = getLayoutInstruction(params.category, params.isBatch, params.isSpriteSheet, params.actions, params.temporalStability);
   const strategyDirectives = getCoreDirectives(params.targetRes);
 
   return `[PIXEL_FORGE_IMAGEN_3_PRO]

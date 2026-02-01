@@ -42,6 +42,9 @@ export class PixelForgeOrchestrator {
     if (settings.batchMode) {
       gridSize = { rows: 2, cols: 2 };
       type = 'batch';
+    } else if (category === 'tileset_bitmask') {
+      gridSize = { rows: 3, cols: 3 };
+      type = 'spritesheet';
     } else if (isSpriteSheet && actions.length > 0) {
       if (actions.length === 1) {
         gridSize = settings.temporalStability ? { rows: 4, cols: 8 } : { rows: 4, cols: 4 };
