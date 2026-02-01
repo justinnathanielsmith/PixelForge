@@ -1,3 +1,4 @@
+
 export type PixelStyle = '8-bit' | '16-bit' | 'gameboy' | 'hi-bit';
 export type PixelPerspective = 'side' | 'isometric' | 'top-down';
 export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'prop' | 'background' | 'ui_panel';
@@ -106,24 +107,5 @@ export type PixelForgeIntent =
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AnimationSettings> }
   | { type: 'SET_INSPIRATION'; payload: { url: string; data: string; mimeType: string; isRefining?: boolean } | null }
   | { type: 'SET_EXPORTING'; payload: boolean }
-  | { type: 'PIN_DESIGN'; payload: GeneratedArt };
-
-// --- External Library Interfaces ---
-
-export interface GIFEncoderInstance {
-  writeFrame: (index: Uint8Array, width: number, height: number, options?: { 
-    palette: any[][]; 
-    delay?: number; 
-    repeat?: number; 
-    transparent?: boolean; 
-    transparentIndex?: number;
-  }) => void;
-  finish: () => void;
-  bytes: () => Uint8Array;
-}
-
-export interface GifEnc {
-  GIFEncoder: () => GIFEncoderInstance;
-  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any[][];
-  applyPalette: (data: Uint8ClampedArray, palette: any[][]) => Uint8Array;
-}
+  | { type: 'PIN_DESIGN'; payload: GeneratedArt }
+  | { type: 'SET_HISTORY'; payload: GeneratedArt[] };

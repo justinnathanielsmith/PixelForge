@@ -1,3 +1,4 @@
+
 import { 
   GeneratedArt, 
   PixelForgeState, 
@@ -75,21 +76,21 @@ export class PixelForgeOrchestrator {
       sliceData
     };
 
-    pixelRepository.saveArt(newArt);
+    await pixelRepository.saveArt(newArt);
     return newArt;
   }
 
   async forgeNormalMap(art: GeneratedArt): Promise<GeneratedArt> {
     const normalMapUrl = await pixelGenService.generateNormalMap(art.imageUrl);
     const updatedArt = { ...art, normalMapUrl };
-    pixelRepository.updateArt(updatedArt);
+    await pixelRepository.updateArt(updatedArt);
     return updatedArt;
   }
 
   async forgeSkeleton(art: GeneratedArt): Promise<GeneratedArt> {
     const skeleton = await pixelGenService.generateSkeleton(art.imageUrl, art.category);
     const updatedArt = { ...art, skeleton };
-    pixelRepository.updateArt(updatedArt);
+    await pixelRepository.updateArt(updatedArt);
     return updatedArt;
   }
 
@@ -114,11 +115,12 @@ export class PixelForgeOrchestrator {
     }
   }
 
-  loadInitialState(): { history: GeneratedArt[], session: { settings: AnimationSettings | null, prompt: string } } {
-    return {
-      history: pixelRepository.getHistory(),
-      session: pixelRepository.loadSession()
-    };
+  async loadInitialHistory(): Promise<GeneratedArt[]> {
+    return await pixelRepository.getHistory();
+  }
+
+  loadSession(): { settings: AnimationSettings | null, prompt: string } {
+    return pixelRepository.loadSession();
   }
 
   persistSession(state: Partial<PixelForgeState>): void {

@@ -1,9 +1,9 @@
-import { AnimationSettings, PixelStyle, GeneratedArt, GifEnc } from '../domain/entities';
+import { AnimationSettings, PixelStyle, GeneratedArt } from '../domain/entities';
 import gifenc from 'gifenc';
 import JSZip from 'jszip';
 import { imageProcessingService } from './imageProcessingService';
 
-const { GIFEncoder, quantize, applyPalette } = gifenc as unknown as GifEnc;
+const { GIFEncoder, quantize, applyPalette } = gifenc;
 
 export class ExportService {
 

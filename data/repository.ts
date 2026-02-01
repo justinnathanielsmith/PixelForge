@@ -1,37 +1,25 @@
 
 import { GeneratedArt, PixelForgeState, AnimationSettings } from '../domain/entities';
+import { pixelDB } from './db';
 
 const STORAGE_KEYS = {
-  HISTORY: 'pixelforge_history_v1',
   SETTINGS: 'pixelforge_settings_v1',
   PROMPT: 'pixelforge_last_prompt_v1'
 };
 
 export class PixelRepository {
-  getHistory(): GeneratedArt[] {
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
+  async getHistory(): Promise<GeneratedArt[]> {
+    return await pixelDB.getAllHistory();
   }
 
-  saveArt(art: GeneratedArt): GeneratedArt[] {
-    const history = this.getHistory();
-    const updated = [art, ...history].slice(0, 24);
-    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
-    return updated;
+  async saveArt(art: GeneratedArt): Promise<GeneratedArt[]> {
+    await pixelDB.putArt(art);
+    return await this.getHistory();
   }
 
-  updateArt(updatedArt: GeneratedArt): GeneratedArt[] {
-    const history = this.getHistory();
-    const index = history.findIndex(a => a.id === updatedArt.id);
-    if (index !== -1) {
-      history[index] = updatedArt;
-      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
-    }
-    return history;
+  async updateArt(updatedArt: GeneratedArt): Promise<GeneratedArt[]> {
+    await pixelDB.putArt(updatedArt);
+    return await this.getHistory();
   }
 
   saveSession(state: Partial<PixelForgeState>): void {

@@ -1,3 +1,4 @@
+
 import React, { useReducer, useRef, useCallback, useEffect } from 'react';
 import { orchestrator } from '../../domain/pixelForgeOrchestrator';
 import { 
@@ -50,7 +51,7 @@ function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeIntent): Pi
         ...state, 
         genState: GenerationState.SUCCESS, 
         activeArt: art,
-        history: [art, ...state.history].slice(0, 24),
+        history: [art, ...state.history],
         animationSettings: {
           ...state.animationSettings,
           rows: art.gridSize!.rows,
@@ -83,13 +84,19 @@ function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeIntent): Pi
         category: design.category,
         inspiration: { url: design.imageUrl, data: design.imageUrl.split(',')[1], mimeType: 'image/png', isRefining: true }
       };
+    case 'SET_HISTORY':
+      return {
+        ...state,
+        history: intent.payload,
+        activeArt: state.activeArt || (intent.payload.length > 0 ? intent.payload[0] : null)
+      };
     default: return state;
   }
 }
 
 export const usePixelForge = () => {
   const getInitialState = (): PixelForgeState => {
-    const { history, session } = orchestrator.loadInitialState();
+    const session = orchestrator.loadSession();
     return {
       prompt: session.prompt || '',
       isSpriteSheet: true,
@@ -98,8 +105,8 @@ export const usePixelForge = () => {
       category: 'character',
       selectedActions: ['idle'],
       genState: GenerationState.IDLE,
-      history,
-      activeArt: history.length > 0 ? history[0] : null,
+      history: [],
+      activeArt: null,
       errorMessage: '',
       isExporting: false,
       inspiration: null,
@@ -110,9 +117,19 @@ export const usePixelForge = () => {
   const [state, dispatch] = useReducer(pixelForgeReducer, getInitialState());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Persistence Ritual: Small settings to LocalStorage
   useEffect(() => {
     orchestrator.persistSession({ animationSettings: state.animationSettings, prompt: state.prompt });
   }, [state.animationSettings, state.prompt]);
+
+  // Initialization Ritual: Large history from IndexedDB
+  useEffect(() => {
+    const loadHistory = async () => {
+      const history = await orchestrator.loadInitialHistory();
+      dispatch({ type: 'SET_HISTORY', payload: history });
+    };
+    loadHistory();
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -167,14 +184,18 @@ export const usePixelForge = () => {
     }
   }, [state.activeArt, state.isExporting]);
 
-  const exportAsset = useCallback(async (mode: 'gif' | 'video' | 'png' | 'aseprite') => {
+  const exportAsset = useCallback(async (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile') => {
     if (!state.activeArt || state.isExporting) return;
     dispatch({ type: 'SET_EXPORTING', payload: true });
     try {
       const url = await orchestrator.exportAsset(state.activeArt, state.animationSettings, mode);
       const link = document.createElement('a');
       link.href = url;
-      link.download = mode === 'aseprite' ? `pxl_flux_${state.activeArt.id}.json` : `pxl_export.${mode === 'video' ? 'webm' : mode}`;
+      if (mode === 'mobile') {
+        link.download = `mobile_bundle_${state.activeArt.id}.zip`;
+      } else {
+        link.download = mode === 'aseprite' ? `pxl_flux_${state.activeArt.id}.json` : `pxl_export.${mode === 'video' ? 'webm' : mode}`;
+      }
       link.click();
     } catch (error) {
       console.error("Export failed", error);

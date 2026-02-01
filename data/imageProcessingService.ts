@@ -1,34 +1,10 @@
-import { AnimationSettings, GifEnc } from '../domain/entities';
+import { AnimationSettings } from '../domain/entities';
 import { CHROMA_KEY } from '../domain/constants';
 import gifenc from 'gifenc';
 
-const { quantize, applyPalette } = gifenc as unknown as GifEnc;
+const { quantize, applyPalette } = gifenc;
 
 export class ImageProcessingService {
-  // Use a pair of scratch canvases to handle cases where two processed frames are needed simultaneously (e.g., onion skinning or normal map lighting)
-  private scratchA: HTMLCanvasElement | null = null;
-  private scratchB: HTMLCanvasElement | null = null;
-  private nextScratchIdx = 0;
-
-  private getScratchCanvas(width: number, height: number): HTMLCanvasElement {
-    let canvas: HTMLCanvasElement;
-    if (this.nextScratchIdx === 0) {
-      if (!this.scratchA) this.scratchA = document.createElement('canvas');
-      canvas = this.scratchA;
-      this.nextScratchIdx = 1;
-    } else {
-      if (!this.scratchB) this.scratchB = document.createElement('canvas');
-      canvas = this.scratchB;
-      this.nextScratchIdx = 0;
-    }
-
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-    return canvas;
-  }
-
   async loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -51,12 +27,15 @@ export class ImageProcessingService {
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    const canvas = this.getScratchCanvas(targetResolution, targetResolution);
+    // Create a fresh canvas for every frame to prevent race conditions 
+    // between background exports and real-time previews.
+    const canvas = document.createElement('canvas');
+    canvas.width = targetResolution;
+    canvas.height = targetResolution;
+    
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return canvas;
 
-    // Reset canvas for fresh frame
-    ctx.clearRect(0, 0, targetResolution, targetResolution);
     ctx.imageSmoothingEnabled = false;
     
     // Apply visual filters via CSS filters on the context
@@ -137,11 +116,39 @@ export class ImageProcessingService {
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         const i = (y * width + x) * 4;
-        
+        const alpha = temp[i + 3];
+
         // Pixel-snapping: Force alpha to binary states to eliminate AI-generated "soft" edges
-        const alpha = data[i + 3];
         if (alpha > 0 && alpha < 255) {
-          data[i + 3] = alpha > 127 ? 255 : 0;
+          if (alpha > 140) { // Threshold for snapping to opaque
+            data[i + 3] = 255;
+            
+            // HALO CORRECTION: Pull color from already opaque neighbors
+            // This prevents "fringe" colors (background bleed) from becoming solid.
+            let rSum = 0, gSum = 0, bSum = 0, count = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const ni = ((y + dy) * width + (x + dx)) * 4;
+                // Only consider original opaque pixels for color source
+                if (temp[ni + 3] > 220) {
+                  rSum += temp[ni];
+                  gSum += temp[ni + 1];
+                  bSum += temp[ni + 2];
+                  count++;
+                }
+              }
+            }
+            
+            if (count > 0) {
+              data[i] = Math.round(rSum / count);
+              data[i + 1] = Math.round(gSum / count);
+              data[i + 2] = Math.round(bSum / count);
+            }
+          } else {
+            // Snap to fully transparent
+            data[i + 3] = 0;
+          }
         }
 
         // Noise Reduction: Remove isolated floating pixels
@@ -165,7 +172,7 @@ export class ImageProcessingService {
         const ny = y + dy;
         if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
           const ni = (ny * w + nx) * 4;
-          if (data[ni + 3] > 0) neighbors++;
+          if (data[ni + 3] > 100) neighbors++; // Slightly more robust neighbor check
         }
       }
     }
