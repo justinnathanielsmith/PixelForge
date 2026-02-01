@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { usePixelForge } from './ui/hooks/usePixelForge.ts';
 import { GenerationState } from './domain/entities.ts';
@@ -17,7 +18,7 @@ const App: React.FC = () => {
   
   const { 
     prompt, genState, history, activeArt, inspiration, 
-    animationSettings, isSpriteSheet, category, selectedActions, perspective, isExporting
+    animationSettings, isSpriteSheet, category, selectedActions, perspective, isExporting, errorMessage
   } = state;
 
   const handleSwitchKey = async () => {
@@ -30,8 +31,8 @@ const App: React.FC = () => {
 
   return (
     <Gatekeeper>
-      <div className="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
-        <header className="border-b-4 border-[#44403c] bg-[#1c1917] py-3 shadow-lg relative z-20">
+      <div className="min-h-[100dvh] flex flex-col selection:bg-amber-500 selection:text-black">
+        <header className="border-b-4 border-[#44403c] bg-[#1c1917] py-3 shadow-lg relative z-20 shrink-0">
           <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
                <div className="w-10 h-10 bg-gradient-to-tr from-amber-600 to-red-800 border-2 border-[#d97706] shadow-[2px_2px_0_#000] rotate-45 transform ml-2" />
@@ -43,7 +44,7 @@ const App: React.FC = () => {
                   </div>
                </div>
             </div>
-            <div className="flex gap-3 items-center">
+            <div className="hidden md:flex gap-3 items-center">
               <div className="flex border border-stone-800 rounded-sm overflow-hidden h-7">
                 <button onClick={() => refs.projectInputRef.current?.click()} className="px-3 text-[9px] fantasy-font text-stone-400 hover:text-white hover:bg-stone-800 transition-all border-r border-stone-800 uppercase tracking-widest">Import .forge</button>
                 <button onClick={actions.exportProject} className="px-3 text-[9px] fantasy-font text-stone-400 hover:text-white hover:bg-stone-800 transition-all uppercase tracking-widest">Export .forge</button>
@@ -54,10 +55,14 @@ const App: React.FC = () => {
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
               <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
+            <div className="md:hidden flex items-center gap-2">
+               <button onClick={() => setShowUserGuide(true)} className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 items-start relative">
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 relative">
+          {/* Sidebar / Form Column */}
           <div className="lg:col-span-4 space-y-6">
             <section className="fantasy-card p-4 relative">
               <div className="absolute -top-3 left-4 bg-[#1c1917] px-2 text-[10px] fantasy-font font-bold text-amber-500 border border-[#57534e] uppercase tracking-widest">The Grimoire</div>
@@ -137,15 +142,24 @@ const App: React.FC = () => {
             </section>
           </div>
 
-          <div className="lg:col-span-8 flex flex-col h-full gap-6">
-             <div className="grid md:grid-cols-12 gap-6 h-full">
+          {/* Main Content Column */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+             <div className="grid md:grid-cols-12 gap-6 flex-1 min-h-0">
                 <div className="md:col-span-7 flex flex-col gap-4">
-                   <div className="fantasy-card p-2 bg-[#0c0a09] relative aspect-square flex flex-col border-[#78350f]">
+                   <div className="fantasy-card p-2 bg-[#0c0a09] relative aspect-square flex flex-col border-[#78350f] overflow-hidden">
                       <div className="flex-1 relative bg-[#020202] flex items-center justify-center overflow-hidden border border-[#292524] shadow-inner">
                          {genState === GenerationState.GENERATING ? (
                            <div className="flex flex-col items-center gap-4 text-center">
                               <div className="w-12 h-12 border-4 border-amber-950 border-t-amber-500 rounded-full animate-spin" />
                               <p className="fantasy-font text-xs text-amber-500 animate-pulse uppercase tracking-widest">Scribing to Reality...</p>
+                           </div>
+                         ) : genState === GenerationState.ERROR ? (
+                           <div className="flex flex-col items-center gap-4 text-center px-4 max-w-xs animate-in zoom-in duration-300">
+                              <div className="text-4xl">🔮💥</div>
+                              <div>
+                                <h3 className="fantasy-font text-red-500 uppercase tracking-widest font-bold mb-1">Ritual Failed</h3>
+                                <p className="text-xs text-stone-400 font-serif leading-relaxed">{errorMessage || "Unknown anomaly encountered."}</p>
+                              </div>
                            </div>
                          ) : (
                            activeArt && (
@@ -166,26 +180,31 @@ const App: React.FC = () => {
                       </div>
                    </div>
                    {activeArt && (
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-2 justify-end shrink-0">
                          <button onClick={() => dispatch({ type: 'PIN_DESIGN', payload: activeArt })} className="px-6 py-2 bg-emerald-700 text-white text-[10px] fantasy-font rounded border-b-2 border-emerald-900 uppercase hover:bg-emerald-600 transition-all">✨ Refine Design</button>
                          <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-[#1e3a8a] text-white text-[10px] fantasy-font rounded border-b-2 border-blue-900 uppercase hover:bg-blue-800 transition-all">Export Manifest</button>
                       </div>
                    )}
                 </div>
-                <div className="md:col-span-5 h-full">
-                   <div className="fantasy-card h-full p-5 bg-[#1c1917] border-[#44403c]">
+                <div className="md:col-span-5">
+                   <div className="fantasy-card h-full p-5 bg-[#1c1917] border-[#44403c] overflow-y-auto max-h-[600px] custom-scrollbar">
                       <SettingsPanel settings={animationSettings} setSettings={(s) => dispatch({ type: 'UPDATE_SETTINGS', payload: s })} />
                    </div>
                 </div>
              </div>
              
-             <section className="w-full bg-black/20 p-2 border border-stone-800/50 rounded flex gap-4 overflow-x-auto h-28 items-center custom-scrollbar">
-                {history.map(art => (
-                   <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-20 h-20 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
-                      <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
-                      <div className="absolute top-0 right-0 p-0.5 bg-black/60 text-[6px] font-mono text-stone-400">{art.type.split('-')[0].toUpperCase()}</div>
-                   </button>
-                ))}
+             {/* History Bar */}
+             <section className="w-full shrink-0 bg-black/20 p-3 border border-stone-800/50 rounded flex gap-4 overflow-x-auto h-32 items-center custom-scrollbar pb-4 mb-4 md:mb-0">
+                {history.length === 0 ? (
+                  <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[10px] tracking-widest">History is empty...</div>
+                ) : (
+                  history.map(art => (
+                    <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-20 h-20 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
+                        <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+                        <div className="absolute top-0 right-0 p-0.5 bg-black/60 text-[6px] font-mono text-stone-400">{art.type.split('-')[0].toUpperCase()}</div>
+                    </button>
+                  ))
+                )}
              </section>
           </div>
 
@@ -200,6 +219,9 @@ const App: React.FC = () => {
             onExport={actions.exportAsset}
           />
         </main>
+        
+        {/* Mobile Spacer to avoid navigation chrome */}
+        <div className="h-24 md:hidden shrink-0" />
       </div>
     </Gatekeeper>
   );

@@ -239,6 +239,48 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     ctx.restore();
   };
 
+  /**
+   * FIX: Added missing drawGuides function to handle rendering of grid lines and center guides.
+   */
+  const drawGuides = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+
+    // Center Guides
+    ctx.beginPath();
+    ctx.moveTo(width / 2, 0);
+    ctx.lineTo(width / 2, height);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
+
+    // Sprite Sheet Grid
+    if (settings.cols > 1 || settings.rows > 1) {
+      const colWidth = width / settings.cols;
+      const rowHeight = height / settings.rows;
+
+      ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+
+      for (let c = 1; c < settings.cols; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * colWidth, 0);
+        ctx.lineTo(c * colWidth, height);
+        ctx.stroke();
+      }
+      for (let r = 1; r < settings.rows; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, r * rowHeight);
+        ctx.lineTo(width, r * rowHeight);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  };
+
   // Fix: source parameter updated to accept OffscreenCanvas as well to avoid assignment errors from imageProcessingService.processFrame results
   const drawStandardFrame = (ctx: CanvasRenderingContext2D, source: HTMLCanvasElement | OffscreenCanvas, settings: AnimationSettings, dx: number, dy: number, dw: number, dh: number) => {
     if (settings.tiledPreview) {

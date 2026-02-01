@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Content, Part, Type } from "@google/genai";
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton, SliceData } from "../domain/entities";
 import { assembleForgePrompt } from "../domain/promptTemplates";
@@ -52,6 +53,10 @@ export class PixelGenService {
         }
       });
       
+      if (response.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw new Error("The Oracle refused this vision due to safety constraints.");
+      }
+
       const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
       
       if (!part?.inlineData?.data) {
@@ -109,6 +114,10 @@ export class PixelGenService {
         }
       });
 
+      if (response.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw new Error("The Oracle refused to slice this pattern due to safety constraints.");
+      }
+
       const json = JSON.parse(response.text || "{}");
       return json as SliceData;
     } catch (error) {
@@ -146,6 +155,10 @@ export class PixelGenService {
         contents: { parts },
         config: { imageConfig: { aspectRatio: "1:1", imageSize: "1K" } }
       });
+
+      if (response.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw new Error("The Oracle refused to map this surface due to safety constraints.");
+      }
 
       const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
       if (!part?.inlineData?.data) throw new Error("ALCHEMIST_FAIL: Normal map generation failed.");
@@ -221,6 +234,10 @@ export class PixelGenService {
           }
         }
       });
+
+      if (response.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw new Error("The Oracle refused to rig this entity due to safety constraints.");
+      }
 
       const json = JSON.parse(response.text || "{}");
       return json as Skeleton;
