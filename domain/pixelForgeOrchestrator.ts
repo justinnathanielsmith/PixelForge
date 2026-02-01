@@ -96,7 +96,7 @@ export class PixelForgeOrchestrator {
   async exportAsset(
     art: GeneratedArt,
     settings: AnimationSettings,
-    mode: 'gif' | 'video' | 'png' | 'aseprite'
+    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile'
   ): Promise<string> {
     switch (mode) {
       case 'png':
@@ -107,6 +107,8 @@ export class PixelForgeOrchestrator {
         return await exportService.exportToVideo(art.imageUrl, settings, art.style);
       case 'aseprite':
         return await exportService.exportAsepriteData(art, settings);
+      case 'mobile':
+        return await exportService.exportMobileBundle(art, settings);
       default:
         throw new Error("DOMAIN_ERROR: Unknown export medium.");
     }
