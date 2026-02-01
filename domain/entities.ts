@@ -1,7 +1,14 @@
 export type PixelStyle = '8-bit' | '16-bit' | 'gameboy' | 'hi-bit';
 export type PixelPerspective = 'side' | 'isometric' | 'top-down';
-export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'prop' | 'background';
+export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'prop' | 'background' | 'ui_panel';
 export type AnimationAction = 'idle' | 'walk' | 'jump' | 'attack' | 'death' | 'none';
+
+export interface SliceData {
+  top: number;    // In pixels from the top edge
+  bottom: number; // In pixels from the bottom edge
+  left: number;   // In pixels from the left edge
+  right: number;  // In pixels from the right edge
+}
 
 export interface Joint {
   id: string;
@@ -25,6 +32,7 @@ export interface GeneratedArt {
   imageUrl: string;
   normalMapUrl?: string;
   skeleton?: Skeleton; 
+  sliceData?: SliceData;
   prompt: string;
   timestamp: number;
   type: 'single' | 'spritesheet' | 'batch' | 'multi-sheet';
@@ -99,3 +107,23 @@ export type PixelForgeIntent =
   | { type: 'SET_INSPIRATION'; payload: { url: string; data: string; mimeType: string; isRefining?: boolean } | null }
   | { type: 'SET_EXPORTING'; payload: boolean }
   | { type: 'PIN_DESIGN'; payload: GeneratedArt };
+
+// --- External Library Interfaces ---
+
+export interface GIFEncoderInstance {
+  writeFrame: (index: Uint8Array, width: number, height: number, options?: { 
+    palette: any[][]; 
+    delay?: number; 
+    repeat?: number; 
+    transparent?: boolean; 
+    transparentIndex?: number;
+  }) => void;
+  finish: () => void;
+  bytes: () => Uint8Array;
+}
+
+export interface GifEnc {
+  GIFEncoder: () => GIFEncoderInstance;
+  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any[][];
+  applyPalette: (data: Uint8ClampedArray, palette: any[][]) => Uint8Array;
+}

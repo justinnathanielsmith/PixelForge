@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const { state, dispatch, actions, refs } = usePixelForge();
   const [showExportModal, setShowExportModal] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
+  const [showManifesto, setShowManifesto] = useState(false);
   
   const { 
     prompt, genState, history, activeArt, inspiration, 
@@ -43,6 +44,7 @@ const App: React.FC = () => {
                </div>
             </div>
             <div className="flex gap-3">
+              <button onClick={() => setShowManifesto(true)} className="text-[9px] fantasy-font text-emerald-500 hover:text-emerald-400 uppercase tracking-widest border border-emerald-900/50 bg-emerald-950/20 px-3 py-1 rounded transition-all">🧪 Lab Manifesto</button>
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
               <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Switch Key</button>
             </div>
@@ -127,7 +129,6 @@ const App: React.FC = () => {
                  </button>
               </form>
             </section>
-            <UpcomingFeatures />
           </div>
 
           <div className="lg:col-span-8 flex flex-col h-full gap-6">
@@ -182,6 +183,7 @@ const App: React.FC = () => {
           </div>
 
           {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
+          {showManifesto && <UpcomingFeatures onClose={() => setShowManifesto(false)} />}
           
           <ExportModal 
             isOpen={showExportModal}

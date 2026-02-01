@@ -1,13 +1,6 @@
-import { AnimationSettings, PixelStyle, GeneratedArt } from '../domain/entities';
+import { AnimationSettings, PixelStyle, GeneratedArt, GifEnc } from '../domain/entities';
 import gifenc from 'gifenc';
 import { imageProcessingService } from './imageProcessingService';
-
-// Define a local interface for the gifenc library functionality
-interface GifEnc {
-  GIFEncoder: () => any;
-  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any;
-  applyPalette: (data: Uint8ClampedArray, palette: any) => Uint8Array;
-}
 
 const { GIFEncoder, quantize, applyPalette } = gifenc as unknown as GifEnc;
 
@@ -72,6 +65,24 @@ export class ExportService {
       }
     }
 
+    const slices = art.sliceData ? [
+      {
+        name: "9slice",
+        color: "#0000ff",
+        keys: [
+          {
+            frame: 0,
+            bounds: { 
+              x: art.sliceData.left, 
+              y: art.sliceData.top, 
+              w: targetResolution - (art.sliceData.left + art.sliceData.right), 
+              h: targetResolution - (art.sliceData.top + art.sliceData.bottom) 
+            }
+          }
+        ]
+      }
+    ] : [];
+
     const data = {
       frames,
       meta: {
@@ -81,7 +92,8 @@ export class ExportService {
         format: "RGBA8888",
         size: { w: targetResolution * cols, h: targetResolution * rows },
         scale: "1",
-        frameTags
+        frameTags,
+        slices
       }
     };
 

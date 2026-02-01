@@ -5,6 +5,7 @@ export const ASSET_CATEGORIES: { id: AssetCategory; label: string; icon: string 
   { id: 'enemy', label: 'FOE', icon: '👹' },
   { id: 'tileset', label: 'TILE', icon: '🧱' },
   { id: 'prop', label: 'PROP', icon: '📦' },
+  { id: 'ui_panel', label: 'PANEL', icon: '🖼️' },
   { id: 'background', label: 'SCENE', icon: '🌅' },
 ];
 

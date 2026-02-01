@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AnimationSettings, Skeleton } from '../../domain/entities';
+import { AnimationSettings, Skeleton, SliceData } from '../../domain/entities';
 import { imageProcessingService } from '../../data/imageProcessingService';
 
 interface SpritePreviewProps {
@@ -11,15 +11,17 @@ interface SpritePreviewProps {
   onGenerateNormalMap?: () => void;
   skeleton?: Skeleton;
   onGenerateSkeleton?: () => void;
+  sliceData?: SliceData;
   isGenerating?: boolean;
 }
 
 const SpritePreview: React.FC<SpritePreviewProps> = ({ 
-  imageUrl, settings, style, isBatch, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, isGenerating 
+  imageUrl, settings, style, isBatch, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, sliceData, isGenerating 
 }) => {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [lightingMode, setLightingMode] = useState(false);
   const [skeletonMode, setSkeletonMode] = useState(false);
+  const [sliceMode, setSliceMode] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 256, y: 256 });
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -196,12 +198,17 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       drawSkeleton(ctx, skeleton, dx, dy, dw, dh);
     }
 
+    // --- 9-SLICE OVERLAY ---
+    if (sliceMode && sliceData && !settings.tiledPreview && !isBatch) {
+      drawSliceGuides(ctx, sliceData, dx, dy, dw, dh, settings.targetResolution);
+    }
+
     // Guides
     if (settings.showGuides && !settings.tiledPreview) {
       drawGuides(ctx, canvas.width, canvas.height);
     }
 
-  }, [settings, style, drawCheckerboard, lightingMode, skeletonMode, mousePos, isBatch, skeleton]);
+  }, [settings, style, drawCheckerboard, lightingMode, skeletonMode, sliceMode, mousePos, isBatch, skeleton, sliceData]);
 
   const drawSkeleton = (ctx: CanvasRenderingContext2D, skeleton: Skeleton, dx: number, dy: number, dw: number, dh: number) => {
     ctx.save();
@@ -226,12 +233,35 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       const jy = dy + (joint.y / 100) * dh;
       const grad = ctx.createRadialGradient(jx, jy, 0, jx, jy, 6);
       grad.addColorStop(0, 'rgba(217, 119, 6, 0.9)');
-      grad.addColorStop(1, 'rgba(217, 119, 6, 0)');
+      grad.addColorStop(1, 'rgba(217, 119, 6, 0 eye)');
       ctx.fillStyle = grad;
       ctx.beginPath(); ctx.arc(jx, jy, 6, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(jx, jy, 2.5, 0, Math.PI * 2); ctx.fill();
     });
+    ctx.restore();
+  };
+
+  const drawSliceGuides = (ctx: CanvasRenderingContext2D, data: SliceData, dx: number, dy: number, dw: number, dh: number, res: number) => {
+    ctx.save();
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 2]);
+    
+    const scale = dw / res;
+    
+    // Horizontal Slices
+    const topY = dy + (data.top * scale);
+    const bottomY = dy + dh - (data.bottom * scale);
+    ctx.beginPath(); ctx.moveTo(dx, topY); ctx.lineTo(dx + dw, topY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(dx, bottomY); ctx.lineTo(dx + dw, bottomY); ctx.stroke();
+    
+    // Vertical Slices
+    const leftX = dx + (data.left * scale);
+    const rightX = dx + dw - (data.right * scale);
+    ctx.beginPath(); ctx.moveTo(leftX, dy); ctx.lineTo(leftX, dy + dh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rightX, dy); ctx.lineTo(rightX, dy + dh); ctx.stroke();
+    
     ctx.restore();
   };
 
@@ -282,7 +312,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
   useEffect(() => {
     requestAnimationFrame(() => renderFrame(currentFrame));
-  }, [currentFrame, renderFrame, mousePos, lightingMode, skeletonMode]);
+  }, [currentFrame, renderFrame, mousePos, lightingMode, skeletonMode, sliceMode]);
 
   return (
     <div className="flex flex-col gap-2 w-full h-full">
@@ -328,6 +358,13 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                 </button>
               )}
 
+              {/* Slice Guide Button */}
+              {sliceData && (
+                <button onClick={() => setSliceMode(!sliceMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${sliceMode ? 'bg-emerald-600 border-emerald-300 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                   <span>📏</span> 9-Slice Guide
+                </button>
+              )}
+
               {/* Rigging Button */}
               {!skeleton ? (
                 <button onClick={onGenerateSkeleton} disabled={isGenerating} className="bg-sky-900/80 hover:bg-sky-800 border border-sky-500 text-sky-100 px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2">
@@ -343,6 +380,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
         {/* STATUS HUD */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-30 pointer-events-none">
+            {sliceData && <div className="bg-emerald-900/60 border border-emerald-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">📏</span><span className="fantasy-font text-[8px] text-emerald-200 font-bold uppercase">UI Slicing Calibrated</span></div>}
             {skeleton && <div className="bg-sky-900/60 border border-sky-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">💀</span><span className="fantasy-font text-[8px] text-sky-200 font-bold uppercase">Anatomy Analyzed</span></div>}
             {normalMapUrl && <div className="bg-purple-900/60 border border-purple-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">🗺️</span><span className="fantasy-font text-[8px] text-purple-200 font-bold uppercase">Surface Mapping Active</span></div>}
         </div>

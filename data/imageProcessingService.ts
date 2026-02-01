@@ -1,12 +1,6 @@
-import { AnimationSettings } from '../domain/entities';
+import { AnimationSettings, GifEnc } from '../domain/entities';
 import { CHROMA_KEY } from '../domain/constants';
 import gifenc from 'gifenc';
-
-// Define a local interface for gifenc as the library types might not be perfectly resolved via ESM
-interface GifEnc {
-  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any;
-  applyPalette: (data: Uint8ClampedArray, palette: any) => Uint8Array;
-}
 
 const { quantize, applyPalette } = gifenc as unknown as GifEnc;
 

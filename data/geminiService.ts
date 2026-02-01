@@ -1,5 +1,5 @@
 import { GoogleGenAI, Content, Part, Type } from "@google/genai";
-import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton } from "../domain/entities";
+import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton, SliceData } from "../domain/entities";
 import { CHROMA_KEY } from "../domain/constants";
 
 export class PixelGenService {
@@ -47,7 +47,16 @@ export class PixelGenService {
         break;
     }
 
-    const categoryDirective = `SUBJECT: ${category} sprite. ${perspectiveText}`;
+    let categoryDirective = `SUBJECT: ${category} sprite. ${perspectiveText}`;
+    
+    if (category === 'ui_panel') {
+      categoryDirective = `
+        SUBJECT: UI Panel/Frame component for mobile/desktop.
+        FOCUS: Symmetrical borders, distinct corners, and a tileable center area.
+        REQUIREMENT: The inner content area must be solid or a simple repeating pattern suitable for 9-slicing. 
+        STYLE: Clear 9-slice structure. Ensure corners do not exceed 25% of the total width/height.
+      `;
+    }
 
     let layoutInstruction = "";
     if (isBatch) {
@@ -119,6 +128,60 @@ export class PixelGenService {
     } catch (error: any) {
       console.error("FORGE_EXCEPTION:", error);
       throw error;
+    }
+  }
+
+  async generateSliceData(imageBase64: string, targetResolution: number): Promise<SliceData> {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const model = 'gemini-3-pro-preview';
+
+    const prompt = `
+      TASK: Analyze this UI panel and define 9-slice coordinates.
+      INPUT: A pixel art UI component.
+      GRID_RESOLUTION: ${targetResolution}
+      
+      OBJECTIVE: Identify the top, bottom, left, and right margins where the corners end and the repeating/scaling edges begin.
+      Margins should be in pixels relative to the base resolution of ${targetResolution}.
+      
+      INSTRUCTIONS:
+      1. Return ONLY the JSON object.
+      2. Ensure margins are balanced if the panel is symmetrical.
+      3. Margins usually range from 2 to ${Math.floor(targetResolution / 4)} pixels.
+    `;
+
+    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: {
+          parts: [
+            { inlineData: { data: cleanBase64, mimeType: 'image/png' } },
+            { text: prompt }
+          ]
+        },
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              top: { type: Type.NUMBER },
+              bottom: { type: Type.NUMBER },
+              left: { type: Type.NUMBER },
+              right: { type: Type.NUMBER }
+            },
+            required: ["top", "bottom", "left", "right"]
+          }
+        }
+      });
+
+      const json = JSON.parse(response.text || "{}");
+      return json as SliceData;
+    } catch (error) {
+      console.error("SLICE_EXCEPTION:", error);
+      // Fallback: 25% margins
+      const fallback = Math.floor(targetResolution / 4);
+      return { top: fallback, bottom: fallback, left: fallback, right: fallback };
     }
   }
 

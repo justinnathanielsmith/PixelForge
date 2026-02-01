@@ -52,6 +52,15 @@ export class PixelForgeOrchestrator {
       }
     }
 
+    let sliceData;
+    if (category === 'ui_panel') {
+      try {
+        sliceData = await pixelGenService.generateSliceData(imageUrl, settings.targetResolution);
+      } catch (e) {
+        console.error("Slice generation failure", e);
+      }
+    }
+
     const newArt: GeneratedArt = {
       id: Date.now().toString(),
       imageUrl,
@@ -62,7 +71,8 @@ export class PixelForgeOrchestrator {
       perspective,
       category,
       actions: actions.length > 0 ? actions : ['none'],
-      gridSize
+      gridSize,
+      sliceData
     };
 
     pixelRepository.saveArt(newArt);
