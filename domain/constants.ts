@@ -4,6 +4,7 @@ import { AssetCategory, AnimationAction, PixelPerspective } from './entities';
 export const ASSET_CATEGORIES: { id: AssetCategory; label: string; icon: string }[] = [
   { id: 'character', label: 'HERO', icon: '👤' },
   { id: 'enemy', label: 'FOE', icon: '👹' },
+  { id: 'icon_set', label: 'ARMORY', icon: '⚔️' },
   { id: 'tileset', label: 'TILE', icon: '🧱' },
   { id: 'tileset_bitmask', label: 'AUTOTILE', icon: '🗺️' },
   { id: 'prop', label: 'PROP', icon: '📦' },

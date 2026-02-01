@@ -45,6 +45,9 @@ export class PixelForgeOrchestrator {
     } else if (category === 'tileset_bitmask') {
       gridSize = { rows: 3, cols: 3 };
       type = 'spritesheet';
+    } else if (category === 'icon_set') {
+      gridSize = { rows: 4, cols: 4 };
+      type = 'spritesheet';
     } else if (isSpriteSheet && actions.length > 0) {
       if (actions.length === 1) {
         gridSize = settings.temporalStability ? { rows: 4, cols: 8 } : { rows: 4, cols: 4 };

@@ -50,6 +50,16 @@ export const getCategoryDirective = (category: AssetCategory, perspectiveText: s
       - Background must be ${CHROMA_KEY.LABEL}.
     `;
   }
+  if (category === 'icon_set') {
+    return `
+      SUBJECT: Item Icon Set (The Armory).
+      FOCUS: A collection of 16 distinct and unique items matching the theme.
+      REQUIREMENT:
+      - VARIATION: High. Each of the 16 cells must contain a DIFFERENT object.
+      - CLARITY: Objects must be centered and isolated.
+      - Background must be ${CHROMA_KEY.LABEL}.
+    `;
+  }
   return `SUBJECT: ${category} sprite. ${perspectiveText}`;
 };
 
@@ -66,6 +76,10 @@ export const getLayoutInstruction = (
 
   if (category === 'tileset_bitmask') {
     return "LAYOUT: 3x3 GRID (9 tiles). Tightly packed. \n- Row 1: Corner-TL, Edge-T, Corner-TR\n- Row 2: Edge-L, Center-Fill, Edge-R\n- Row 3: Corner-BL, Edge-B, Corner-BR";
+  }
+
+  if (category === 'icon_set') {
+    return "LAYOUT: 4x4 GRID (16 Items). \n- CONTENTS: 16 UNIQUE items. Do not repeat the same item. \n- ISOLATION: Each item perfectly centered in its own grid cell.";
   }
   
   if (isSpriteSheet && actions.length > 0) {

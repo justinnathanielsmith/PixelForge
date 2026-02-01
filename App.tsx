@@ -147,7 +147,7 @@ const App: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Entity Essence</label>
-                      <div className="grid grid-cols-5 gap-1">
+                      <div className="grid grid-cols-4 gap-1">
                         {ASSET_CATEGORIES.map(cat => (
                           <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-[#0c0a09] border-stone-800 text-stone-600'}`}>
                             <span className="text-xs">{cat.icon}</span>
@@ -156,7 +156,7 @@ const App: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    {isSpriteSheet && (
+                    {isSpriteSheet && category !== 'icon_set' && (
                       <div className="space-y-1">
                         <div className="flex justify-between items-end mb-1">
                           <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Action Atlas (Multi-Select)</label>
