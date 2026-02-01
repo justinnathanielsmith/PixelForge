@@ -179,8 +179,8 @@ export const usePixelForge = () => {
     }
   };
 
-  const generateArt = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const generateArt = async (e?: React.FormEvent | Event) => {
+    if (e) e.preventDefault();
     if (!state.prompt.trim() || state.genState === GenerationState.GENERATING) return;
     dispatch({ type: 'SUMMON_START' });
     try {
@@ -250,6 +250,23 @@ export const usePixelForge = () => {
     }
   }, [state.activeArt, state.animationSettings, state.isExporting]);
 
+  const navigateHistory = useCallback((direction: 'newer' | 'older') => {
+    if (!state.history.length) return;
+    const currentIndex = state.activeArt ? state.history.findIndex(a => a.id === state.activeArt!.id) : -1;
+    
+    let newIndex = currentIndex;
+    if (currentIndex === -1) {
+        newIndex = 0; 
+    } else {
+        if (direction === 'newer') newIndex = Math.max(0, currentIndex - 1);
+        if (direction === 'older') newIndex = Math.min(state.history.length - 1, currentIndex + 1);
+    }
+    
+    if (newIndex !== currentIndex && state.history[newIndex]) {
+        dispatch({ type: 'SET_ACTIVE_ART', payload: state.history[newIndex] });
+    }
+  }, [state.history, state.activeArt]);
+
   return { 
     state, 
     dispatch, 
@@ -261,7 +278,8 @@ export const usePixelForge = () => {
       exportAsset, 
       generateNormalMap, 
       generateSkeleton,
-      generatePalette 
+      generatePalette,
+      navigateHistory
     }, 
     refs: { fileInputRef, projectInputRef } 
   };

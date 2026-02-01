@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface UserGuideProps {
@@ -14,7 +15,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
              <span className="text-2xl">📜</span>
              <div>
                <h2 className="fantasy-font text-lg text-amber-500 uppercase tracking-widest leading-none">The Arcane Grimoire</h2>
-               <span className="text-[10px] text-stone-500 font-mono">v1.2.4-stable • Gemini 3 Pro Vision</span>
+               <span className="text-[10px] text-stone-500 font-mono">v1.2.5-stable • Gemini 3 Pro Vision</span>
              </div>
            </div>
            <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
@@ -68,6 +69,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                <div className="space-y-2">
                  <h4 className="fantasy-font text-sm text-amber-500">4. Entity Essence</h4>
                  <p className="text-sm">Helps the AI understand anatomy: <span className="text-stone-300">HERO, FOE, TILE, PROP, SCENE</span>.</p>
+                 <p className="text-xs text-stone-500 ml-2 mt-1">• Select <strong className="text-emerald-500">AUTOTILE</strong> to generate a 3x3 layout suitable for 9-slice terrain bitmasking.</p>
                </div>
             </div>
           </section>
@@ -91,8 +93,8 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
             <div className="space-y-3 mt-4">
                <h4 className="fantasy-font text-sm text-stone-400 uppercase border-b border-stone-800/50 pb-1 w-max">Alchemy (Color)</h4>
                <ul className="text-sm text-stone-400 space-y-1 ml-2">
-                  <li><strong className="text-red-400">Palette Lock:</strong> Forces colors to hardware limits (e.g., NES 4-color).</li>
-                  <li><strong className="text-red-400">Tint/Vibrance:</strong> Post-processing sliders.</li>
+                  <li><strong className="text-red-400">Neural Ramps:</strong> Type a material (e.g., "Rusty Iron") and click <em>Synthesize</em> to generate a physics-based palette.</li>
+                  <li><strong className="text-red-400">Palette Lock:</strong> Forces colors to hardware limits (e.g., NES 4-color) or your generated Neural Ramp.</li>
                </ul>
             </div>
           </section>

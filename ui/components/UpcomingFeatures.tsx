@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface UpcomingFeaturesProps {
@@ -7,9 +8,19 @@ interface UpcomingFeaturesProps {
 const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
   const activeFeatures = [
     { 
-      title: "Consistency V4", 
-      desc: "Diffusion-based temporal anchoring for 32-frame seamless loops.", 
-      icon: "🔄"
+      title: "Neural Color Ramps", 
+      desc: "Procedural palette generation based on material physics (wood, metal, slimes).", 
+      icon: "🎨"
+    },
+    { 
+      title: "Autotile Architect", 
+      desc: "Automated 3x3 bitmask layout generation for 9-slice terrain.", 
+      icon: "🗺️"
+    },
+    { 
+      title: "Aseprite Flux", 
+      desc: "Full metadata export compatible with Aseprite JSON import.", 
+      icon: "📦"
     },
     { 
       title: "Normal Alchemist", 
@@ -20,38 +31,27 @@ const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
       title: "Auto-Rigger", 
       desc: "Anatomical skeletal identification via Gemini 3 Pro vision reasoning.", 
       icon: "🦴"
-    },
-    { 
-      title: "Top-Down Projection", 
-      desc: "New orthographic top-down perspective for ARPG and tactics environments.", 
-      icon: "📐"
     }
   ];
 
   const researchRoadmap = [
     { 
-      title: "Autotile Architect", 
-      desc: "Generating 47-tile bitmask sets for seamless terrain integration.", 
-      icon: "🗺️",
-      progress: 65
-    },
-    { 
       title: "Hardware Emulation", 
       desc: "Physical limit strictness for C64, NES (3-color), and Amiga palettes.", 
       icon: "🕹️",
-      progress: 40
+      progress: 60
     },
     { 
-      title: "Neural Color Ramps", 
-      desc: "Procedural palette generation based on material physics (wood, metal, slimes).", 
-      icon: "🎨",
-      progress: 85
+      title: "Vector-to-SVG", 
+      desc: "Converting pixel clusters into clean, scalable SVG paths.", 
+      icon: "📐", 
+      progress: 15
     },
     { 
-      title: "Aseprite Flux", 
-      desc: "JSON manifest export preserving frame tags and animation timing.", 
-      icon: "📦",
-      progress: 95
+      title: "Live Mobile Link", 
+      desc: "Real-time WebSocket preview on connected mobile devices.", 
+      icon: "📱", 
+      progress: 10
     }
   ];
 
@@ -64,7 +64,7 @@ const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
              <span className="text-2xl">🧪</span>
              <div>
                <h2 className="fantasy-font text-sm text-emerald-500 uppercase tracking-widest leading-none">The Lab Manifesto</h2>
-               <span className="text-[10px] text-stone-500 font-mono">v1.2.4-stable • Research Roadmap</span>
+               <span className="text-[10px] text-stone-500 font-mono">v1.2.5-stable • Research Roadmap</span>
              </div>
            </div>
            <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>

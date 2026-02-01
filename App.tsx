@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePixelForge } from './ui/hooks/usePixelForge.ts';
 import { GenerationState } from './domain/entities.ts';
 import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from './domain/constants.ts';
@@ -28,6 +28,49 @@ const App: React.FC = () => {
       console.error("Key selection error", e);
     }
   };
+
+  // --- Keyboard Shortcuts (Power User Suite) ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+
+      // 1. Generate: Ctrl+Enter (Allowed while typing)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        actions.generateArt();
+        return;
+      }
+
+      // 2. Export PNG: Ctrl+S (Allowed while typing)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        actions.exportAsset('png');
+        return;
+      }
+
+      // 3. Toggle Play/Pause: Space (Only if not typing)
+      if (e.code === 'Space' && !isTyping) {
+        e.preventDefault();
+        dispatch({ type: 'UPDATE_SETTINGS', payload: { isPlaying: !animationSettings.isPlaying } });
+        return;
+      }
+
+      // 4. Navigate History: Arrows (Only if not typing)
+      if (!isTyping) {
+        if (e.key === 'ArrowLeft') {
+           // Left = Newer (Index 0 is visual left)
+           actions.navigateHistory('newer');
+        } else if (e.key === 'ArrowRight') {
+           // Right = Older
+           actions.navigateHistory('older');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [actions, animationSettings.isPlaying, dispatch]);
 
   return (
     <Gatekeeper>
