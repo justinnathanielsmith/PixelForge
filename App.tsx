@@ -11,6 +11,7 @@ import { Gatekeeper } from './ui/components/Gatekeeper.tsx';
 import ExportModal from './ui/components/ExportModal.tsx';
 import GalleryModal from './ui/components/GalleryModal.tsx';
 import CrystalLinkModal from './ui/components/CrystalLinkModal.tsx';
+import AutotileModal from './ui/components/AutotileModal.tsx';
 import MobileViewer from './ui/components/MobileViewer.tsx';
 import { ToastProvider } from './ui/context/ToastContext.tsx';
 import { ToastContainer } from './ui/components/Toast.tsx';
@@ -22,6 +23,7 @@ const AppContent: React.FC = () => {
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [showManifesto, setShowManifesto] = useState(false);
   const [showCrystalLink, setShowCrystalLink] = useState(false);
+  const [showAutotileSandbox, setShowAutotileSandbox] = useState(false);
   
   const { 
     prompt, genState, history, activeArt, inspiration, 
@@ -264,7 +266,15 @@ const AppContent: React.FC = () => {
 
              {/* 2. Action Bar */}
              {activeArt && (
-                <div className="flex gap-2 justify-end shrink-0">
+                <div className="flex gap-2 justify-end shrink-0 flex-wrap">
+                   {activeArt.category === 'tileset_bitmask' && (
+                      <button 
+                        onClick={() => setShowAutotileSandbox(true)} 
+                        className="px-6 py-2 bg-stone-800 text-stone-300 text-[10px] fantasy-font rounded border-b-2 border-stone-600 uppercase hover:bg-stone-700 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center gap-2"
+                      >
+                        <span>🗺️</span> Test Autotile
+                      </button>
+                   )}
                    <button onClick={() => dispatch({ type: 'PIN_DESIGN', payload: activeArt })} className="px-6 py-2 bg-emerald-700 text-white text-[10px] fantasy-font rounded border-b-2 border-emerald-900 uppercase hover:bg-emerald-600 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]">✨ Refine Design</button>
                    <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-[#1e3a8a] text-white text-[10px] fantasy-font rounded border-b-2 border-blue-900 uppercase hover:bg-blue-800 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">Export Manifest</button>
                 </div>
@@ -325,6 +335,15 @@ const AppContent: React.FC = () => {
             onSelect={(art) => { dispatch({ type: 'SET_ACTIVE_ART', payload: art }); setShowGallery(false); }}
             onDelete={actions.deleteArt}
           />
+
+          {showAutotileSandbox && activeArt && (
+            <AutotileModal 
+              isOpen={showAutotileSandbox}
+              onClose={() => setShowAutotileSandbox(false)}
+              activeArt={activeArt}
+              settings={animationSettings}
+            />
+          )}
         </main>
         
         {/* Mobile Spacer to avoid navigation chrome */}
