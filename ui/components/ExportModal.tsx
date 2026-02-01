@@ -10,11 +10,11 @@ interface ExportModalProps {
   onClose: () => void;
   activeArt: GeneratedArt | null;
   settings: AnimationSettings;
-  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas') => void;
+  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg') => void;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
-  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code'>('gif');
+  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code' | 'svg'>('gif');
   const { whisper } = useToast();
 
   const asepritePreview = useMemo(() => {
@@ -45,13 +45,13 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
           </div>
           
           <div className="flex bg-[#0a0807] border-b border-[#44403c] overflow-x-auto custom-scrollbar">
-             {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code'] as const).map(tab => (
+             {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code', 'svg'] as const).map(tab => (
                 <button 
                   key={tab} 
                   onClick={() => setExportTab(tab)}
                   className={`px-6 py-3 text-[10px] fantasy-font uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${exportTab === tab ? 'bg-[#1c1917] text-amber-500 border-t-2 border-amber-600' : 'text-stone-600 hover:text-stone-400'}`}
                 >
-                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab === 'code' ? 'Code (Kotlin)' : tab === 'atlas' ? 'Atlas (LittleKT)' : tab}
+                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab === 'code' ? 'Code (Kotlin)' : tab === 'atlas' ? 'Atlas (LittleKT)' : tab === 'svg' ? 'Vector (SVG)' : tab}
                 </button>
              ))}
           </div>
@@ -180,6 +180,28 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                       </p>
                   </div>
                 </div>
+             ) : exportTab === 'svg' ? (
+                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                   <div className="bg-pink-950/20 border border-pink-900/40 p-4 rounded space-y-3">
+                      <div className="flex items-center gap-3">
+                         <span className="text-2xl">📐</span>
+                         <div>
+                            <h3 className="fantasy-font text-xs text-pink-400 uppercase tracking-wide">Scalable Vector Runes</h3>
+                            <p className="text-[10px] text-stone-500 italic">Lossless vectorization of the pixel grid. Perfect for UI scaling and print.</p>
+                         </div>
+                      </div>
+                      <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded flex justify-center">
+                         {activeArt && <img src={activeArt.imageUrl} className="w-32 h-32 object-contain image-pixelated" style={{ imageRendering: 'pixelated' }} />}
+                      </div>
+                   </div>
+                   <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Vectorization Tech</h4>
+                      <p className="text-[9px] text-stone-400 italic leading-tight">
+                        Uses a custom "Pixel-to-Rect" parser with horizontal run-length optimization. 
+                        The resulting SVG uses <code>shape-rendering="crispEdges"</code> to ensure exact pixel alignment at any scale.
+                      </p>
+                   </div>
+                </div>
              ) : (
                <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300 text-center">
                   <div className="flex justify-center bg-[#020202] p-4 border border-[#292524] rounded aspect-square max-w-[300px] mx-auto overflow-hidden">
@@ -210,7 +232,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                     onClick={() => onExport(exportTab as any)} 
                     className="flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
                 >
-                    {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : `Begin ${exportTab.toUpperCase()} Download`}
+                    {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : exportTab === 'svg' ? 'Download Vector (.svg)' : `Begin ${exportTab.toUpperCase()} Download`}
                 </button>
              )}
           </div>

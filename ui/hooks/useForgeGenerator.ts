@@ -131,7 +131,7 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
     }
   }, [updateSettings, whisper]);
 
-  const exportAsset = useCallback(async (activeArt: GeneratedArt | null, mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas') => {
+  const exportAsset = useCallback(async (activeArt: GeneratedArt | null, mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg') => {
     if (!activeArt || isExporting) return;
     setIsExporting(true);
     whisper("Export Started", `Preparing ${mode.toUpperCase()} manifest...`, "info");
@@ -143,6 +143,8 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
         link.download = `mobile_bundle_${activeArt.id}.zip`;
       } else if (mode === 'atlas') {
         link.download = `atlas_${activeArt.id}.zip`;
+      } else if (mode === 'svg') {
+        link.download = `pxl_vector_${activeArt.id}.svg`;
       } else {
         link.download = mode === 'aseprite' ? `pxl_flux_${activeArt.id}.json` : `pxl_export.${mode === 'video' ? 'webm' : mode}`;
       }

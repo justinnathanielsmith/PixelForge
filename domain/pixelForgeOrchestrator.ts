@@ -108,11 +108,13 @@ export class PixelForgeOrchestrator {
   async exportAsset(
     art: GeneratedArt,
     settings: AnimationSettings,
-    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas'
+    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg'
   ): Promise<string> {
     switch (mode) {
       case 'png':
         return await exportService.exportToPng(art.imageUrl, settings, art.style);
+      case 'svg':
+        return await exportService.exportToSvg(art.imageUrl, settings, art.style);
       case 'gif':
         return await exportService.exportToGif(art.imageUrl, settings, art.style);
       case 'video':

@@ -57,6 +57,81 @@ export class ExportService {
     return canvas.toDataURL('image/png');
   }
 
+  async exportToSvg(imageUrl: string, settings: AnimationSettings, style: PixelStyle): Promise<string> {
+    const img = await imageProcessingService.loadImage(imageUrl);
+    const { cols, rows } = settings;
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
+    
+    const finalW = frameW * cols;
+    const finalH = frameH * rows;
+
+    // Use a canvas to assemble the processed frames (applying effects)
+    const canvas = document.createElement('canvas');
+    canvas.width = finalW;
+    canvas.height = finalH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('CANVAS_FAIL');
+
+    ctx.imageSmoothingEnabled = false;
+    
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const frameIndex = r * cols + c;
+        const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style);
+        ctx.drawImage(frameCanvas, c * frameW, r * frameH);
+      }
+    }
+
+    const { data } = ctx.getImageData(0, 0, finalW, finalH);
+    let rects = '';
+
+    for (let y = 0; y < finalH; y++) {
+      let startX = 0;
+      let currentFill = null;
+      let currentOpacity = null;
+
+      for (let x = 0; x < finalW; x++) {
+        const i = (y * finalW + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+
+        if (a === 0) {
+          // Transparent pixel
+          if (currentFill !== null) {
+            // Close previous rect
+            rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+            currentFill = null;
+            currentOpacity = null;
+          }
+          continue; // Skip transparent
+        }
+
+        const fill = `rgb(${r},${g},${b})`;
+        const opacity = a < 255 ? (a / 255).toFixed(3) : null;
+
+        // Check if we can extend the current rect
+        if (fill !== currentFill || opacity !== currentOpacity) {
+          if (currentFill !== null) {
+             rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+          }
+          currentFill = fill;
+          currentOpacity = opacity;
+          startX = x;
+        }
+      }
+      // End of row
+      if (currentFill !== null) {
+        rects += `<rect x="${startX}" y="${y}" width="${finalW - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+      }
+    }
+
+    const svgContent = `<svg width="${finalW}" height="${finalH}" viewBox="0 0 ${finalW} ${finalH}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${rects}</svg>`;
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    return URL.createObjectURL(blob);
+  }
+
   async exportMobileBundle(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
     const blob = await this.runWorkerTask('EXPORT_MOBILE', { art, settings });
     return URL.createObjectURL(blob);
