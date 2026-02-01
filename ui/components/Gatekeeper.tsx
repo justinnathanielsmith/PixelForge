@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PreparationRitual from './PreparationRitual.tsx';
 
@@ -10,9 +11,27 @@ export const Gatekeeper: React.FC<GatekeeperProps> = ({ children }) => {
 
   useEffect(() => {
     const checkKey = async () => {
+      // 1. Dev Mode Bypass: Allow local debugging without AI Studio iframe
+      // Safe access to import.meta.env to prevent crashes if undefined
+      const isDev = (import.meta as any)?.env?.DEV;
+
+      if (isDev) {
+        console.warn("Gatekeeper: Development mode detected. Bypassing AI Studio key check.");
+        setHasApiKey(true);
+        return;
+      }
+
+      // 2. Production/AI Studio Environment Check
       try {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(selected);
+        if ((window as any).aistudio) {
+          const selected = await (window as any).aistudio.hasSelectedApiKey();
+          setHasApiKey(selected);
+        } else {
+          // If not in Dev mode and aistudio is missing, we must block access
+          // as we rely on the parent frame for the API key in production.
+          console.warn("Gatekeeper: window.aistudio not found.");
+          setHasApiKey(false);
+        }
       } catch (e) {
         console.error("API Key check failed", e);
         setHasApiKey(false);
@@ -23,8 +42,13 @@ export const Gatekeeper: React.FC<GatekeeperProps> = ({ children }) => {
 
   const handleSelectKey = async () => {
     try {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true);
+      if ((window as any).aistudio) {
+        await (window as any).aistudio.openSelectKey();
+        // Assuming success if the modal opens/closes, though strict check happens on re-render/api call
+        setHasApiKey(true);
+      } else {
+         console.error("Cannot select key: window.aistudio is undefined.");
+      }
     } catch (e) {
       console.error("Key selection flow error", e);
     }

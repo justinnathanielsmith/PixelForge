@@ -34,6 +34,30 @@ export class ImageProcessingService {
     return canvas;
   }
 
+  private rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return [h * 360, s, l];
+  }
+
   processFrame(
     source: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
     frameIndex: number,
@@ -70,17 +94,29 @@ export class ImageProcessingService {
       this.applyVectorSharpening(imageData);
     }
 
-    // Chroma Key Transparency
+    // Chroma Key Transparency (Refined HSL Logic)
     if (settings.autoTransparency) {
       const { data } = imageData;
-      const threshold = (settings.chromaTolerance || 5) * 4; 
       
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-        const dist = Math.abs(r - CHROMA_KEY.RGB.r) + Math.abs(g - CHROMA_KEY.RGB.g) + Math.abs(b - CHROMA_KEY.RGB.b);
-        if (dist <= threshold) {
+
+        // Optimization: Skip obviously non-magenta pixels to save cycles
+        // Magenta is high Red, low Green, high Blue.
+        if (g > 150 || r < 50 || b < 50) continue; 
+
+        const [h, s, l] = this.rgbToHsl(r, g, b);
+        
+        // Strict Magenta Hue Range (280 - 320 degrees)
+        // This protects "neighbor" hues (purples/blues) that are used for shading.
+        // Also verify Saturation/Lightness to ensure we don't nuke dark shadows (low L) or grays (low S).
+        const isMagentaHue = h >= 280 && h <= 320;
+        const isVivid = s > 0.5;
+        const isBright = l > 0.2; // Protect deep shadows
+
+        if (isMagentaHue && isVivid && isBright) {
           data[i + 3] = 0;
         }
       }
