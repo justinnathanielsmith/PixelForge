@@ -98,12 +98,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
     
     // Scale factor based on zoom and filling the 512 box relatively
-    // We treat 512px as the container for the "targetResolution" height.
-    // e.g. if Res=64, Zoom=1, we might want it small.
-    // But currently PixelForge zooms to fit.
-    // Let's assume settings.zoom=1 means "Fit nicely in 512x512".
-    
-    // Calculate aspect ratio of the frame
     const ratio = frameW / frameH;
     
     // Calculate base dimensions that fit within 512x512
@@ -323,10 +317,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
+    // FIX: Use canvasRef for mapping instead of containerRef to handle object-contain and non-square ratios correctly
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    
+    // Calculate normalized coordinates in the 512x512 buffer space
     const x = (e.clientX - rect.left) * (512 / rect.width);
     const y = (e.clientY - rect.top) * (512 / rect.height);
+    
     setMousePos({ x, y });
 
     if (isDrawing && tool !== 'none') {
@@ -428,6 +426,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     requestAnimationFrame(() => renderFrame(currentFrame));
   }, [currentFrame, renderFrame, mousePos, lightingMode, skeletonMode, sliceMode]);
 
+  // --- CALCULATE CURSOR GEOMETRY FOR RENDER ---
+  const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
+  const ratio = frameW / frameH;
+  let baseW, baseH;
+  if (ratio > 1) { baseW = 512; baseH = 512 / ratio; } 
+  else { baseH = 512; baseW = 512 * ratio; }
+  const pixelPercent = (baseH * settings.zoom) / 512 / settings.targetResolution * 100;
+
   return (
     <div className="flex flex-col gap-2 w-full h-full">
       <div 
@@ -466,42 +472,46 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
            )}
         </div>
 
-        {/* LIGHTING SOURCE CURSOR */}
-        {lightingMode && (
-          <div 
-            className="absolute pointer-events-none z-50 w-24 h-24 rounded-full"
-            style={{ 
-              left: `${(mousePos.x / 512) * 100}%`, 
-              top: `${(mousePos.y / 512) * 100}%`,
-              transform: 'translate(-50%, -50%)',
-              background: 'radial-gradient(circle, rgba(255,200,100,0.15) 0%, rgba(255,200,100,0) 70%)'
-            }}
+        {/* WRAPPER FOR CANVAS AND OVERLAYS - Ensures coordinate syncing */}
+        <div className="relative inline-block" style={{ width: 'fit-content', height: 'fit-content' }}>
+          
+          <canvas 
+            ref={canvasRef} 
+            width={512} 
+            height={512} 
+            className={`max-w-full max-h-full object-contain image-pixelated z-0 ${tool !== 'none' ? 'cursor-none' : 'cursor-crosshair'}`} 
+            style={{ imageRendering: 'pixelated' }} 
           />
-        )}
 
-        {settings.tiledPreview && <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]" />}
+          {/* LIGHTING SOURCE CURSOR */}
+          {lightingMode && (
+            <div 
+              className="absolute pointer-events-none z-50 w-24 h-24 rounded-full"
+              style={{ 
+                left: `${(mousePos.x / 512) * 100}%`, 
+                top: `${(mousePos.y / 512) * 100}%`,
+                transform: 'translate(-50%, -50%)',
+                background: 'radial-gradient(circle, rgba(255,200,100,0.15) 0%, rgba(255,200,100,0) 70%)'
+              }}
+            />
+          )}
 
-        <canvas 
-          ref={canvasRef} 
-          width={512} 
-          height={512} 
-          className={`max-w-full max-h-full object-contain image-pixelated z-0 ${tool !== 'none' ? 'cursor-none' : 'cursor-crosshair'}`} 
-          style={{ imageRendering: 'pixelated' }} 
-        />
+          {/* CUSTOM CURSOR FOR DRAWING */}
+          {tool !== 'none' && (
+             <div 
+              className={`absolute pointer-events-none z-[60] border border-white mix-blend-difference`}
+              style={{ 
+                left: `${(mousePos.x / 512) * 100}%`, 
+                top: `${(mousePos.y / 512) * 100}%`,
+                width: `${pixelPercent}%`,
+                height: `${pixelPercent}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+             />
+          )}
 
-        {/* CUSTOM CURSOR FOR DRAWING */}
-        {tool !== 'none' && (
-           <div 
-            className={`absolute pointer-events-none z-[60] border border-white mix-blend-difference`}
-            style={{ 
-              left: `${mousePos.x}px`, 
-              top: `${mousePos.y}px`,
-              width: `${(activeArt.gridSize?.cols ? 1024 / activeArt.gridSize.cols : 1024) / settings.targetResolution * settings.zoom * (512/512)}px`,
-              height: `${(activeArt.gridSize?.rows ? 1024 / activeArt.gridSize.rows : 1024) / settings.targetResolution * settings.zoom * (512/512)}px`,
-              transform: 'translate(-50%, -50%)'
-            }}
-           />
-        )}
+          {settings.tiledPreview && <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]" />}
+        </div>
         
         {/* INTERACTION HUB */}
         {!isBatch && (
