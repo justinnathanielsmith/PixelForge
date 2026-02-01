@@ -11,12 +11,12 @@ export function generateAsepriteMetadata(art: GeneratedArt, settings: AnimationS
   let frameTags: any[] = [];
 
   if (art.type === 'batch') {
-    // BUG-11 Fix: For batch/breeding mode, define 4 distinct variations
+    // Batch Mode: 4 distinct variations (2x2 grid)
     frameTags = [
-      { name: "VAR_1", from: 0, to: 0, direction: "forward" },
-      { name: "VAR_2", from: 1, to: 1, direction: "forward" },
-      { name: "VAR_3", from: 2, to: 2, direction: "forward" },
-      { name: "VAR_4", from: 3, to: 3, direction: "forward" }
+      { name: "Var_1", from: 0, to: 0, direction: "forward" },
+      { name: "Var_2", from: 1, to: 1, direction: "forward" },
+      { name: "Var_3", from: 2, to: 2, direction: "forward" },
+      { name: "Var_4", from: 3, to: 3, direction: "forward" }
     ];
   } else {
     const artActions = art.actions || ['none'];
