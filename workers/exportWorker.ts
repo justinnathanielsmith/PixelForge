@@ -14,7 +14,9 @@ self.onmessage = async (e: MessageEvent) => {
       case 'EXPORT_GIF': {
         const { imageUrl, settings, style } = payload;
         const img = await processor.loadImage(imageUrl);
-        const { cols, rows, fps, targetResolution } = settings;
+        const { cols, rows, fps } = settings;
+        const { width: frameW, height: frameH } = processor.getFrameDimensions(settings);
+
         const gif = GIFEncoder();
         const totalFrames = cols * rows;
 
@@ -38,7 +40,7 @@ self.onmessage = async (e: MessageEvent) => {
         for (let i = 0; i < totalFrames; i++) {
           const frameCanvas = processor.processFrame(img, i, settings, style);
           const ctx = frameCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
-          const { data } = ctx.getImageData(0, 0, targetResolution, targetResolution);
+          const { data } = ctx.getImageData(0, 0, frameW, frameH);
           
           let framePalette = palette;
           if (!framePalette) {
@@ -47,7 +49,7 @@ self.onmessage = async (e: MessageEvent) => {
           
           const index = applyPalette(data, framePalette);
             
-          gif.writeFrame(index, targetResolution, targetResolution, { 
+          gif.writeFrame(index, frameW, frameH, { 
             palette: framePalette, 
             delay: 1000 / fps,
             repeat: 0,
@@ -65,10 +67,11 @@ self.onmessage = async (e: MessageEvent) => {
       case 'EXPORT_MOBILE': {
         const { art, settings } = payload;
         const img = await processor.loadImage(art.imageUrl);
-        const { cols, rows, targetResolution } = settings;
+        const { cols, rows } = settings;
+        const { width: frameW, height: frameH } = processor.getFrameDimensions(settings);
         
-        const baseWidth = targetResolution * cols;
-        const baseHeight = targetResolution * rows;
+        const baseWidth = frameW * cols;
+        const baseHeight = frameH * rows;
         const baseCanvas = processor.createCanvas(baseWidth, baseHeight);
         const ctx = baseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
         ctx.imageSmoothingEnabled = false;
@@ -77,7 +80,7 @@ self.onmessage = async (e: MessageEvent) => {
           for (let c = 0; c < cols; c++) {
             const frameIndex = r * cols + c;
             const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style);
-            ctx.drawImage(frameCanvas, c * targetResolution, r * targetResolution);
+            ctx.drawImage(frameCanvas, c * frameW, r * frameH);
           }
         }
 
@@ -130,11 +133,12 @@ self.onmessage = async (e: MessageEvent) => {
       case 'EXPORT_ATLAS': {
         const { art, settings } = payload;
         const img = await processor.loadImage(art.imageUrl);
-        const { cols, rows, targetResolution } = settings;
+        const { cols, rows } = settings;
+        const { width: frameW, height: frameH } = processor.getFrameDimensions(settings);
         
         // 1. Generate Full Sheet PNG
-        const baseWidth = targetResolution * cols;
-        const baseHeight = targetResolution * rows;
+        const baseWidth = frameW * cols;
+        const baseHeight = frameH * rows;
         const baseCanvas = processor.createCanvas(baseWidth, baseHeight);
         const ctx = baseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
         ctx.imageSmoothingEnabled = false;
@@ -143,7 +147,7 @@ self.onmessage = async (e: MessageEvent) => {
           for (let c = 0; c < cols; c++) {
             const frameIndex = r * cols + c;
             const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style);
-            ctx.drawImage(frameCanvas, c * targetResolution, r * targetResolution);
+            ctx.drawImage(frameCanvas, c * frameW, r * frameH);
           }
         }
         
@@ -176,11 +180,11 @@ self.onmessage = async (e: MessageEvent) => {
              }
 
              frames[regionName] = {
-                frame: { x: c * targetResolution, y: r * targetResolution, w: targetResolution, h: targetResolution },
+                frame: { x: c * frameW, y: r * frameH, w: frameW, h: frameH },
                 rotated: false,
                 trimmed: false,
-                spriteSourceSize: { x: 0, y: 0, w: targetResolution, h: targetResolution },
-                sourceSize: { w: targetResolution, h: targetResolution }
+                spriteSourceSize: { x: 0, y: 0, w: frameW, h: frameH },
+                sourceSize: { w: frameW, h: frameH }
              };
           }
         }

@@ -34,6 +34,22 @@ export class ImageProcessingService {
     return canvas;
   }
 
+  getFrameDimensions(settings: AnimationSettings): { width: number; height: number } {
+    const { targetResolution, aspectRatio } = settings;
+    let width = targetResolution;
+    let height = targetResolution;
+
+    const [wRatio, hRatio] = aspectRatio.split(':').map(Number);
+    const ratio = wRatio / hRatio;
+
+    // Logic: targetResolution specifies the VERTICAL height (rows), width is derived.
+    // This ensures consistency across character sprites (which usually share a height).
+    height = targetResolution;
+    width = Math.round(targetResolution * ratio);
+
+    return { width, height };
+  }
+
   private rgbToHsl(r: number, g: number, b: number): [number, number, number] {
     r /= 255;
     g /= 255;
@@ -64,13 +80,15 @@ export class ImageProcessingService {
     settings: AnimationSettings,
     style: string
   ): HTMLCanvasElement | OffscreenCanvas {
-    const { cols, rows, targetResolution } = settings;
+    const { cols, rows } = settings;
+    const { width: targetW, height: targetH } = this.getFrameDimensions(settings);
+
     const sw = source.width / cols;
     const sh = source.height / rows;
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    const canvas = this.createCanvas(targetResolution, targetResolution);
+    const canvas = this.createCanvas(targetW, targetH);
     const ctx = canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     if (!ctx) return canvas;
 
@@ -81,13 +99,13 @@ export class ImageProcessingService {
       (ctx as any).filter = `hue-rotate(${settings.hue}deg) saturate(${settings.saturation}%) contrast(${settings.contrast}%) brightness(${settings.brightness}%)`;
     }
     
-    ctx.drawImage(source as any, sx, sy, sw, sh, 0, 0, targetResolution, targetResolution);
+    ctx.drawImage(source as any, sx, sy, sw, sh, 0, 0, targetW, targetH);
     
     if ('filter' in ctx) {
       (ctx as any).filter = 'none';
     }
 
-    let imageData = ctx.getImageData(0, 0, targetResolution, targetResolution);
+    let imageData = ctx.getImageData(0, 0, targetW, targetH);
 
     // Vector-to-Grid Rite: Sharp Silhouette Filter
     if (settings.vectorRite) {

@@ -12,7 +12,7 @@ import {
 
 export const DEFAULT_SETTINGS: AnimationSettings = {
   rows: 4, cols: 4, fps: 8, isPlaying: true, showGuides: false, tiledPreview: false, 
-  targetResolution: 32, paletteLock: false, autoTransparency: true, chromaTolerance: 5, batchMode: false, zoom: 1.0, 
+  targetResolution: 32, aspectRatio: '1:1', paletteLock: false, autoTransparency: true, chromaTolerance: 5, batchMode: false, zoom: 1.0, 
   onionSkin: false, hue: 0, saturation: 100, contrast: 100, brightness: 100,
   temporalStability: false,
   vectorRite: false,
@@ -239,7 +239,7 @@ export const usePixelForge = () => {
     }
   }, []);
 
-  const exportAsset = useCallback(async (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile') => {
+  const exportAsset = useCallback(async (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas') => {
     if (!state.activeArt || state.isExporting) return;
     dispatch({ type: 'SET_EXPORTING', payload: true });
     try {
@@ -248,6 +248,8 @@ export const usePixelForge = () => {
       link.href = url;
       if (mode === 'mobile') {
         link.download = `mobile_bundle_${state.activeArt.id}.zip`;
+      } else if (mode === 'atlas') {
+        link.download = `atlas_${state.activeArt.id}.zip`;
       } else {
         link.download = mode === 'aseprite' ? `pxl_flux_${state.activeArt.id}.json` : `pxl_export.${mode === 'video' ? 'webm' : mode}`;
       }

@@ -31,10 +31,11 @@ export class ExportService {
 
   async exportToPng(imageUrl: string, settings: AnimationSettings, style: PixelStyle): Promise<string> {
     const img = await imageProcessingService.loadImage(imageUrl);
-    const { cols, rows, targetResolution } = settings;
+    const { cols, rows } = settings;
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
     
-    const finalW = targetResolution * cols;
-    const finalH = targetResolution * rows;
+    const finalW = frameW * cols;
+    const finalH = frameH * rows;
 
     const canvas = document.createElement('canvas');
     canvas.width = finalW;
@@ -48,7 +49,7 @@ export class ExportService {
       for (let c = 0; c < cols; c++) {
         const frameIndex = r * cols + c;
         const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style);
-        ctx.drawImage(frameCanvas, c * targetResolution, r * targetResolution);
+        ctx.drawImage(frameCanvas, c * frameW, r * frameH);
       }
     }
 
@@ -66,7 +67,8 @@ export class ExportService {
   }
 
   async exportAsepriteData(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
-    const { cols, rows, targetResolution, fps } = settings;
+    const { cols, rows, fps } = settings;
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
     const frameDuration = Math.round(1000 / fps);
     
     const frames: Record<string, any> = {};
@@ -85,11 +87,11 @@ export class ExportService {
         const i = r * cols + c;
         const key = `${art.category}_${art.id}_${i}.png`;
         frames[key] = {
-          frame: { x: c * targetResolution, y: r * targetResolution, w: targetResolution, h: targetResolution },
+          frame: { x: c * frameW, y: r * frameH, w: frameW, h: frameH },
           rotated: false,
           trimmed: false,
-          spriteSourceSize: { x: 0, y: 0, w: targetResolution, h: targetResolution },
-          sourceSize: { w: targetResolution, h: targetResolution },
+          spriteSourceSize: { x: 0, y: 0, w: frameW, h: frameH },
+          sourceSize: { w: frameW, h: frameH },
           duration: frameDuration
         };
       }
@@ -105,8 +107,8 @@ export class ExportService {
             bounds: { 
               x: art.sliceData.left, 
               y: art.sliceData.top, 
-              w: targetResolution - (art.sliceData.left + art.sliceData.right), 
-              h: targetResolution - (art.sliceData.top + art.sliceData.bottom) 
+              w: frameW - (art.sliceData.left + art.sliceData.right), 
+              h: frameH - (art.sliceData.top + art.sliceData.bottom) 
             }
           }
         ]
@@ -120,7 +122,7 @@ export class ExportService {
         version: "1.0",
         image: `pxl_flux_${art.id}.png`,
         format: "RGBA8888",
-        size: { w: targetResolution * cols, h: targetResolution * rows },
+        size: { w: frameW * cols, h: frameH * rows },
         scale: "1",
         frameTags,
         slices
@@ -140,12 +142,23 @@ export class ExportService {
     const pngUrl = await this.exportToPng(imageUrl, settings, style);
     const processedSpriteSheet = await imageProcessingService.loadImage(pngUrl);
     
-    const { cols, rows, fps, targetResolution } = settings;
-    const displayRes = 512;
+    const { cols, rows, fps } = settings;
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
+    
+    // Calculate display dimensions maintaining aspect ratio within 512px box
+    const ratio = frameW / frameH;
+    let displayW, displayH;
+    if (frameW > frameH) {
+      displayW = 512;
+      displayH = Math.round(512 / ratio);
+    } else {
+      displayH = 512;
+      displayW = Math.round(512 * ratio);
+    }
     
     const canvas = document.createElement('canvas');
-    canvas.width = displayRes;
-    canvas.height = displayRes;
+    canvas.width = displayW;
+    canvas.height = displayH;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('CTX_FAIL');
 
@@ -175,14 +188,14 @@ export class ExportService {
         const r = Math.floor(i / cols);
 
         ctx.fillStyle = '#000'; 
-        ctx.fillRect(0, 0, displayRes, displayRes);
+        ctx.fillRect(0, 0, displayW, displayH);
         ctx.imageSmoothingEnabled = false;
         
         ctx.drawImage(
           processedSpriteSheet as HTMLImageElement, 
-          c * targetResolution, r * targetResolution, 
-          targetResolution, targetResolution, 
-          0, 0, displayRes, displayRes
+          c * frameW, r * frameH, 
+          frameW, frameH, 
+          0, 0, displayW, displayH
         );
         
         frame++;

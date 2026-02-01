@@ -92,6 +92,13 @@ export const getLayoutInstruction = (
   temporalStability: boolean
 ): string => {
   if (isBatch) {
+    if (category === 'enemy') {
+      return `LAYOUT: 2x2 GRID (Horde Mode Variations).
+      - Top-Left: Standard Version (As prompted).
+      - Top-Right: Elite Version (Tinted Red/Gold, larger, aggressive).
+      - Bottom-Left: Veteran Version (Heavily Armored, shielded or weathered).
+      - Bottom-Right: Spectral Version (Ghostly, translucent, ethereal glow).`;
+    }
     return "LAYOUT: 2x2 grid containing 4 distinct design variations of the same prompt.";
   } 
 

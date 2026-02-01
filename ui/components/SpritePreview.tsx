@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimationSettings, Skeleton, SliceData, GeneratedArt } from '../../domain/entities';
 import { imageProcessingService } from '../../data/imageProcessingService';
@@ -92,9 +93,33 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Geometry Calculation
-    const dw = Math.round(canvas.width * settings.zoom);
-    const dh = Math.round(canvas.height * settings.zoom);
+    // --- GEOMETRY CALCULATION (Aspect Ratio Aware) ---
+    // The canvas is 512x512. We need to fit the frame into this box based on zoom and aspect ratio.
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
+    
+    // Scale factor based on zoom and filling the 512 box relatively
+    // We treat 512px as the container for the "targetResolution" height.
+    // e.g. if Res=64, Zoom=1, we might want it small.
+    // But currently PixelForge zooms to fit.
+    // Let's assume settings.zoom=1 means "Fit nicely in 512x512".
+    
+    // Calculate aspect ratio of the frame
+    const ratio = frameW / frameH;
+    
+    // Calculate base dimensions that fit within 512x512
+    let baseW, baseH;
+    if (ratio > 1) {
+       // Wide
+       baseW = 512;
+       baseH = 512 / ratio;
+    } else {
+       // Tall or Square
+       baseH = 512;
+       baseW = 512 * ratio;
+    }
+
+    const dw = Math.round(baseW * settings.zoom);
+    const dh = Math.round(baseH * settings.zoom);
     const dx = Math.floor((canvas.width - dw) / 2);
     const dy = Math.floor((canvas.height - dh) / 2);
 
@@ -110,15 +135,13 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
        const normalFrame = imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style);
 
        const lightingCanvas = document.createElement('canvas');
-       lightingCanvas.width = settings.targetResolution;
-       lightingCanvas.height = settings.targetResolution;
+       lightingCanvas.width = frameW;
+       lightingCanvas.height = frameH;
        const lCtx = lightingCanvas.getContext('2d');
        
        if (lCtx) {
-         // Fix: Explicitly cast colorFrame to any to avoid type mismatch with OffscreenCanvas in drawImage
          lCtx.drawImage(colorFrame as any, 0, 0);
          const colorData = lCtx.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
-         // Fix: Access getContext via any cast to handle union type of HTMLCanvasElement and OffscreenCanvas
          const normalCtx = (normalFrame as any).getContext('2d');
          const normalData = normalCtx?.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
          
@@ -128,13 +151,15 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
             
             const relX = mousePos.x - dx;
             const relY = mousePos.y - dy;
-            const spriteMouseX = (relX / dw) * settings.targetResolution;
-            const spriteMouseY = (relY / dh) * settings.targetResolution;
+            
+            // Map mouse to sprite coordinates
+            const spriteMouseX = (relX / dw) * frameW;
+            const spriteMouseY = (relY / dh) * frameH;
             
             const lightColor = { r: 255, g: 245, b: 220 }; 
             const ambient = 0.25;
-            const zDistance = 30; 
-            const falloff = 100; 
+            const zDistance = 30 * (frameW / 64); // Scale Z with resolution
+            const falloff = 100 * (frameW / 64); 
 
             for (let i = 0; i < data.length; i += 4) {
                if (data[i + 3] < 10) continue; 
@@ -185,7 +210,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     }
 
     if (sliceMode && sliceData && !settings.tiledPreview && !isBatch) {
-      drawSliceGuides(ctx, sliceData, dx, dy, dw, dh, settings.targetResolution);
+      drawSliceGuides(ctx, sliceData, dx, dy, dw, dh, frameW);
     }
 
     if (settings.showGuides && !settings.tiledPreview) {
@@ -239,9 +264,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     ctx.restore();
   };
 
-  /**
-   * FIX: Added missing drawGuides function to handle rendering of grid lines and center guides.
-   */
   const drawGuides = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -281,7 +303,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     ctx.restore();
   };
 
-  // Fix: source parameter updated to accept OffscreenCanvas as well to avoid assignment errors from imageProcessingService.processFrame results
   const drawStandardFrame = (ctx: CanvasRenderingContext2D, source: HTMLCanvasElement | OffscreenCanvas, settings: AnimationSettings, dx: number, dy: number, dw: number, dh: number) => {
     if (settings.tiledPreview) {
       const tileSize = Math.round((ctx.canvas.width / 3) * settings.zoom);
@@ -289,7 +310,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       const startY = Math.floor((ctx.canvas.height - tileSize) / 2);
       for (let x = -1; x <= 1; x++) {
         for (let y = -1; y <= 1; y++) {
-          // Fix: cast source to any for drawImage and to access width/height properties safely on both canvas types
           ctx.drawImage(source as any, 0, 0, (source as any).width, (source as any).height, startX + (x * tileSize), startY + (y * tileSize), tileSize, tileSize);
           if (x === 0 && y === 0) {
             ctx.strokeStyle = 'rgba(217, 119, 6, 0.4)'; ctx.lineWidth = 2;
@@ -332,9 +352,15 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     const img = imageRef.current;
     if (!img) return;
 
-    // 1. Calculate relative coordinate in active frame view
-    const dw = Math.round(512 * settings.zoom);
-    const dh = Math.round(512 * settings.zoom);
+    // Use current dynamic dimensions
+    const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
+    const ratio = frameW / frameH;
+    let baseW, baseH;
+    if (ratio > 1) { baseW = 512; baseH = 512 / ratio; } 
+    else { baseH = 512; baseW = 512 * ratio; }
+    
+    const dw = Math.round(baseW * settings.zoom);
+    const dh = Math.round(baseH * settings.zoom);
     const dx = Math.floor((512 - dw) / 2);
     const dy = Math.floor((512 - dh) / 2);
 
@@ -343,21 +369,19 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
     if (relX < 0 || relX >= dw || relY < 0 || relY >= dh) return;
 
-    // 2. Map to original image source pixel
+    // Map to original image source pixel
     const sw = img.width / settings.cols;
     const sh = img.height / settings.rows;
     
     const frameX = (currentFrame % settings.cols) * sw;
     const frameY = Math.floor(currentFrame / settings.cols) * sh;
 
-    // Calculate normalized position within the frame (0 to 1)
     const normX = relX / dw;
     const normY = relY / dh;
 
     const sourceX = Math.floor(frameX + (normX * sw));
     const sourceY = Math.floor(frameY + (normY * sh));
 
-    // 3. Perform edit on a scratch canvas representing the FULL source image
     const editCanvas = document.createElement('canvas');
     editCanvas.width = img.width;
     editCanvas.height = img.height;
@@ -366,8 +390,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
     eCtx.drawImage(img, 0, 0);
     
-    // Pencil size relative to image resolution (approx 1 "pixel" at target res)
-    const brushSize = Math.max(1, Math.round(img.width / (settings.cols * settings.targetResolution)));
+    const brushSize = Math.max(1, Math.round(img.width / (settings.cols * frameW)));
 
     if (tool === 'pencil') {
       eCtx.fillStyle = brushColor;
@@ -376,7 +399,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       eCtx.clearRect(sourceX - brushSize / 2, sourceY - brushSize / 2, brushSize, brushSize);
     }
 
-    // Update the local reference image immediately for smooth feedback
     const updatedImg = new Image();
     updatedImg.onload = () => {
        imageRef.current = updatedImg;

@@ -14,6 +14,7 @@ export class PixelGenService {
     targetRes: number, 
     isBatch: boolean,
     temporalStability: boolean,
+    aspectRatio: string = "1:1",
     inspirationImage?: { data: string, mimeType: string }
   ): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -47,7 +48,7 @@ export class PixelGenService {
         contents,
         config: { 
           imageConfig: { 
-            aspectRatio: "1:1",
+            aspectRatio: aspectRatio,
             imageSize: "1K" 
           } 
         }

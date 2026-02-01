@@ -158,6 +158,20 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings, on
               </button>
             ))}
          </div>
+         <div className="space-y-1 pt-1">
+            <h4 className="fantasy-font text-[10px] text-stone-500 uppercase">Canvas Ratio</h4>
+            <div className="grid grid-cols-5 gap-1">
+              {['1:1', '16:9', '9:16', '4:3', '3:4'].map(ratio => (
+                 <button 
+                    key={ratio}
+                    onClick={() => updateSetting('aspectRatio', ratio)}
+                    className={`py-1.5 text-[8px] fantasy-font font-bold border rounded transition-all ${settings.aspectRatio === ratio ? 'bg-sky-700 text-white border-sky-400' : 'bg-[#0c0a09] border-stone-800 text-stone-500 hover:text-stone-300'}`}
+                 >
+                    {ratio}
+                 </button>
+              ))}
+            </div>
+         </div>
       </div>
 
       {/* --- COLOR ALCHEMY --- */}

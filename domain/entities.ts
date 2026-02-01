@@ -58,7 +58,8 @@ export interface AnimationSettings {
   isPlaying: boolean;
   showGuides: boolean;
   tiledPreview: boolean;
-  targetResolution: number;
+  targetResolution: number; // Treated as Height (Vertical Res)
+  aspectRatio: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
   paletteLock: boolean;
   autoTransparency: boolean;
   chromaTolerance: number;

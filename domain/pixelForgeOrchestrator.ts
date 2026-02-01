@@ -33,6 +33,7 @@ export class PixelForgeOrchestrator {
       settings.targetResolution,
       settings.batchMode,
       settings.temporalStability,
+      settings.aspectRatio,
       inspiration
     );
 
