@@ -40,40 +40,33 @@ const AppContent: React.FC = () => {
 
   const updateSettings = (s: any) => dispatch({ type: 'UPDATE_SETTINGS', payload: s });
 
-  // --- Keyboard Shortcuts (Power User Suite) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
-      // 1. Generate: Ctrl+Enter (Allowed while typing)
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         actions.generateArt();
         return;
       }
 
-      // 2. Export PNG: Ctrl+S (Allowed while typing)
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         actions.exportAsset('png');
         return;
       }
 
-      // 3. Toggle Play/Pause: Space (Only if not typing)
       if (e.code === 'Space' && !isTyping) {
         e.preventDefault();
         dispatch({ type: 'UPDATE_SETTINGS', payload: { isPlaying: !animationSettings.isPlaying } });
         return;
       }
 
-      // 4. Navigate History: Arrows (Only if not typing)
       if (!isTyping) {
         if (e.key === 'ArrowLeft') {
-           // Left = Newer (Index 0 is visual left)
            actions.navigateHistory('newer');
         } else if (e.key === 'ArrowRight') {
-           // Right = Older
            actions.navigateHistory('older');
         }
       }
@@ -85,24 +78,19 @@ const AppContent: React.FC = () => {
 
   return (
     <Gatekeeper>
-      {/* --- Arcane Aura Background Layers --- */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          {/* Amber Glow (Top Left) */}
           <div className="aura-orb w-[800px] h-[800px] bg-amber-600/10 -top-[200px] -left-[200px] animate-float-slow" />
-          {/* Mana Glow (Bottom Right) */}
           <div className="aura-orb w-[700px] h-[700px] bg-purple-900/15 bottom-[-150px] right-[-150px] animate-float-medium" />
-          {/* Ethereal Center */}
           <div className="aura-orb w-[500px] h-[500px] bg-emerald-900/5 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-float-fast" />
       </div>
       
-      {/* Film Grain Texture */}
       <div className="noise-overlay" />
 
       <div className="min-h-[100dvh] flex flex-col selection:bg-amber-500 selection:text-black relative z-10">
-        <header className="border-b-4 border-[#44403c] bg-[#1c1917]/90 backdrop-blur-md py-3 shadow-lg relative z-20 shrink-0">
+        <header className="border-b-4 border-stone-700 bg-stone-900/90 backdrop-blur-md py-3 shadow-lg relative z-20 shrink-0">
           <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-gradient-to-tr from-amber-600 to-red-800 border-2 border-[#d97706] shadow-[2px_2px_0_#000] rotate-45 transform ml-2" />
+               <div className="w-10 h-10 bg-gradient-to-tr from-amber-600 to-red-800 border-2 border-amber-600 shadow-[2px_2px_0_#000] rotate-45 transform ml-2" />
                <div className="ml-2">
                   <h1 className="fantasy-font text-2xl text-amber-500 drop-shadow-[2px_2px_0_#000] leading-none tracking-wide">ARCANE FORGE</h1>
                   <div className="flex gap-2 text-[10px] fantasy-font uppercase text-stone-500 tracking-widest mt-1">
@@ -132,16 +120,14 @@ const AppContent: React.FC = () => {
 
         <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 relative min-h-0">
           
-          {/* --- LEFT COLUMN: INPUTS ONLY --- */}
           <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pt-6 pb-12 lg:h-[calc(100vh-120px)]">
             
-            {/* 1. The Grimoire (Prompt & Core Types) */}
             <section className="fantasy-card p-4 relative shrink-0">
-              <div className="absolute -top-3 left-4 bg-[#1c1917] px-2 text-[10px] fantasy-font font-bold text-amber-500 border border-[#57534e] uppercase tracking-widest z-10 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">The Grimoire</div>
+              <div className="absolute -top-3 left-4 bg-stone-900 px-2 text-[10px] fantasy-font font-bold text-amber-500 border border-stone-600 uppercase tracking-widest z-10 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">The Grimoire</div>
               <form onSubmit={actions.generateArt} className="space-y-5 pt-2">
                  <div className="space-y-2">
                     <div className="flex gap-2 h-28">
-                       <div onClick={() => refs.fileInputRef.current?.click()} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-[#44403c] bg-[#0c0a09] hover:bg-[#1c1917] hover:border-amber-600/50'}`}>
+                       <div onClick={() => refs.fileInputRef.current?.click()} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-stone-700 bg-stone-950 hover:bg-stone-900 hover:border-amber-600/50'}`}>
                           {inspiration ? (
                             <div className="relative w-full h-full p-1 group">
                               <img src={inspiration.url} className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
@@ -152,7 +138,7 @@ const AppContent: React.FC = () => {
                           )}
                           <input ref={refs.fileInputRef} type="file" accept="image/*" onChange={actions.handleImageUpload} className="hidden" />
                        </div>
-                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-[#0c0a09]" />
+                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-stone-950" />
                     </div>
                  </div>
                  
@@ -178,7 +164,7 @@ const AppContent: React.FC = () => {
                       <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Entity Essence</label>
                       <div className="grid grid-cols-5 gap-1">
                         {ASSET_CATEGORIES.map(cat => (
-                          <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-[#0c0a09] border-stone-800 text-stone-600 hover:border-stone-600'}`}>
+                          <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-stone-950 border-stone-800 text-stone-600 hover:border-stone-600'}`}>
                             <span className="text-xs">{cat.icon}</span>
                             <span className="text-[7px] font-bold mt-0.5">{cat.label}</span>
                           </button>
@@ -197,7 +183,7 @@ const AppContent: React.FC = () => {
                               key={act.id} 
                               type="button" 
                               onClick={() => dispatch({ type: 'TOGGLE_ACTION', payload: act.id })} 
-                              className={`py-1.5 text-[8px] fantasy-font border rounded transition-all ${selectedActions.includes(act.id) ? 'bg-red-800 text-red-50 border-red-500 shadow-[0_0_8px_rgba(153,27,27,0.4)]' : 'bg-[#0c0a09] border-stone-800 text-stone-600 hover:border-stone-600'}`}
+                              className={`py-1.5 text-[8px] fantasy-font border rounded transition-all ${selectedActions.includes(act.id) ? 'bg-red-800 text-red-50 border-red-500 shadow-[0_0_8px_rgba(153,27,27,0.4)]' : 'bg-stone-950 border-stone-800 text-stone-600 hover:border-stone-600'}`}
                             >
                               {act.label}
                             </button>
@@ -214,12 +200,10 @@ const AppContent: React.FC = () => {
             </section>
           </div>
 
-          {/* --- RIGHT COLUMN: PREVIEW & POST-PROCESS --- */}
           <div className="lg:col-span-8 flex flex-col gap-4 overflow-y-auto custom-scrollbar pt-4 pb-12 lg:h-[calc(100vh-120px)]">
              
-             {/* 1. Main Viewport */}
-             <div className="fantasy-card p-2 bg-[#0c0a09] relative flex flex-col border-[#78350f] overflow-hidden min-h-[400px] shrink-0">
-                <div className="flex-1 relative bg-[#020202] flex items-center justify-center overflow-hidden border border-[#292524] shadow-inner">
+             <div className="fantasy-card p-2 bg-stone-950 relative flex flex-col border-amber-900 overflow-hidden min-h-[400px] shrink-0">
+                <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden border border-stone-800 shadow-inner">
                    {genState === GenerationState.GENERATING ? (
                      <div className="flex flex-col items-center gap-4 text-center">
                         <div className="w-12 h-12 border-4 border-amber-950 border-t-amber-500 rounded-full animate-spin" />
@@ -253,7 +237,6 @@ const AppContent: React.FC = () => {
                 </div>
              </div>
 
-             {/* 2. Action Bar */}
              {activeArt && (
                 <div className="flex gap-2 justify-end shrink-0 flex-wrap">
                    {activeArt.category === 'tileset_bitmask' && (
@@ -265,11 +248,10 @@ const AppContent: React.FC = () => {
                       </button>
                    )}
                    <button onClick={() => dispatch({ type: 'PIN_DESIGN', payload: activeArt })} className="px-6 py-2 bg-emerald-700 text-white text-[10px] fantasy-font rounded border-b-2 border-emerald-900 uppercase hover:bg-emerald-600 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]">✨ Refine Design</button>
-                   <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-[#1e3a8a] text-white text-[10px] fantasy-font rounded border-b-2 border-blue-900 uppercase hover:bg-blue-800 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">Export Manifest</button>
+                   <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-blue-900 text-white text-[10px] fantasy-font rounded border-b-2 border-blue-800 uppercase hover:bg-blue-800 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">Export Manifest</button>
                 </div>
              )}
 
-             {/* 3. History Bar - Full Width for Mobile Access */}
              <div className="w-full bg-black/20 p-2 border border-stone-800/50 rounded flex gap-2 overflow-x-auto h-24 items-center custom-scrollbar relative group/history shrink-0">
                   <button 
                     onClick={() => setShowGallery(true)}
@@ -282,14 +264,13 @@ const AppContent: React.FC = () => {
                     <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[9px] tracking-widest">History is empty...</div>
                   ) : (
                     history.map(art => (
-                      <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
+                      <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-stone-700 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
                           <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
                       </button>
                     ))
                   )}
               </div>
 
-             {/* 4. Configuration Grid (Unified Post-Process) */}
              <div className="grid md:grid-cols-2 gap-4 pb-4">
                 <div className="space-y-4">
                     <CodexDimensions settings={animationSettings} setSettings={updateSettings} />
@@ -297,10 +278,10 @@ const AppContent: React.FC = () => {
                 </div>
                 
                 <div className="space-y-4">
-                    <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50">
+                    <div className="fantasy-card p-3 border border-stone-800 bg-stone-900/50">
                         <CodexChronometry settings={animationSettings} setSettings={updateSettings} />
                     </div>
-                    <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50 h-fit">
+                    <div className="fantasy-card p-3 border border-stone-800 bg-stone-900/50 h-fit">
                         <CodexAlchemy settings={animationSettings} setSettings={updateSettings} onGeneratePalette={actions.generatePalette} />
                     </div>
                 </div>
@@ -339,7 +320,6 @@ const AppContent: React.FC = () => {
           )}
         </main>
         
-        {/* Mobile Spacer to avoid navigation chrome */}
         <div className="h-24 md:hidden shrink-0" />
       </div>
       <ToastContainer />

@@ -9,96 +9,126 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-          theme: {
-            extend: {
-              colors: {
-                void: '#0c0a09',
-                gold: '#d97706',
-                parchment: '#f5f5dc',
-                mana: '#0ea5e9',
-                blood: '#991b1b',
-                moss: '#065f46',
-                arcane: {
-                  950: '#0c0a09',
-                  900: '#1c1917',
-                  800: '#292524',
-                  700: '#44403c',
-                  600: '#57534e',
-                }
-              },
-              boxShadow: {
-                'fantasy': '4px 4px 0 0 #000',
-                'fantasy-inner': 'inset 2px 2px 0 0 #000',
-              },
-              keyframes: {
-                float: {
-                    '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
-                    '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                    '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                },
-                pulse_glow: {
-                    '0%, 100%': { opacity: '0.1' },
-                    '50%': { opacity: '0.2' },
-                }
-              },
-              animation: {
-                'float-slow': 'float 25s ease-in-out infinite',
-                'float-medium': 'float 20s ease-in-out infinite reverse',
-                'float-fast': 'float 15s ease-in-out infinite',
-                'pulse-slow': 'pulse_glow 8s ease-in-out infinite',
-              }
-            }
-          }
-        }
-    </script>
     <style>
         :root {
-            --color-void: #0c0a09;
-            --color-gold: #d97706;
+            /* Base Colors */
+            --color-black: #000000;
+            --color-white: #ffffff;
+
+            /* Stone / Arcane Scale (Neutrals) */
+            --color-stone-950: #0c0a09; /* void */
+            --color-stone-900: #1c1917; /* card bg */
+            --color-stone-800: #292524;
+            --color-stone-700: #44403c;
+            --color-stone-600: #57534e;
+            --color-stone-500: #78716c;
+            --color-stone-400: #a8a29e;
+            --color-stone-300: #d6d3d1; /* main text */
+            --color-stone-200: #e7e5e4;
+            --color-stone-100: #f5f5f4;
+
+            /* Amber / Gold Scale */
+            --color-amber-950: #451a03;
+            --color-amber-900: #78350f; /* border highlight */
+            --color-amber-800: #92400e;
+            --color-amber-700: #b45309;
+            --color-amber-600: #d97706; /* gold main */
+            --color-amber-500: #f59e0b;
+            --color-amber-400: #fbbf24;
+            --color-amber-300: #fcd34d;
+            --color-amber-200: #fde68a;
+
+            /* Emerald / Nature Scale */
+            --color-emerald-950: #022c22;
+            --color-emerald-900: #064e3b;
+            --color-emerald-800: #065f46; /* moss */
+            --color-emerald-700: #047857;
+            --color-emerald-600: #059669;
+            --color-emerald-500: #10b981;
+            --color-emerald-400: #34d399;
+
+            /* Red / Blood Scale */
+            --color-red-950: #450a0a;
+            --color-red-900: #7f1d1d;
+            --color-red-800: #991b1b; /* blood */
+            --color-red-700: #b91c1c;
+            --color-red-600: #dc2626;
+            --color-red-500: #ef4444;
+            --color-red-400: #f87171;
+            --color-red-200: #fecaca;
+
+            /* Sky / Mana Scale */
+            --color-sky-950: #082f49;
+            --color-sky-900: #0c4a6e;
+            --color-sky-800: #075985;
+            --color-sky-600: #0284c7;
+            --color-sky-500: #0ea5e9; /* mana */
+            --color-sky-400: #38bdf8;
+            --color-sky-300: #7dd3fc;
+            --color-sky-200: #bae6fd;
+            --color-sky-100: #e0f2fe;
+
+            /* Purple / Void Scale */
+            --color-purple-950: #3b0764;
+            --color-purple-900: #581c87;
+            --color-purple-800: #6b21a8;
+            --color-purple-500: #a855f7;
+            --color-purple-400: #c084fc;
+            --color-purple-300: #d8b4fe;
+            --color-purple-200: #e9d5ff;
+            --color-purple-100: #f3e8ff;
+            
+            /* Orange Scale */
+            --color-orange-950: #431407;
+            --color-orange-900: #7c2d12;
+            --color-orange-700: #c2410c;
+            --color-orange-600: #ea580c;
+            --color-orange-400: #fb923c;
+            
+            /* Blue Scale */
+            --color-blue-900: #1e3a8a;
+            --color-blue-800: #1e40af;
+            
+            /* Pink Scale */
+            --color-pink-950: #500724;
+            --color-pink-900: #831843;
+            --color-pink-400: #f472b6;
+
+            /* Semantic Aliases */
+            --color-void: var(--color-stone-950);
+            --color-gold: var(--color-amber-600);
             --color-parchment: #f5f5dc;
-            --color-mana: #0ea5e9;
-            --color-blood: #991b1b;
-            --color-moss: #065f46;
-            --fantasy-gold: var(--color-gold);
-            --fantasy-bg: #1c1917;
-            --fantasy-parchment: var(--color-parchment);
+            --color-mana: var(--color-sky-500);
+            --color-blood: var(--color-red-800);
+            --color-moss: var(--color-emerald-800);
         }
 
         body {
             font-family: 'Crimson Text', serif;
             background-color: var(--color-void);
-            color: #d6d3d1;
+            color: var(--color-stone-300);
             overflow-x: hidden;
             background-image: 
                 radial-gradient(circle at center, rgba(120, 53, 15, 0.15), transparent 80%),
                 url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23292524' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/svg%3E");
         }
 
-        .retro-font {
-            font-family: 'Press+Start+2P', cursive;
-        }
-
-        .terminal-font {
-            font-family: 'VT323', monospace;
-        }
-
-        .fantasy-font {
-            font-family: 'Cinzel', serif;
-        }
+        .retro-font { font-family: 'Press+Start+2P', cursive; }
+        .terminal-font { font-family: 'VT323', monospace; }
+        .fantasy-font { font-family: 'Cinzel', serif; }
 
         .fantasy-card {
-            background-color: rgba(28, 25, 23, 0.90);
+            background-color: rgba(28, 25, 23, 0.90); /* stone-900 */
+            background-color: color-mix(in srgb, var(--color-stone-900), transparent 10%);
             backdrop-filter: blur(8px);
-            border: 2px solid #57534e; 
+            border: 2px solid var(--color-stone-600); 
             box-shadow: 4px 4px 0 0 #000;
             position: relative;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .fantasy-card:hover {
-            border-color: #78350f;
+            border-color: var(--color-amber-900);
             box-shadow: 0 0 15px rgba(217, 119, 6, 0.1), 4px 4px 0 0 #000;
         }
         
@@ -106,14 +136,14 @@
              content: '';
              position: absolute;
              top: 2px; left: 2px; right: 2px; bottom: 2px;
-             border: 1px solid #292524;
+             border: 1px solid var(--color-stone-800);
              pointer-events: none;
         }
 
         .fantasy-input {
             background-color: var(--color-void);
-            border: 2px solid #44403c;
-            color: #fbbf24;
+            border: 2px solid var(--color-stone-700);
+            color: var(--color-amber-400);
             font-family: 'VT323', monospace;
             box-shadow: inset 2px 2px 0 0 #000;
         }
@@ -154,16 +184,14 @@
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* Custom Range Slider - Fantasy Style */
+        /* Custom Range Slider */
         input[type=range] {
             -webkit-appearance: none; 
             background: transparent; 
             width: 100%;
         }
         
-        input[type=range]:focus {
-            outline: none;
-        }
+        input[type=range]:focus { outline: none; }
         
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -171,7 +199,7 @@
             width: 12px;
             background: var(--color-gold);
             cursor: pointer;
-            border: 1px solid #78350f;
+            border: 1px solid var(--color-amber-900);
             margin-top: -6px; 
             box-shadow: 1px 1px 2px #000;
             border-radius: 1px;
@@ -179,7 +207,7 @@
         }
 
         input[type=range]::-webkit-slider-thumb:hover {
-            background: #fbbf24;
+            background: var(--color-amber-400);
             transform: scale(1.1);
         }
         
@@ -187,46 +215,159 @@
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #292524;
-            border: 1px solid #57534e;
+            background: var(--color-stone-800);
+            border: 1px solid var(--color-stone-600);
             border-radius: 2px;
         }
 
         /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track {
-            background: #1c1917;
-            border-left: 1px solid #292524;
+            background: var(--color-stone-900);
+            border-left: 1px solid var(--color-stone-800);
         }
         ::-webkit-scrollbar-thumb {
-            background: #44403c;
-            border: 1px solid #1c1917;
+            background: var(--color-stone-700);
+            border: 1px solid var(--color-stone-900);
             border-radius: 2px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #d97706;
+            background: var(--color-gold);
             cursor: grab;
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "gifenc": "https://esm.sh/gifenc@1.0.3",
-    "jszip": "https://esm.sh/jszip@3.10.1",
-    "idb": "https://esm.sh/idb@8.0.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vitest": "https://esm.sh/vitest@^4.0.18"
-  }
-}
-</script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                void: 'var(--color-void)',
+                gold: 'var(--color-gold)',
+                parchment: 'var(--color-parchment)',
+                mana: 'var(--color-mana)',
+                blood: 'var(--color-blood)',
+                moss: 'var(--color-moss)',
+                stone: {
+                    950: 'var(--color-stone-950)',
+                    900: 'var(--color-stone-900)',
+                    800: 'var(--color-stone-800)',
+                    700: 'var(--color-stone-700)',
+                    600: 'var(--color-stone-600)',
+                    500: 'var(--color-stone-500)',
+                    400: 'var(--color-stone-400)',
+                    300: 'var(--color-stone-300)',
+                    200: 'var(--color-stone-200)',
+                    100: 'var(--color-stone-100)',
+                },
+                amber: {
+                    950: 'var(--color-amber-950)',
+                    900: 'var(--color-amber-900)',
+                    800: 'var(--color-amber-800)',
+                    700: 'var(--color-amber-700)',
+                    600: 'var(--color-amber-600)',
+                    500: 'var(--color-amber-500)',
+                    400: 'var(--color-amber-400)',
+                    300: 'var(--color-amber-300)',
+                    200: 'var(--color-amber-200)',
+                },
+                emerald: {
+                    950: 'var(--color-emerald-950)',
+                    900: 'var(--color-emerald-900)',
+                    800: 'var(--color-emerald-800)',
+                    700: 'var(--color-emerald-700)',
+                    600: 'var(--color-emerald-600)',
+                    500: 'var(--color-emerald-500)',
+                    400: 'var(--color-emerald-400)',
+                },
+                red: {
+                    950: 'var(--color-red-950)',
+                    900: 'var(--color-red-900)',
+                    800: 'var(--color-red-800)',
+                    700: 'var(--color-red-700)',
+                    600: 'var(--color-red-600)',
+                    500: 'var(--color-red-500)',
+                    400: 'var(--color-red-400)',
+                    200: 'var(--color-red-200)',
+                },
+                sky: {
+                    950: 'var(--color-sky-950)',
+                    900: 'var(--color-sky-900)',
+                    800: 'var(--color-sky-800)',
+                    600: 'var(--color-sky-600)',
+                    500: 'var(--color-sky-500)',
+                    400: 'var(--color-sky-400)',
+                    300: 'var(--color-sky-300)',
+                    200: 'var(--color-sky-200)',
+                    100: 'var(--color-sky-100)',
+                },
+                purple: {
+                    950: 'var(--color-purple-950)',
+                    900: 'var(--color-purple-900)',
+                    800: 'var(--color-purple-800)',
+                    500: 'var(--color-purple-500)',
+                    400: 'var(--color-purple-400)',
+                    300: 'var(--color-purple-300)',
+                    200: 'var(--color-purple-200)',
+                    100: 'var(--color-purple-100)',
+                },
+                orange: {
+                    950: 'var(--color-orange-950)',
+                    900: 'var(--color-orange-900)',
+                    700: 'var(--color-orange-700)',
+                    600: 'var(--color-orange-600)',
+                    400: 'var(--color-orange-400)',
+                },
+                blue: {
+                    900: 'var(--color-blue-900)',
+                    800: 'var(--color-blue-800)',
+                },
+                pink: {
+                    950: 'var(--color-pink-950)',
+                    900: 'var(--color-pink-900)',
+                    400: 'var(--color-pink-400)',
+                }
+              },
+              boxShadow: {
+                'fantasy': '4px 4px 0 0 #000',
+                'fantasy-inner': 'inset 2px 2px 0 0 #000',
+              },
+              keyframes: {
+                float: {
+                    '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                    '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                    '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                },
+                pulse_glow: {
+                    '0%, 100%': { opacity: '0.1' },
+                    '50%': { opacity: '0.2' },
+                }
+              },
+              animation: {
+                'float-slow': 'float 25s ease-in-out infinite',
+                'float-medium': 'float 20s ease-in-out infinite reverse',
+                'float-fast': 'float 15s ease-in-out infinite',
+                'pulse-slow': 'pulse_glow 8s ease-in-out infinite',
+              }
+            }
+          }
+        }
+    </script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "react": "https://esm.sh/react@^19.2.4",
+        "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "gifenc": "https://esm.sh/gifenc@1.0.3",
+        "jszip": "https://esm.sh/jszip@3.10.1",
+        "idb": "https://esm.sh/idb@8.0.0",
+        "vite": "https://esm.sh/vite@^7.3.1",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+        "vitest": "https://esm.sh/vitest@^4.0.18"
+      }
+    }
+    </script>
 </head>
 <body>
     <div id="root"></div>
