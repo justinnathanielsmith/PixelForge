@@ -126,12 +126,12 @@ export class PixelForgeOrchestrator {
     return await pixelRepository.getHistory();
   }
 
-  loadSession(): { settings: AnimationSettings | null, prompt: string } {
-    return pixelRepository.loadSession();
+  async loadSession(): Promise<{ settings: AnimationSettings | null, prompt: string }> {
+    return await pixelRepository.loadSession();
   }
 
-  persistSession(state: Partial<PixelForgeState>): void {
-    pixelRepository.saveSession(state);
+  async persistSession(state: Partial<PixelForgeState>): Promise<void> {
+    await pixelRepository.saveSession(state);
   }
 
   async exportProjectFile(): Promise<string> {

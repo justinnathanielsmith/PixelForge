@@ -105,9 +105,8 @@ export function pixelForgeReducer(state: PixelForgeState, intent: PixelForgeInte
 
 export const usePixelForge = () => {
   const getInitialState = (): PixelForgeState => {
-    const session = orchestrator.loadSession();
     return {
-      prompt: session.prompt || '',
+      prompt: '',
       isSpriteSheet: true,
       selectedStyle: '16-bit',
       perspective: 'side',
@@ -119,7 +118,7 @@ export const usePixelForge = () => {
       errorMessage: '',
       isExporting: false,
       inspiration: null,
-      animationSettings: session.settings || DEFAULT_SETTINGS
+      animationSettings: DEFAULT_SETTINGS
     };
   };
 
@@ -127,18 +126,28 @@ export const usePixelForge = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
 
-  // Persistence Ritual: Small settings to LocalStorage
+  // Persistence Ritual: Small settings to IndexedDB
   useEffect(() => {
     orchestrator.persistSession({ animationSettings: state.animationSettings, prompt: state.prompt });
   }, [state.animationSettings, state.prompt]);
 
-  // Initialization Ritual: Large history from IndexedDB
+  // Initialization Ritual: Hydrate from IndexedDB
   useEffect(() => {
-    const loadHistory = async () => {
+    const hydrate = async () => {
+      // 1. Load History
       const history = await orchestrator.loadInitialHistory();
       dispatch({ type: 'SET_HISTORY', payload: history });
+
+      // 2. Load Session (Settings & Prompt)
+      const session = await orchestrator.loadSession();
+      if (session.prompt) {
+        dispatch({ type: 'SET_PROMPT', payload: session.prompt });
+      }
+      if (session.settings) {
+        dispatch({ type: 'UPDATE_SETTINGS', payload: session.settings });
+      }
     };
-    loadHistory();
+    hydrate();
   }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,7 +286,7 @@ export const usePixelForge = () => {
       exportProject, 
       exportAsset, 
       generateNormalMap, 
-      generateSkeleton,
+      generateSkeleton, 
       generatePalette,
       navigateHistory
     }, 

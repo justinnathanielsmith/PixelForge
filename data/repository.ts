@@ -22,24 +22,18 @@ export class PixelRepository {
     return await this.getHistory();
   }
 
-  saveSession(state: Partial<PixelForgeState>): void {
+  async saveSession(state: Partial<PixelForgeState>): Promise<void> {
     if (state.animationSettings) {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(state.animationSettings));
+      await pixelDB.putSessionValue(STORAGE_KEYS.SETTINGS, state.animationSettings);
     }
     if (state.prompt !== undefined) {
-      localStorage.setItem(STORAGE_KEYS.PROMPT, state.prompt);
+      await pixelDB.putSessionValue(STORAGE_KEYS.PROMPT, state.prompt);
     }
   }
 
-  loadSession(): { settings: AnimationSettings | null, prompt: string } {
-    let settings = null;
-    let prompt = '';
-    try {
-      const sData = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (sData) settings = JSON.parse(sData);
-      const pData = localStorage.getItem(STORAGE_KEYS.PROMPT);
-      if (pData) prompt = pData;
-    } catch (e) {}
+  async loadSession(): Promise<{ settings: AnimationSettings | null, prompt: string }> {
+    const settings = await pixelDB.getSessionValue(STORAGE_KEYS.SETTINGS) || null;
+    const prompt = await pixelDB.getSessionValue(STORAGE_KEYS.PROMPT) || '';
     return { settings, prompt };
   }
 
@@ -48,7 +42,7 @@ export class PixelRepository {
    */
   async exportProject(): Promise<string> {
     const history = await this.getHistory();
-    const session = this.loadSession();
+    const session = await this.loadSession();
     
     const projectData = {
       version: '1.0',
@@ -77,12 +71,12 @@ export class PixelRepository {
       await pixelDB.putArt(art);
     }
 
-    // Restore Settings to LocalStorage
+    // Restore Settings to IndexedDB
     if (data.settings) {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
+      await pixelDB.putSessionValue(STORAGE_KEYS.SETTINGS, data.settings);
     }
     if (data.lastPrompt) {
-      localStorage.setItem(STORAGE_KEYS.PROMPT, data.lastPrompt);
+      await pixelDB.putSessionValue(STORAGE_KEYS.PROMPT, data.lastPrompt);
     }
 
     return {
