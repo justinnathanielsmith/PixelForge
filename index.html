@@ -168,13 +168,19 @@
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
-            width: 10px;
+            width: 12px;
             background: var(--color-gold);
             cursor: pointer;
             border: 1px solid #78350f;
             margin-top: -6px; 
-            box-shadow: 1px 1px 0px #000;
-            border-radius: 2px;
+            box-shadow: 1px 1px 2px #000;
+            border-radius: 1px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #fbbf24;
+            transform: scale(1.1);
         }
         
         input[type=range]::-webkit-slider-runnable-track {
@@ -183,22 +189,26 @@
             cursor: pointer;
             background: #292524;
             border: 1px solid #57534e;
+            border-radius: 2px;
         }
 
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
         }
         ::-webkit-scrollbar-track {
-            background: var(--color-void);
+            background: #1c1917;
+            border-left: 1px solid #292524;
         }
         ::-webkit-scrollbar-thumb {
             background: #44403c;
-            border: 1px solid var(--color-void);
+            border: 1px solid #1c1917;
+            border-radius: 2px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #78350f;
+            background: #d97706;
+            cursor: grab;
         }
     </style>
 <script type="importmap">

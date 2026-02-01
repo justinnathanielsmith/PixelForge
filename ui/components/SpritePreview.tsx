@@ -345,14 +345,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
         <div className="absolute left-3 top-3 flex flex-col gap-2 z-50">
            <button 
              onClick={() => setTool(tool === 'pencil' ? 'none' : 'pencil')} 
-             className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'pencil' ? 'bg-amber-600 border-amber-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300'}`}
+             className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'pencil' ? 'bg-amber-600 border-amber-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800'}`}
              title="Scribe Tool (Pencil)"
            >
              <span className="text-lg">🖋️</span>
            </button>
            <button 
              onClick={() => setTool(tool === 'eraser' ? 'none' : 'eraser')} 
-             className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'eraser' ? 'bg-red-600 border-red-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300'}`}
+             className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'eraser' ? 'bg-red-600 border-red-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800'}`}
              title="Nullify Tool (Eraser)"
            >
              <span className="text-lg">🧼</span>
@@ -363,13 +363,13 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                   type="color" 
                   value={brushColor} 
                   onChange={(e) => setBrushColor(e.target.value)} 
-                  className="w-8 h-8 cursor-pointer bg-transparent border-0 p-0"
+                  className="w-8 h-8 cursor-pointer bg-transparent border-0 p-0 hover:scale-110 transition-transform"
                 />
              </div>
            )}
            <button 
              onClick={() => onUpdateSettings({ zoom: 1, panOffset: { x: 0, y: 0 } })} 
-             className="w-10 h-10 flex items-center justify-center rounded border bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 transition-all"
+             className="w-10 h-10 flex items-center justify-center rounded border bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800 transition-all"
              title="Reset View"
            >
              <span className="text-lg">🎯</span>
@@ -416,27 +416,27 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
         {!isBatch && (
            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3 z-40">
               {!normalMapUrl ? (
-                <button onClick={onGenerateNormalMap} disabled={isGenerating} className="bg-purple-900/80 hover:bg-purple-800 border border-purple-500 text-purple-100 px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2">
+                <button onClick={onGenerateNormalMap} disabled={isGenerating} className="bg-purple-900/80 hover:bg-purple-800 border border-purple-500 text-purple-100 px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 hover:scale-105 transition-all">
                    {isGenerating ? <span className="animate-spin">⚙</span> : <span>🔮</span>} Alchemist
                 </button>
               ) : (
-                <button onClick={() => setLightingMode(!lightingMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${lightingMode ? 'bg-amber-600 border-amber-300 text-black shadow-[0_0_15px_rgba(217,119,6,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setLightingMode(!lightingMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${lightingMode ? 'bg-amber-600 border-amber-300 text-black shadow-[0_0_15px_rgba(217,119,6,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>🔥</span> {lightingMode ? 'Quench' : 'Ignite'} Torch
                 </button>
               )}
 
               {sliceData && (
-                <button onClick={() => setSliceMode(!sliceMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all ${sliceMode ? 'bg-emerald-600 border-emerald-300 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setSliceMode(!sliceMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${sliceMode ? 'bg-emerald-600 border-emerald-300 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>📏</span> 9-Slice Guide
                 </button>
               )}
 
               {!skeleton ? (
-                <button onClick={onGenerateSkeleton} disabled={isGenerating} className="bg-sky-900/80 hover:bg-sky-800 border border-sky-500 text-sky-100 px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2">
+                <button onClick={onGenerateSkeleton} disabled={isGenerating} className="bg-sky-900/80 hover:bg-sky-800 border border-sky-500 text-sky-100 px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 hover:scale-105 transition-all">
                    {isGenerating ? <span className="animate-spin">⚙</span> : <span>🦴</span>} Auto-Rig
                 </button>
               ) : (
-                <button onClick={() => setSkeletonMode(!skeletonMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 ${skeletonMode ? 'bg-sky-600 border-sky-300 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setSkeletonMode(!skeletonMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 hover:scale-105 transition-all ${skeletonMode ? 'bg-sky-600 border-sky-300 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>💀</span> Skeleton
                 </button>
               )}
@@ -444,14 +444,14 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
         )}
 
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-30 pointer-events-none">
-            {tool !== 'none' && <div className="bg-amber-900/60 border border-amber-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">🎨</span><span className="fantasy-font text-[8px] text-amber-200 font-bold uppercase">Manual Correction Mode</span></div>}
-            {sliceData && <div className="bg-emerald-900/60 border border-emerald-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">📏</span><span className="fantasy-font text-[8px] text-emerald-200 font-bold uppercase">UI Slicing Calibrated</span></div>}
-            {skeleton && <div className="bg-sky-900/60 border border-sky-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">💀</span><span className="fantasy-font text-[8px] text-sky-200 font-bold uppercase">Anatomy Analyzed</span></div>}
-            {normalMapUrl && <div className="bg-purple-900/60 border border-purple-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5"><span className="text-[10px]">🗺️</span><span className="fantasy-font text-[8px] text-purple-200 font-bold uppercase">Surface Mapping Active</span></div>}
+            {tool !== 'none' && <div className="bg-amber-900/60 border border-amber-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5 animate-in slide-in-from-right-2"><span className="text-[10px]">🎨</span><span className="fantasy-font text-[8px] text-amber-200 font-bold uppercase">Manual Correction Mode</span></div>}
+            {sliceData && <div className="bg-emerald-900/60 border border-emerald-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5 animate-in slide-in-from-right-2"><span className="text-[10px]">📏</span><span className="fantasy-font text-[8px] text-emerald-200 font-bold uppercase">UI Slicing Calibrated</span></div>}
+            {skeleton && <div className="bg-sky-900/60 border border-sky-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5 animate-in slide-in-from-right-2"><span className="text-[10px]">💀</span><span className="fantasy-font text-[8px] text-sky-200 font-bold uppercase">Anatomy Analyzed</span></div>}
+            {normalMapUrl && <div className="bg-purple-900/60 border border-purple-500/30 px-2 py-0.5 rounded shadow-lg backdrop-blur-sm flex items-center gap-1.5 animate-in slide-in-from-right-2"><span className="text-[10px]">🗺️</span><span className="fantasy-font text-[8px] text-purple-200 font-bold uppercase">Surface Mapping Active</span></div>}
         </div>
 
         <div className="absolute bottom-3 left-3 flex gap-2 items-center z-20 pointer-events-none">
-           <div className="bg-black/80 border border-stone-800 px-2 py-1 rounded backdrop-blur-md flex items-center gap-3">
+           <div className="bg-black/80 border border-stone-800 px-2 py-1 rounded backdrop-blur-md flex items-center gap-3 shadow-lg">
               <span className="terminal-font text-[10px] text-stone-300 font-bold tracking-wider">{settings.tiledPreview ? 'LOOP-VIEW' : `FRAME ${String(currentFrame + 1).padStart(2, '0')}`}</span>
               <div className="w-px h-3 bg-stone-800" />
               <span className="terminal-font text-[10px] text-amber-600/80 font-bold">{settings.fps} FPS</span>

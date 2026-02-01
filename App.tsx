@@ -4,7 +4,7 @@ import { usePixelForge } from './ui/hooks/usePixelForge.ts';
 import { GenerationState } from './domain/entities.ts';
 import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from './domain/constants.ts';
 import SpritePreview from './ui/components/SpritePreview.tsx';
-import SettingsPanel from './ui/components/SettingsPanel.tsx';
+import { CodexDimensions, CodexGrid, CodexChronometry, CodexAlchemy } from './ui/components/SettingsPanel.tsx';
 import UpcomingFeatures from './ui/components/UpcomingFeatures.tsx';
 import UserGuide from './ui/components/UserGuide.tsx';
 import { Gatekeeper } from './ui/components/Gatekeeper.tsx';
@@ -35,6 +35,8 @@ const AppContent: React.FC = () => {
       console.error("Key selection error", e);
     }
   };
+
+  const updateSettings = (s: any) => dispatch({ type: 'UPDATE_SETTINGS', payload: s });
 
   // --- Keyboard Shortcuts (Power User Suite) ---
   useEffect(() => {
@@ -126,15 +128,18 @@ const AppContent: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 relative">
-          {/* Sidebar / Form Column */}
-          <div className="lg:col-span-4 space-y-6">
-            <section className="fantasy-card p-4 relative">
-              <div className="absolute -top-3 left-4 bg-[#1c1917] px-2 text-[10px] fantasy-font font-bold text-amber-500 border border-[#57534e] uppercase tracking-widest">The Grimoire</div>
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 grid lg:grid-cols-12 gap-6 relative min-h-0">
+          
+          {/* --- LEFT COLUMN: INPUTS & CONFIG --- */}
+          <div className="lg:col-span-4 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pt-4 pb-12 lg:h-[calc(100vh-120px)]">
+            
+            {/* 1. The Grimoire (Prompt & Core Types) */}
+            <section className="fantasy-card p-4 relative shrink-0">
+              <div className="absolute -top-3 left-4 bg-[#1c1917] px-2 text-[10px] fantasy-font font-bold text-amber-500 border border-[#57534e] uppercase tracking-widest z-10 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">The Grimoire</div>
               <form onSubmit={actions.generateArt} className="space-y-5 pt-2">
                  <div className="space-y-2">
                     <div className="flex gap-2 h-28">
-                       <div onClick={() => refs.fileInputRef.current?.click()} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-[#44403c] bg-[#0c0a09]'}`}>
+                       <div onClick={() => refs.fileInputRef.current?.click()} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-[#44403c] bg-[#0c0a09] hover:bg-[#1c1917] hover:border-amber-600/50'}`}>
                           {inspiration ? (
                             <div className="relative w-full h-full p-1 group">
                               <img src={inspiration.url} className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
@@ -145,7 +150,7 @@ const AppContent: React.FC = () => {
                           )}
                           <input ref={refs.fileInputRef} type="file" accept="image/*" onChange={actions.handleImageUpload} className="hidden" />
                        </div>
-                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed" />
+                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-[#0c0a09]" />
                     </div>
                  </div>
                  
@@ -154,15 +159,15 @@ const AppContent: React.FC = () => {
                       <div className="space-y-1">
                         <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Asset Mode</label>
                         <div className="flex gap-1">
-                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: false })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${!isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600'}`}>SINGLE</button>
-                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: true })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600'}`}>SHEET</button>
+                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: false })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${!isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SINGLE</button>
+                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: true })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SHEET</button>
                         </div>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest text-right block">View Angle</label>
                         <div className="flex gap-1">
                           {VIEW_PERSPECTIVES.map(p => (
-                            <button key={p.id} type="button" onClick={() => dispatch({ type: 'SET_PERSPECTIVE', payload: p.id })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all flex items-center justify-center gap-1 ${perspective === p.id ? 'bg-sky-600 text-black border-sky-300' : 'bg-transparent border-stone-800 text-stone-600'}`}>{p.label}</button>
+                            <button key={p.id} type="button" onClick={() => dispatch({ type: 'SET_PERSPECTIVE', payload: p.id })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all flex items-center justify-center gap-1 ${perspective === p.id ? 'bg-sky-600 text-black border-sky-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>{p.label}</button>
                           ))}
                         </div>
                       </div>
@@ -171,7 +176,7 @@ const AppContent: React.FC = () => {
                       <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Entity Essence</label>
                       <div className="grid grid-cols-5 gap-1">
                         {ASSET_CATEGORIES.map(cat => (
-                          <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-[#0c0a09] border-stone-800 text-stone-600'}`}>
+                          <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-[#0c0a09] border-stone-800 text-stone-600 hover:border-stone-600'}`}>
                             <span className="text-xs">{cat.icon}</span>
                             <span className="text-[7px] font-bold mt-0.5">{cat.label}</span>
                           </button>
@@ -190,7 +195,7 @@ const AppContent: React.FC = () => {
                               key={act.id} 
                               type="button" 
                               onClick={() => dispatch({ type: 'TOGGLE_ACTION', payload: act.id })} 
-                              className={`py-1.5 text-[8px] fantasy-font border rounded transition-all ${selectedActions.includes(act.id) ? 'bg-red-800 text-red-50 border-red-500 shadow-[0_0_8px_rgba(153,27,27,0.4)]' : 'bg-[#0c0a09] border-stone-800 text-stone-600'}`}
+                              className={`py-1.5 text-[8px] fantasy-font border rounded transition-all ${selectedActions.includes(act.id) ? 'bg-red-800 text-red-50 border-red-500 shadow-[0_0_8px_rgba(153,27,27,0.4)]' : 'bg-[#0c0a09] border-stone-800 text-stone-600 hover:border-stone-600'}`}
                             >
                               {act.label}
                             </button>
@@ -200,89 +205,104 @@ const AppContent: React.FC = () => {
                     )}
                  </div>
 
-                 <button type="submit" disabled={genState === GenerationState.GENERATING || !prompt.trim() || (isSpriteSheet && selectedActions.length === 0)} className="w-full py-4 fantasy-btn bg-red-800 text-red-50 hover:bg-red-700 disabled:opacity-50">
+                 <button type="submit" disabled={genState === GenerationState.GENERATING || !prompt.trim() || (isSpriteSheet && selectedActions.length === 0)} className="w-full py-4 fantasy-btn bg-red-800 text-red-50 hover:bg-red-700 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(153,27,27,0.3)] hover:shadow-[0_0_20px_rgba(153,27,27,0.5)]">
                     {genState === GenerationState.GENERATING ? 'TRANSMUTING...' : 'SUMMON ENTITY'}
                  </button>
               </form>
             </section>
+
+            {/* 2. Dimensions & Grid Configuration (Inputs) */}
+            <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2 px-1 opacity-70">
+                    <span className="w-8 h-[1px] bg-stone-700"></span>
+                    <h3 className="fantasy-font text-[10px] text-stone-500 uppercase tracking-widest">Arcane Configuration</h3>
+                    <span className="flex-1 h-[1px] bg-stone-700"></span>
+                </div>
+                <CodexDimensions settings={animationSettings} setSettings={updateSettings} />
+                <CodexGrid settings={animationSettings} setSettings={updateSettings} />
+            </div>
           </div>
 
-          {/* Main Content Column */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-             <div className="grid md:grid-cols-12 gap-6 flex-1 min-h-0">
-                <div className="md:col-span-7 flex flex-col gap-4">
-                   <div className="fantasy-card p-2 bg-[#0c0a09] relative aspect-square flex flex-col border-[#78350f] overflow-hidden">
-                      <div className="flex-1 relative bg-[#020202] flex items-center justify-center overflow-hidden border border-[#292524] shadow-inner">
-                         {genState === GenerationState.GENERATING ? (
-                           <div className="flex flex-col items-center gap-4 text-center">
-                              <div className="w-12 h-12 border-4 border-amber-950 border-t-amber-500 rounded-full animate-spin" />
-                              <p className="fantasy-font text-xs text-amber-500 animate-pulse uppercase tracking-widest">Scribing to Reality...</p>
-                           </div>
-                         ) : genState === GenerationState.ERROR ? (
-                           <div className="flex flex-col items-center gap-4 text-center px-4 max-w-xs animate-in zoom-in duration-300">
-                              <div className="text-4xl">🔮💥</div>
-                              <div>
-                                <h3 className="fantasy-font text-red-500 uppercase tracking-widest font-bold mb-1">Ritual Failed</h3>
-                                <p className="text-xs text-stone-400 font-serif leading-relaxed">{errorMessage || "Unknown anomaly encountered."}</p>
-                              </div>
-                           </div>
-                         ) : (
-                           activeArt && (
-                             <SpritePreview 
-                                activeArt={activeArt} 
-                                settings={animationSettings} 
-                                style={activeArt.style} 
-                                isBatch={activeArt.type === 'batch'}
-                                onUpdateArt={(updatedArt) => dispatch({ type: 'UPDATE_ART', payload: updatedArt })}
-                                onUpdateSettings={(updatedSettings) => dispatch({ type: 'UPDATE_SETTINGS', payload: updatedSettings })}
-                                normalMapUrl={activeArt.normalMapUrl}
-                                onGenerateNormalMap={actions.generateNormalMap}
-                                skeleton={activeArt.skeleton}
-                                onGenerateSkeleton={actions.generateSkeleton}
-                                isGenerating={isExporting} 
-                             />
-                           )
-                         )}
-                      </div>
-                   </div>
-                   {activeArt && (
-                      <div className="flex gap-2 justify-end shrink-0">
-                         <button onClick={() => dispatch({ type: 'PIN_DESIGN', payload: activeArt })} className="px-6 py-2 bg-emerald-700 text-white text-[10px] fantasy-font rounded border-b-2 border-emerald-900 uppercase hover:bg-emerald-600 transition-all">✨ Refine Design</button>
-                         <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-[#1e3a8a] text-white text-[10px] fantasy-font rounded border-b-2 border-blue-900 uppercase hover:bg-blue-800 transition-all">Export Manifest</button>
-                      </div>
+          {/* --- RIGHT COLUMN: PREVIEW & POST-PROCESS --- */}
+          <div className="lg:col-span-8 flex flex-col gap-4 overflow-y-auto custom-scrollbar pt-4 pb-12 lg:h-[calc(100vh-120px)]">
+             
+             {/* 1. Main Viewport */}
+             <div className="fantasy-card p-2 bg-[#0c0a09] relative flex flex-col border-[#78350f] overflow-hidden min-h-[400px] shrink-0">
+                <div className="flex-1 relative bg-[#020202] flex items-center justify-center overflow-hidden border border-[#292524] shadow-inner">
+                   {genState === GenerationState.GENERATING ? (
+                     <div className="flex flex-col items-center gap-4 text-center">
+                        <div className="w-12 h-12 border-4 border-amber-950 border-t-amber-500 rounded-full animate-spin" />
+                        <p className="fantasy-font text-xs text-amber-500 animate-pulse uppercase tracking-widest">Scribing to Reality...</p>
+                     </div>
+                   ) : genState === GenerationState.ERROR ? (
+                     <div className="flex flex-col items-center gap-4 text-center px-4 max-w-xs animate-in zoom-in duration-300">
+                        <div className="text-4xl">🔮💥</div>
+                        <div>
+                          <h3 className="fantasy-font text-red-500 uppercase tracking-widest font-bold mb-1">Ritual Failed</h3>
+                          <p className="text-xs text-stone-400 font-serif leading-relaxed">{errorMessage || "Unknown anomaly encountered."}</p>
+                        </div>
+                     </div>
+                   ) : (
+                     activeArt && (
+                       <SpritePreview 
+                          activeArt={activeArt} 
+                          settings={animationSettings} 
+                          style={activeArt.style} 
+                          isBatch={activeArt.type === 'batch'}
+                          onUpdateArt={(updatedArt) => dispatch({ type: 'UPDATE_ART', payload: updatedArt })}
+                          onUpdateSettings={updateSettings}
+                          normalMapUrl={activeArt.normalMapUrl}
+                          onGenerateNormalMap={actions.generateNormalMap}
+                          skeleton={activeArt.skeleton}
+                          onGenerateSkeleton={actions.generateSkeleton}
+                          isGenerating={isExporting} 
+                       />
+                     )
                    )}
                 </div>
-                <div className="md:col-span-5">
-                   <div className="fantasy-card h-full p-5 bg-[#1c1917] border-[#44403c] overflow-y-auto max-h-[600px] custom-scrollbar">
-                      <SettingsPanel 
-                        settings={animationSettings} 
-                        setSettings={(s) => dispatch({ type: 'UPDATE_SETTINGS', payload: s })} 
-                        onGeneratePalette={actions.generatePalette} 
-                      />
-                   </div>
+             </div>
+
+             {/* 2. Action Bar */}
+             {activeArt && (
+                <div className="flex gap-2 justify-end shrink-0">
+                   <button onClick={() => dispatch({ type: 'PIN_DESIGN', payload: activeArt })} className="px-6 py-2 bg-emerald-700 text-white text-[10px] fantasy-font rounded border-b-2 border-emerald-900 uppercase hover:bg-emerald-600 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]">✨ Refine Design</button>
+                   <button onClick={() => setShowExportModal(true)} className="px-6 py-2 bg-[#1e3a8a] text-white text-[10px] fantasy-font rounded border-b-2 border-blue-900 uppercase hover:bg-blue-800 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(37,99,235,0.3)]">Export Manifest</button>
+                </div>
+             )}
+
+             {/* 3. Controls & Post-Processing (Split Grid) */}
+             <div className="grid md:grid-cols-2 gap-4 pb-4">
+                <div className="space-y-4">
+                    <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50">
+                        <CodexChronometry settings={animationSettings} setSettings={updateSettings} />
+                    </div>
+                    
+                    {/* History Bar moved here for better mobile flow */}
+                    <div className="w-full bg-black/20 p-2 border border-stone-800/50 rounded flex gap-2 overflow-x-auto h-24 items-center custom-scrollbar relative group/history">
+                        <button 
+                          onClick={() => setShowGallery(true)}
+                          className="absolute right-2 top-2 z-10 w-6 h-6 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
+                          title="Expand Gallery"
+                        >
+                          ↖️
+                        </button>
+                        {history.length === 0 ? (
+                          <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[9px] tracking-widest">History is empty...</div>
+                        ) : (
+                          history.map(art => (
+                            <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
+                                <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+                            </button>
+                          ))
+                        )}
+                    </div>
+                </div>
+                
+                <div className="fantasy-card p-3 border border-stone-800 bg-[#1c1917]/50 h-fit">
+                    <CodexAlchemy settings={animationSettings} setSettings={updateSettings} onGeneratePalette={actions.generatePalette} />
                 </div>
              </div>
-             
-             {/* History Bar */}
-             <section className="w-full shrink-0 bg-black/20 p-3 border border-stone-800/50 rounded flex gap-4 overflow-x-auto h-32 items-center custom-scrollbar pb-4 mb-4 md:mb-0 relative group/history">
-                <button 
-                  onClick={() => setShowGallery(true)}
-                  className="absolute right-3 top-3 z-10 w-8 h-8 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
-                  title="Expand Gallery"
-                >
-                  ↖️
-                </button>
-                {history.length === 0 ? (
-                  <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[10px] tracking-widest">History is empty...</div>
-                ) : (
-                  history.map(art => (
-                    <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-20 h-20 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-[#44403c] grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
-                        <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
-                        <div className="absolute top-0 right-0 p-0.5 bg-black/60 text-[6px] font-mono text-stone-400">{art.type.split('-')[0].toUpperCase()}</div>
-                    </button>
-                  ))
-                )}
-             </section>
+
           </div>
 
           {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
