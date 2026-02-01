@@ -60,6 +60,27 @@ export const getCategoryDirective = (category: AssetCategory, perspectiveText: s
       - Background must be ${CHROMA_KEY.LABEL}.
     `;
   }
+  if (category === 'projectile') {
+    return `
+      SUBJECT: Projectile / Ammunition Asset.
+      FOCUS: Aerodynamic, directional trajectory, or spinning mechanism.
+      REQUIREMENT:
+      - Centered, isolated.
+      - If animated, depict rotation or pulsing trail.
+      - High contrast.
+      - Background must be ${CHROMA_KEY.LABEL}.
+    `;
+  }
+  if (category === 'vfx') {
+    return `
+      SUBJECT: Visual Effect (VFX) / Particle System.
+      FOCUS: High-energy bursts, magic, explosions, or impacts.
+      REQUIREMENT:
+      - Volumetric pixel art (smoke, fire, plasma).
+      - Bright glowing core, darker edges.
+      - Background must be ${CHROMA_KEY.LABEL}.
+    `;
+  }
   return `SUBJECT: ${category} sprite. ${perspectiveText}`;
 };
 
@@ -80,6 +101,14 @@ export const getLayoutInstruction = (
 
   if (category === 'icon_set') {
     return "LAYOUT: 4x4 GRID (16 Items). \n- CONTENTS: 16 UNIQUE items. Do not repeat the same item. \n- ISOLATION: Each item perfectly centered in its own grid cell.";
+  }
+
+  if (category === 'vfx' && isSpriteSheet) {
+    return "LAYOUT: 4x4 Sprite Sheet (16 frames). \n- ANIMATION: Full lifecycle (Ignition -> Expansion -> Dissipation). \n- FLOW: Continuous sequence left-to-right, top-to-bottom.";
+  }
+  
+  if (category === 'projectile' && isSpriteSheet) {
+    return "LAYOUT: 4x4 Sprite Sheet (16 frames). \n- ANIMATION: looping rotation (spinning) or directional flight trail. \n- CONSISTENCY: Keep the object centered.";
   }
   
   if (isSpriteSheet && actions.length > 0) {
