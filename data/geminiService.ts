@@ -1,5 +1,6 @@
 import { GoogleGenAI, Content, Part, Type } from "@google/genai";
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton } from "../domain/entities";
+import { CHROMA_KEY } from "../domain/constants";
 
 export class PixelGenService {
   async generatePixelArt(
@@ -33,7 +34,20 @@ export class PixelGenService {
         break;
     }
 
-    const categoryDirective = `SUBJECT: ${category} sprite. ${perspective === 'isometric' ? 'Isometric 2.5D view.' : 'Orthographic side-view.'}`;
+    let perspectiveText = "";
+    switch (perspective) {
+      case 'isometric':
+        perspectiveText = "Isometric 2.5D view.";
+        break;
+      case 'top-down':
+        perspectiveText = "Top-down orthographic view (Zelda/RPG/Tactics style). Camera looking down at approx 45-60 degrees.";
+        break;
+      default:
+        perspectiveText = "Orthographic side-view.";
+        break;
+    }
+
+    const categoryDirective = `SUBJECT: ${category} sprite. ${perspectiveText}`;
 
     let layoutInstruction = "";
     if (isBatch) {
@@ -59,7 +73,7 @@ export class PixelGenService {
     const strategyDirectives = `
       CORE_DIRECTIVES:
       - Pixel art style, video game sprite.
-      - Isolated and centered on a Solid Magenta (#FF00FF) background for easy masking.
+      - Isolated and centered on a ${CHROMA_KEY.LABEL} background for easy masking.
       - Crisp, sharp edges. NO anti-aliasing. NO gradients. NO soft brushes.
       - High readability for 2D game engines.
       - RESOLUTION_TARGET: Each individual frame should have detail consistent with a ${targetRes}x${targetRes} grid.

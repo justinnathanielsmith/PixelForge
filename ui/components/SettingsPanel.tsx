@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnimationSettings } from '../../domain/entities';
+import { RESOLUTION_PRESETS } from '../../domain/constants';
 
 interface SettingsPanelProps {
   settings: AnimationSettings;
@@ -10,8 +11,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings }) 
   const updateSetting = (key: keyof AnimationSettings, value: any) => {
     setSettings({ [key]: value });
   };
-
-  const resolutions = [64, 128, 256, 512];
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -133,7 +132,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, setSettings }) 
       <div className="space-y-3">
          <h3 className="fantasy-font text-xs font-bold text-sky-500 uppercase tracking-widest border-b border-[#44403c] pb-1">Asset Resolution</h3>
          <div className="grid grid-cols-4 gap-1">
-            {resolutions.map(res => (
+            {RESOLUTION_PRESETS.map(res => (
               <button 
                 key={res} 
                 onClick={() => updateSetting('targetResolution', res)}

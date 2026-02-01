@@ -1,5 +1,5 @@
 export type PixelStyle = '8-bit' | '16-bit' | 'gameboy' | 'hi-bit';
-export type PixelPerspective = 'side' | 'isometric';
+export type PixelPerspective = 'side' | 'isometric' | 'top-down';
 export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'prop' | 'background';
 export type AnimationAction = 'idle' | 'walk' | 'jump' | 'attack' | 'death' | 'none';
 

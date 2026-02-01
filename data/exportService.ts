@@ -1,9 +1,15 @@
 import { AnimationSettings, PixelStyle, GeneratedArt } from '../domain/entities';
-import * as gifenc from 'gifenc';
+import gifenc from 'gifenc';
 import { imageProcessingService } from './imageProcessingService';
 
-const gifencMod = (gifenc as any).default || gifenc;
-const { GIFEncoder, quantize, applyPalette } = gifencMod;
+// Define a local interface for the gifenc library functionality
+interface GifEnc {
+  GIFEncoder: () => any;
+  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any;
+  applyPalette: (data: Uint8ClampedArray, palette: any) => Uint8Array;
+}
+
+const { GIFEncoder, quantize, applyPalette } = gifenc as unknown as GifEnc;
 
 export class ExportService {
 
@@ -41,7 +47,6 @@ export class ExportService {
     const frameDuration = Math.round(1000 / fps);
     
     const frames: Record<string, any> = {};
-    // Fix: Use the first action from the actions array (plural) as GeneratedArt no longer has a singular 'action'
     const primaryAction = art.actions && art.actions.length > 0 ? art.actions[0] : 'none';
     const frameTags = [
       {
@@ -88,8 +93,6 @@ export class ExportService {
     const img = await imageProcessingService.loadImage(imageUrl);
     const { cols, rows, fps, targetResolution } = settings;
 
-    if (typeof GIFEncoder !== 'function') throw new Error("GIF_ENCODER_NOT_INITIALIZED");
-    
     const gif = GIFEncoder();
     const totalFrames = cols * rows;
 
@@ -116,21 +119,16 @@ export class ExportService {
 
       const { data } = ctx.getImageData(0, 0, targetResolution, targetResolution);
       
-      if (typeof quantize === 'function') {
-        const palette = quantize(data, targetColors);
-        let index: Uint8Array;
-
-        // Simple quantization mapping (fallback for dither)
-        index = applyPalette(data, palette);
+      const palette = quantize(data, { colors: targetColors });
+      const index = applyPalette(data, palette);
         
-        gif.writeFrame(index, targetResolution, targetResolution, { 
-          palette, 
-          delay: 1000 / fps,
-          repeat: 0,
-          transparent: true,
-          transparentIndex: 0
-        });
-      }
+      gif.writeFrame(index, targetResolution, targetResolution, { 
+        palette, 
+        delay: 1000 / fps,
+        repeat: 0,
+        transparent: true,
+        transparentIndex: 0
+      });
     }
 
     gif.finish();

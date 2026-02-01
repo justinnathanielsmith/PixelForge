@@ -18,9 +18,9 @@ const UpcomingFeatures: React.FC = () => {
       icon: "🦴"
     },
     { 
-      title: "Aseprite Flux", 
-      desc: "JSON manifest export preserving frame tags and animation timing.", 
-      icon: "📦"
+      title: "Top-Down Projection", 
+      desc: "New orthographic top-down perspective for ARPG and tactics environments.", 
+      icon: "📐"
     }
   ];
 
@@ -44,15 +44,15 @@ const UpcomingFeatures: React.FC = () => {
       progress: 85
     },
     { 
-      title: "Top-Down Projection", 
-      desc: "New orthographic top-down perspective for ARPG and tactics environments.", 
-      icon: "📐",
-      progress: 15
+      title: "Aseprite Flux", 
+      desc: "JSON manifest export preserving frame tags and animation timing.", 
+      icon: "📦",
+      progress: 95
     }
   ];
 
   return (
-    <section className="fantasy-card p-4 relative overflow-hidden bg-stone-900/60 border-emerald-900/30">
+    <section className="fantasy-card p-4 relative bg-stone-900/60 border-emerald-900/30">
       <div className="absolute -top-3 left-4 bg-[#1c1917] px-2 text-[10px] fantasy-font font-bold text-emerald-500 border border-emerald-800/50 uppercase tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.2)] z-10">
         The Lab Manifesto
       </div>

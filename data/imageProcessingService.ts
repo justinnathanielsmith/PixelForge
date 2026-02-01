@@ -1,12 +1,40 @@
-
 import { AnimationSettings } from '../domain/entities';
-import * as gifenc from 'gifenc';
+import { CHROMA_KEY } from '../domain/constants';
+import gifenc from 'gifenc';
 
-const gifencMod = (gifenc as any).default || gifenc;
-const quantize = gifencMod.quantize;
-const applyPalette = gifencMod.applyPalette;
+// Define a local interface for gifenc as the library types might not be perfectly resolved via ESM
+interface GifEnc {
+  quantize: (data: Uint8ClampedArray, options: { colors: number }) => any;
+  applyPalette: (data: Uint8ClampedArray, palette: any) => Uint8Array;
+}
+
+const { quantize, applyPalette } = gifenc as unknown as GifEnc;
 
 export class ImageProcessingService {
+  // Use a pair of scratch canvases to handle cases where two processed frames are needed simultaneously (e.g., onion skinning or normal map lighting)
+  private scratchA: HTMLCanvasElement | null = null;
+  private scratchB: HTMLCanvasElement | null = null;
+  private nextScratchIdx = 0;
+
+  private getScratchCanvas(width: number, height: number): HTMLCanvasElement {
+    let canvas: HTMLCanvasElement;
+    if (this.nextScratchIdx === 0) {
+      if (!this.scratchA) this.scratchA = document.createElement('canvas');
+      canvas = this.scratchA;
+      this.nextScratchIdx = 1;
+    } else {
+      if (!this.scratchB) this.scratchB = document.createElement('canvas');
+      canvas = this.scratchB;
+      this.nextScratchIdx = 0;
+    }
+
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    return canvas;
+  }
+
   async loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -29,13 +57,15 @@ export class ImageProcessingService {
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = targetResolution;
-    canvas.height = targetResolution;
+    const canvas = this.getScratchCanvas(targetResolution, targetResolution);
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return canvas;
 
+    // Reset canvas for fresh frame
+    ctx.clearRect(0, 0, targetResolution, targetResolution);
     ctx.imageSmoothingEnabled = false;
+    
+    // Apply visual filters via CSS filters on the context
     ctx.filter = `hue-rotate(${settings.hue}deg) saturate(${settings.saturation}%) contrast(${settings.contrast}%) brightness(${settings.brightness}%)`;
     ctx.drawImage(source, sx, sy, sw, sh, 0, 0, targetResolution, targetResolution);
     ctx.filter = 'none';
@@ -47,11 +77,10 @@ export class ImageProcessingService {
       this.applyVectorSharpening(imageData);
     }
 
+    // Chroma Key Transparency
     if (settings.autoTransparency) {
       const { data } = imageData;
-      // Convert 0-50% tolerance to a 0-255 Manhattan distance threshold
-      // Pure Magenta is (255, 0, 255). Combined max distance is 765.
-      // We'll use a scaled tolerance.
+      // Convert 0-50% tolerance to a Manhattan distance threshold
       const threshold = (settings.chromaTolerance || 5) * 4; 
       
       for (let i = 0; i < data.length; i += 4) {
@@ -59,8 +88,8 @@ export class ImageProcessingService {
         const g = data[i + 1];
         const b = data[i + 2];
         
-        // Manhattan distance to Magenta #FF00FF
-        const dist = Math.abs(r - 255) + Math.abs(g - 0) + Math.abs(b - 255);
+        // Manhattan distance to target Chroma Key
+        const dist = Math.abs(r - CHROMA_KEY.RGB.r) + Math.abs(g - CHROMA_KEY.RGB.g) + Math.abs(b - CHROMA_KEY.RGB.b);
         
         if (dist <= threshold) {
           data[i + 3] = 0;
@@ -68,9 +97,9 @@ export class ImageProcessingService {
       }
     }
 
+    // Hardware Palette Emulation (Quantization)
     if (settings.paletteLock && typeof quantize === 'function' && typeof applyPalette === 'function') {
       const { data } = imageData;
-      // Determine color count based on style
       let colorCount = 256;
       switch (style) {
         case '8-bit':
@@ -88,7 +117,7 @@ export class ImageProcessingService {
       }
 
       try {
-        const palette = quantize(data, colorCount);
+        const palette = quantize(data, { colors: colorCount });
         const index = applyPalette(data, palette);
         for (let i = 0; i < index.length; i++) {
           const color = palette[index[i]];
@@ -111,19 +140,17 @@ export class ImageProcessingService {
     const { data, width, height } = imageData;
     const temp = new Uint8ClampedArray(data);
     
-    // Threshold and neighbor-based edge cleanup
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         const i = (y * width + x) * 4;
         
-        // Simple pixel-snapping: If a pixel is semi-transparent or low contrast, 
-        // snap it to the most dominant neighbor to eliminate "AI noise"
+        // Pixel-snapping: Force alpha to binary states to eliminate AI-generated "soft" edges
         const alpha = data[i + 3];
         if (alpha > 0 && alpha < 255) {
           data[i + 3] = alpha > 127 ? 255 : 0;
         }
 
-        // Sharpen diagonals by removing single isolated pixels (noise)
+        // Noise Reduction: Remove isolated floating pixels
         const isIsolated = this.isPixelIsolated(temp, x, y, width, height);
         if (isIsolated) {
           data[i + 3] = 0;
