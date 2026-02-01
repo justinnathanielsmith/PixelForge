@@ -31,6 +31,23 @@
               boxShadow: {
                 'fantasy': '4px 4px 0 0 #000',
                 'fantasy-inner': 'inset 2px 2px 0 0 #000',
+              },
+              keyframes: {
+                float: {
+                    '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                    '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                    '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                },
+                pulse_glow: {
+                    '0%, 100%': { opacity: '0.1' },
+                    '50%': { opacity: '0.2' },
+                }
+              },
+              animation: {
+                'float-slow': 'float 25s ease-in-out infinite',
+                'float-medium': 'float 20s ease-in-out infinite reverse',
+                'float-fast': 'float 15s ease-in-out infinite',
+                'pulse-slow': 'pulse_glow 8s ease-in-out infinite',
               }
             }
           }
@@ -72,10 +89,17 @@
         }
 
         .fantasy-card {
-            background-color: var(--fantasy-bg);
+            background-color: rgba(28, 25, 23, 0.90);
+            backdrop-filter: blur(8px);
             border: 2px solid #57534e; 
             box-shadow: 4px 4px 0 0 #000;
             position: relative;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .fantasy-card:hover {
+            border-color: #78350f;
+            box-shadow: 0 0 15px rgba(217, 119, 6, 0.1), 4px 4px 0 0 #000;
         }
         
         .fantasy-card::before {
@@ -111,6 +135,23 @@
         .fantasy-btn:active {
             transform: translate(2px, 2px);
             box-shadow: none;
+        }
+
+        .aura-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50; 
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
         /* Custom Range Slider - Fantasy Style */

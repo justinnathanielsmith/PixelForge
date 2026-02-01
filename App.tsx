@@ -10,6 +10,8 @@ import UserGuide from './ui/components/UserGuide.tsx';
 import { Gatekeeper } from './ui/components/Gatekeeper.tsx';
 import ExportModal from './ui/components/ExportModal.tsx';
 import GalleryModal from './ui/components/GalleryModal.tsx';
+import CrystalLinkModal from './ui/components/CrystalLinkModal.tsx';
+import MobileViewer from './ui/components/MobileViewer.tsx';
 import { ToastProvider } from './ui/context/ToastContext.tsx';
 import { ToastContainer } from './ui/components/Toast.tsx';
 
@@ -19,6 +21,7 @@ const AppContent: React.FC = () => {
   const [showGallery, setShowGallery] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [showManifesto, setShowManifesto] = useState(false);
+  const [showCrystalLink, setShowCrystalLink] = useState(false);
   
   const { 
     prompt, genState, history, activeArt, inspiration, 
@@ -78,8 +81,21 @@ const AppContent: React.FC = () => {
 
   return (
     <Gatekeeper>
-      <div className="min-h-[100dvh] flex flex-col selection:bg-amber-500 selection:text-black">
-        <header className="border-b-4 border-[#44403c] bg-[#1c1917] py-3 shadow-lg relative z-20 shrink-0">
+      {/* --- Arcane Aura Background Layers --- */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          {/* Amber Glow (Top Left) */}
+          <div className="aura-orb w-[800px] h-[800px] bg-amber-600/10 -top-[200px] -left-[200px] animate-float-slow" />
+          {/* Mana Glow (Bottom Right) */}
+          <div className="aura-orb w-[700px] h-[700px] bg-purple-900/15 bottom-[-150px] right-[-150px] animate-float-medium" />
+          {/* Ethereal Center */}
+          <div className="aura-orb w-[500px] h-[500px] bg-emerald-900/5 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-float-fast" />
+      </div>
+      
+      {/* Film Grain Texture */}
+      <div className="noise-overlay" />
+
+      <div className="min-h-[100dvh] flex flex-col selection:bg-amber-500 selection:text-black relative z-10">
+        <header className="border-b-4 border-[#44403c] bg-[#1c1917]/90 backdrop-blur-md py-3 shadow-lg relative z-20 shrink-0">
           <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
                <div className="w-10 h-10 bg-gradient-to-tr from-amber-600 to-red-800 border-2 border-[#d97706] shadow-[2px_2px_0_#000] rotate-45 transform ml-2" />
@@ -100,10 +116,12 @@ const AppContent: React.FC = () => {
               <div className="w-px h-6 bg-stone-800 mx-2" />
               <button onClick={() => setShowManifesto(true)} className="text-[9px] fantasy-font text-emerald-500 hover:text-emerald-400 uppercase tracking-widest border border-emerald-900/50 bg-emerald-950/20 px-3 py-1 rounded transition-all">🧪 Lab Manifesto</button>
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
+              <button onClick={() => setShowCrystalLink(true)} className="text-[9px] fantasy-font text-purple-400 hover:text-purple-300 uppercase tracking-widest border border-purple-900/50 bg-purple-950/20 px-3 py-1 rounded transition-all flex items-center gap-1"><span>💎</span> Link</button>
               <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
             <div className="md:hidden flex items-center gap-2">
                <button onClick={() => setShowUserGuide(true)} className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
+               <button onClick={() => setShowCrystalLink(true)} className="p-2 bg-purple-950/20 rounded border border-purple-900/50 text-purple-400">💎</button>
             </div>
           </div>
         </header>
@@ -269,6 +287,7 @@ const AppContent: React.FC = () => {
 
           {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
           {showManifesto && <UpcomingFeatures onClose={() => setShowManifesto(false)} />}
+          {showCrystalLink && <CrystalLinkModal isOpen={showCrystalLink} onClose={() => setShowCrystalLink(false)} activeArt={activeArt} />}
           
           <ExportModal 
             isOpen={showExportModal}
@@ -297,6 +316,23 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const [params, setParams] = useState(new URLSearchParams(window.location.search));
+  
+  useEffect(() => {
+     const handlePopState = () => {
+        setParams(new URLSearchParams(window.location.search));
+     };
+     window.addEventListener('popstate', handlePopState);
+     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const isMobileView = params.get('view') === 'mobile';
+  const artId = params.get('id');
+
+  if (isMobileView && artId) {
+     return <MobileViewer artId={artId} />;
+  }
+
   return (
     <ToastProvider>
       <AppContent />
