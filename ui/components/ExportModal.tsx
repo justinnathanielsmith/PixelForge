@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { GeneratedArt, AnimationSettings } from '../../domain/entities';
 import { generateAsepriteMetadata } from '../../utils/asepriteFormatter.ts';
-import { generateKotlinFleksCode } from '../../utils/codeGenerator.ts';
+import { generateKotlinFleksCode, generateComposeCode } from '../../utils/codeGenerator.ts';
 import { useToast } from '../context/ToastContext';
 
 interface ExportModalProps {
@@ -14,7 +14,7 @@ interface ExportModalProps {
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
-  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code' | 'svg'>('gif');
+  const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code' | 'compose' | 'svg'>('gif');
   const { whisper } = useToast();
 
   const asepritePreview = useMemo(() => {
@@ -27,10 +27,15 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
     return generateKotlinFleksCode(activeArt, settings);
   }, [activeArt, settings]);
 
-  const handleCopyCode = () => {
-    if (codePreview) {
-      navigator.clipboard.writeText(codePreview);
-      whisper("Snippet Inscribed", "Kotlin/Fleks code copied to clipboard.", "success");
+  const composePreview = useMemo(() => {
+    if (!activeArt) return null;
+    return generateComposeCode(activeArt, settings);
+  }, [activeArt, settings]);
+
+  const handleCopyCode = (code: string | null) => {
+    if (code) {
+      navigator.clipboard.writeText(code);
+      whisper("Snippet Inscribed", "Code successfully copied to clipboard.", "success");
     }
   };
 
@@ -38,20 +43,20 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
-       <div className="w-full max-w-2xl fantasy-card bg-[#1c1917] flex flex-col shadow-2xl border-amber-900/50 max-h-[90vh]">
-          <div className="flex items-center justify-between p-4 border-b border-[#44403c] bg-[#0c0a09]">
+       <div className="w-full max-w-2xl fantasy-card bg-stone-900 flex flex-col shadow-2xl border-amber-900/50 max-h-[90vh]">
+          <div className="flex items-center justify-between p-4 border-b border-stone-800 bg-stone-950">
              <h2 className="fantasy-font text-sm text-amber-500 uppercase tracking-widest flex items-center gap-2"><span>📦</span> Export Manifest</h2>
              <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
           </div>
           
-          <div className="flex bg-[#0a0807] border-b border-[#44403c] overflow-x-auto custom-scrollbar">
-             {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code', 'svg'] as const).map(tab => (
+          <div className="flex bg-stone-950 border-b border-stone-800 overflow-x-auto custom-scrollbar">
+             {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code', 'compose', 'svg'] as const).map(tab => (
                 <button 
                   key={tab} 
                   onClick={() => setExportTab(tab)}
-                  className={`px-6 py-3 text-[10px] fantasy-font uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${exportTab === tab ? 'bg-[#1c1917] text-amber-500 border-t-2 border-amber-600' : 'text-stone-600 hover:text-stone-400'}`}
+                  className={`px-6 py-3 text-[10px] fantasy-font uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${exportTab === tab ? 'bg-stone-900 text-amber-500 border-t-2 border-amber-600' : 'text-stone-600 hover:text-stone-400'}`}
                 >
-                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab === 'code' ? 'Code (Kotlin)' : tab === 'atlas' ? 'Atlas (LittleKT)' : tab === 'svg' ? 'Vector (SVG)' : tab}
+                  {tab === 'aseprite' ? 'Aseprite Flux' : tab === 'mobile' ? 'Universal Bundle' : tab === 'code' ? 'Code (Fleks)' : tab === 'compose' ? 'Compose (KMP)' : tab === 'atlas' ? 'Atlas (LittleKT)' : tab === 'svg' ? 'Vector (SVG)' : tab}
                 </button>
              ))}
           </div>
@@ -72,7 +77,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                      </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                     <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                     <div className="bg-stone-950 p-3 border border-stone-800 rounded">
                         <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Metadata Details</h4>
                         <ul className="text-[9px] text-stone-400 space-y-1">
                            <li>• Format: Aseprite JSON (Hash)</li>
@@ -81,7 +86,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                            <li>• Tags: {(activeArt?.actions || ['none']).join(", ").toUpperCase()}</li>
                         </ul>
                      </div>
-                     <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
+                     <div className="bg-stone-950 p-3 border border-stone-800 rounded">
                         <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Import Rite</h4>
                         <p className="text-[9px] text-stone-400 italic leading-tight">Download both the Sprite Sheet (PNG) and this Metadata (JSON) into your project folder.</p>
                      </div>
@@ -107,65 +112,35 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                          ))}
                       </div>
                   </div>
-                  
-                  <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
-                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Payload Contents (ZIP)</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="text-[9px] text-emerald-500 font-bold block mb-1">Android Structure</span>
-                            <ul className="text-[9px] text-stone-400 space-y-1 font-mono">
-                                <li>📁 android/drawable-mdpi/ (1x)</li>
-                                <li>📁 android/drawable-xhdpi/ (2x)</li>
-                                <li>📁 android/drawable-xxhdpi/ (3x)</li>
-                                <li>📁 android/drawable-xxxhdpi/ (4x)</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <span className="text-[9px] text-sky-500 font-bold block mb-1">iOS Asset Catalog</span>
-                            <ul className="text-[9px] text-stone-400 space-y-1 font-mono">
-                                <li>📁 ios/Assets.xcassets/</li>
-                                <li>&nbsp;&nbsp;└ 📄 Contents.json</li>
-                                <li>&nbsp;&nbsp;└ 🖼️ 1x, @2x, @3x</li>
-                            </ul>
-                        </div>
+               </div>
+             ) : exportTab === 'compose' ? (
+               <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                  <div className="bg-sky-950/20 border border-sky-900/40 p-4 rounded space-y-3">
+                      <div className="flex items-center gap-3">
+                          <span className="text-2xl">📱</span>
+                          <div>
+                              <h3 className="fantasy-font text-xs text-sky-400 uppercase tracking-wide">Compose Multiplatform Resource</h3>
+                              <p className="text-[10px] text-stone-500 italic">Kotlin code for Jetpack Compose (Android/Desktop/iOS).</p>
+                          </div>
+                      </div>
+                      <div className="bg-black/80 border border-stone-800 p-3 rounded font-mono text-[10px] text-stone-400 overflow-x-auto whitespace-pre custom-scrollbar">
+                          {composePreview}
                       </div>
                   </div>
+                  <div className="bg-stone-950 p-3 border border-stone-800 rounded">
+                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Compose Integration</h4>
+                      <p className="text-[9px] text-stone-400 italic leading-tight">
+                        Perfect for UI-heavy games using standard Compose layouting. Best used with the 'Single' asset mode or 'Card' Archetype.
+                      </p>
+                  </div>
                </div>
-             ) : exportTab === 'atlas' ? (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-                   <div className="bg-purple-950/20 border border-purple-900/40 p-4 rounded space-y-3">
-                      <div className="flex items-center gap-3">
-                         <span className="text-2xl">🗺️</span>
-                         <div>
-                            <h3 className="fantasy-font text-xs text-purple-400 uppercase tracking-wide">LittleKT Texture Atlas</h3>
-                            <p className="text-[10px] text-stone-500 italic">Packed ZIP containing Sprite Sheet (PNG) and Atlas Definition (JSON).</p>
-                         </div>
-                      </div>
-                      <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
-                        <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Usage in Kotlin</h4>
-                        <div className="bg-black/80 border border-stone-800 p-2 rounded font-mono text-[9px] text-stone-400">
-                           <p className="mb-1 text-purple-400">val atlas = resourcesVfs["{activeArt?.prompt.substring(0,10).replace(/\s/g,'_')}.json"].readAtlas()</p>
-                           <p className="text-stone-500">// Access regions by name (e.g., 'idle_0', 'icon_5')</p>
-                           <p>val sprite = atlas["{activeArt?.category === 'icon_set' ? 'icon_0' : 'idle_0'}"]</p>
-                        </div>
-                      </div>
-                   </div>
-                   <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
-                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Region Naming Protocol</h4>
-                      <ul className="text-[9px] text-stone-400 space-y-1 ml-2 list-disc">
-                         <li><strong className="text-purple-400">Icon Sets:</strong> icon_0, icon_1, icon_2...</li>
-                         <li><strong className="text-purple-400">Characters:</strong> action_0, action_1 (e.g., walk_0, attack_0)</li>
-                         <li><strong className="text-purple-400">Generic:</strong> frame_0, frame_1...</li>
-                      </ul>
-                   </div>
-                </div>
              ) : exportTab === 'code' ? (
                 <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
                   <div className="bg-orange-950/20 border border-orange-900/40 p-4 rounded space-y-3">
                       <div className="flex items-center gap-3">
                           <span className="text-2xl">💻</span>
                           <div>
-                              <h3 className="fantasy-font text-xs text-orange-400 uppercase tracking-wide">Kotlin / Fleks Manifest</h3>
+                              <h3 className="fantasy-font text-xs text-orange-400 uppercase tracking-wide">Fleks ECS Manifest</h3>
                               <p className="text-[10px] text-stone-500 italic">LittleKT + Fleks ECS entity definition.</p>
                           </div>
                       </div>
@@ -173,57 +148,29 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                           {codePreview}
                       </div>
                   </div>
-                  <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
-                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Integration Instructions</h4>
-                      <p className="text-[9px] text-stone-400 italic leading-tight">
-                        This snippet defines a World Entity compatible with Fleks ECS. Ensure your asset is loaded into the `resources` object with the generated name before invoking this builder.
-                      </p>
-                  </div>
-                </div>
-             ) : exportTab === 'svg' ? (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-                   <div className="bg-pink-950/20 border border-pink-900/40 p-4 rounded space-y-3">
-                      <div className="flex items-center gap-3">
-                         <span className="text-2xl">📐</span>
-                         <div>
-                            <h3 className="fantasy-font text-xs text-pink-400 uppercase tracking-wide">Scalable Vector Runes</h3>
-                            <p className="text-[10px] text-stone-500 italic">Lossless vectorization of the pixel grid. Perfect for UI scaling and print.</p>
-                         </div>
-                      </div>
-                      <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded flex justify-center">
-                         {activeArt && <img src={activeArt.imageUrl} className="w-32 h-32 object-contain image-pixelated" style={{ imageRendering: 'pixelated' }} />}
-                      </div>
-                   </div>
-                   <div className="bg-[#0c0a09] p-3 border border-stone-800 rounded">
-                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Vectorization Tech</h4>
-                      <p className="text-[9px] text-stone-400 italic leading-tight">
-                        Uses a custom "Pixel-to-Rect" parser with horizontal run-length optimization. 
-                        The resulting SVG uses <code>shape-rendering="crispEdges"</code> to ensure exact pixel alignment at any scale.
-                      </p>
-                   </div>
                 </div>
              ) : (
                <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300 text-center">
-                  <div className="flex justify-center bg-[#020202] p-4 border border-[#292524] rounded aspect-square max-w-[300px] mx-auto overflow-hidden">
+                  <div className="flex justify-center bg-black p-4 border border-stone-800 rounded aspect-square max-w-[300px] mx-auto overflow-hidden">
                      {activeArt && <img src={activeArt.imageUrl} className="w-full h-full object-contain image-pixelated" style={{ imageRendering: 'pixelated' }} />}
                   </div>
-                  <div className="bg-[#0c0a09] p-4 border border-stone-800 rounded max-w-md mx-auto">
+                  <div className="bg-stone-950 p-4 border border-stone-800 rounded max-w-md mx-auto">
                      <h3 className="fantasy-font text-xs text-amber-600 uppercase mb-2">Export Preparation</h3>
-                     <p className="text-[10px] text-stone-500 leading-relaxed">Preparing {exportTab.toUpperCase()} at {settings.targetResolution}px base resolution. Color-accurate downsampling is active.</p>
+                     <p className="text-[10px] text-stone-500 leading-relaxed">Preparing {exportTab.toUpperCase()} at {settings.targetResolution}px base resolution.</p>
                   </div>
                </div>
              )}
           </div>
 
-          <div className="p-6 border-t border-[#44403c] bg-[#0c0a09] flex gap-3">
+          <div className="p-6 border-t border-stone-800 bg-stone-950 flex gap-3">
              {exportTab === 'aseprite' && (
                 <button onClick={() => onExport('png')} className="flex-1 py-4 bg-sky-900 text-sky-100 fantasy-font text-xs font-bold border border-sky-600 uppercase transition-all hover:bg-sky-800">1. Download PNG</button>
              )}
              
-             {exportTab === 'code' ? (
+             {['code', 'compose'].includes(exportTab) ? (
                 <button 
-                  onClick={handleCopyCode}
-                  className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] bg-orange-700 text-white border border-orange-600 hover:bg-orange-600`}
+                  onClick={() => handleCopyCode(exportTab === 'code' ? codePreview : composePreview)}
+                  className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-lg ${exportTab === 'code' ? 'bg-orange-700 text-white border-orange-600 hover:bg-orange-600' : 'bg-sky-700 text-white border-sky-600 hover:bg-sky-600'}`}
                 >
                   Copy Snippet to Clipboard
                 </button>

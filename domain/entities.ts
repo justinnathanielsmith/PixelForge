@@ -1,7 +1,6 @@
-
 export type PixelStyle = '8-bit' | '16-bit' | 'gameboy' | 'hi-bit';
 export type PixelPerspective = 'side' | 'isometric' | 'top-down';
-export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'tileset_bitmask' | 'prop' | 'background' | 'ui_panel' | 'icon_set' | 'projectile' | 'vfx';
+export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'tileset_bitmask' | 'prop' | 'background' | 'ui_panel' | 'icon_set' | 'projectile' | 'vfx' | 'playing_card';
 export type AnimationAction = 'idle' | 'walk' | 'jump' | 'attack' | 'death' | 'none';
 
 export interface SliceData {
@@ -76,7 +75,7 @@ export interface AnimationSettings {
   gifRepeat: number; 
   gifDither: boolean; 
   gifDisposal: number;
-  customPalette?: { r: number; g: number; b: number }[];
+  customPalette?: { r: number; g: number; b: number }[] | null;
 }
 
 export interface PixelForgeState {

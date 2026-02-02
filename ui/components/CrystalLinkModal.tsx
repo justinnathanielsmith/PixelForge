@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { GeneratedArt } from '../../domain/entities';
 
 interface CrystalLinkModalProps {
@@ -9,16 +8,26 @@ interface CrystalLinkModalProps {
 }
 
 const CrystalLinkModal: React.FC<CrystalLinkModalProps> = ({ isOpen, onClose, activeArt }) => {
-  if (!isOpen) return null;
+  const [overrideIp, setOverrideIp] = useState('');
+  
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-  const getViewerUrl = () => {
+  const viewerUrl = useMemo(() => {
      if (!activeArt) return '';
-     const baseUrl = window.location.href.split('?')[0];
-     return `${baseUrl}?view=mobile&id=${activeArt.id}`;
-  };
+     const url = new URL(window.location.href.split('?')[0]);
+     
+     if (isLocal && overrideIp) {
+        url.hostname = overrideIp;
+     }
+     
+     url.searchParams.set('view', 'mobile');
+     url.searchParams.set('id', activeArt.id);
+     return url.toString();
+  }, [activeArt, overrideIp, isLocal]);
 
-  const viewerUrl = getViewerUrl();
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}&bgcolor=1c1917&color=d97706`;
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
@@ -31,23 +40,39 @@ const CrystalLinkModal: React.FC<CrystalLinkModalProps> = ({ isOpen, onClose, ac
              <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
           </div>
           
-          <div className="p-8 flex flex-col items-center gap-6">
+          <div className="p-6 flex flex-col items-center gap-6">
              {!activeArt ? (
-                <div className="text-center text-stone-500 space-y-2">
+                <div className="text-center text-stone-500 space-y-2 py-4">
                    <p className="text-2xl">🌫️</p>
                    <p className="text-xs fantasy-font uppercase">No Artifact Selected</p>
                 </div>
              ) : (
                 <>
+                   {isLocal && (
+                      <div className="w-full bg-amber-950/20 border border-amber-900/40 p-3 rounded text-center space-y-2 animate-in slide-in-from-top-2">
+                         <p className="text-[10px] fantasy-font text-amber-500 uppercase font-bold">Localhost Detected</p>
+                         <p className="text-[9px] text-stone-400 italic leading-tight">Your mobile device cannot resolve 'localhost'. Replace it with your LAN IP (e.g. 192.168.1.5) to sync.</p>
+                         <div className="flex gap-1">
+                            <input 
+                               type="text" 
+                               placeholder="Enter Local IP" 
+                               value={overrideIp} 
+                               onChange={(e) => setOverrideIp(e.target.value)}
+                               className="flex-1 bg-black/40 border border-amber-900/30 text-[10px] p-1 text-amber-400 font-mono outline-none focus:border-amber-500"
+                            />
+                         </div>
+                      </div>
+                   )}
+
                    <div className="p-2 bg-white rounded shadow-[0_0_25px_rgba(217,119,6,0.2)]">
-                      <img src={qrUrl} alt="Crystal Link QR" className="w-[200px] h-[200px]" />
+                      <img src={qrUrl} alt="Crystal Link QR" className="w-[180px] h-[180px]" />
                    </div>
                    
                    <div className="text-center space-y-2">
                       <p className="fantasy-font text-xs text-amber-600 uppercase tracking-widest font-bold">Scan to Materialize</p>
                       <p className="text-[10px] text-stone-500 max-w-[200px] mx-auto leading-relaxed">
                          Open this artifact in the <strong>Mobile Viewer</strong>.
-                         <br/><span className="text-stone-600 italic">(Requires device on same network or local capability)</span>
+                         <br/><span className="text-stone-600 italic">(Requires device on same network)</span>
                       </p>
                    </div>
 

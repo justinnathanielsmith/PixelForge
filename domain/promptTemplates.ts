@@ -1,4 +1,3 @@
-
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction } from "./entities";
 import { CHROMA_KEY } from "./constants";
 
@@ -35,6 +34,16 @@ export const getCategoryDirective = (category: AssetCategory, perspectiveText: s
       FOCUS: Symmetrical borders, distinct corners, and a tileable center area.
       REQUIREMENT: The inner content area must be solid or a simple repeating pattern suitable for 9-slicing. 
       STYLE: Clear 9-slice structure. Ensure corners do not exceed 25% of the total width/height.
+    `;
+  }
+  if (category === 'playing_card') {
+    return `
+      SUBJECT: Playing Card (Front or Back).
+      FOCUS: Vertical rectangular layout (approx 2:3 ratio), decorative filigree borders, and centered focal art.
+      REQUIREMENT: 
+      - If prompt mentions "Back" or "Pattern": Focus on perfect 2-way rotational symmetry.
+      - If prompt mentions "Face" or "Suit": Focus on a central character/monster illustration with suit icons in corners.
+      - CLEAR EDGES: Crisp, defined card boundary with rounded corners.
     `;
   }
   if (category === 'tileset_bitmask') {

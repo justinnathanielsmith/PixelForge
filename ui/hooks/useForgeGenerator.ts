@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { 
   GenerationState, 
@@ -47,6 +46,17 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
     };
     load();
   }, []);
+
+  // Category switch side-effects
+  useEffect(() => {
+    if (category === 'playing_card') {
+      updateSettings({ aspectRatio: '3:4' });
+      setIsSpriteSheet(false);
+    } else if (category === 'ui_panel') {
+      updateSettings({ aspectRatio: '1:1' });
+      setIsSpriteSheet(false);
+    }
+  }, [category, updateSettings]);
 
   const generateArt = useCallback(async (e?: React.FormEvent | Event) => {
     if (e) e.preventDefault();

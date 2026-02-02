@@ -1,4 +1,3 @@
-
 import { AssetCategory, AnimationAction, PixelPerspective } from './entities';
 
 export const ASSET_CATEGORIES: { id: AssetCategory; label: string; icon: string }[] = [
@@ -7,6 +6,7 @@ export const ASSET_CATEGORIES: { id: AssetCategory; label: string; icon: string 
   { id: 'projectile', label: 'AMMO', icon: '☄️' },
   { id: 'vfx', label: 'FX', icon: '✨' },
   { id: 'icon_set', label: 'ARMORY', icon: '⚔️' },
+  { id: 'playing_card', label: 'CARD', icon: '🃏' },
   { id: 'tileset', label: 'TILE', icon: '🧱' },
   { id: 'tileset_bitmask', label: 'AUTOTILE', icon: '🗺️' },
   { id: 'prop', label: 'PROP', icon: '📦' },
