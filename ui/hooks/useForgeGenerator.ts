@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { 
   GenerationState, 
@@ -33,12 +34,10 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
   
   const { whisper } = useToast();
 
-  // Persist prompt
   useEffect(() => {
      orchestrator.persistSession({ prompt });
   }, [prompt]);
 
-  // Load prompt
   useEffect(() => {
     const load = async () => {
       const session = await orchestrator.loadSession();
@@ -47,7 +46,6 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
     load();
   }, []);
 
-  // Category switch side-effects
   useEffect(() => {
     if (category === 'playing_card') {
       updateSettings({ aspectRatio: '3:4' });
@@ -77,7 +75,6 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
       
       addArt(art);
       
-      // Update settings based on result
       updateSettings({
         rows: art.gridSize!.rows,
         cols: art.gridSize!.cols,
@@ -141,12 +138,12 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
     }
   }, [updateSettings, whisper]);
 
-  const exportAsset = useCallback(async (activeArt: GeneratedArt | null, mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg') => {
+  const exportAsset = useCallback(async (activeArt: GeneratedArt | null, mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg', options?: any) => {
     if (!activeArt || isExporting) return;
     setIsExporting(true);
     whisper("Export Started", `Preparing ${mode.toUpperCase()} manifest...`, "info");
     try {
-      const url = await orchestrator.exportAsset(activeArt, settings, mode);
+      const url = await orchestrator.exportAsset(activeArt, settings, mode, options);
       const link = document.createElement('a');
       link.href = url;
       if (mode === 'mobile') {

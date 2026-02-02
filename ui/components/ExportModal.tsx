@@ -10,11 +10,13 @@ interface ExportModalProps {
   onClose: () => void;
   activeArt: GeneratedArt | null;
   settings: AnimationSettings;
-  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg') => void;
+  onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg', options?: any) => void;
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
   const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code' | 'compose' | 'svg'>('gif');
+  const [adaptiveIcons, setAdaptiveIcons] = useState(true);
+  const [useWebp, setUseWebp] = useState(true);
   const { whisper } = useToast();
 
   const asepritePreview = useMemo(() => {
@@ -36,6 +38,14 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
     if (code) {
       navigator.clipboard.writeText(code);
       whisper("Snippet Inscribed", "Code successfully copied to clipboard.", "success");
+    }
+  };
+
+  const handleExport = () => {
+    if (exportTab === 'mobile') {
+      onExport('mobile', { adaptiveIcons, useWebp });
+    } else {
+      onExport(exportTab as any);
     }
   };
 
@@ -99,7 +109,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                         <span className="text-2xl">📱</span>
                         <div>
                             <h3 className="fantasy-font text-xs text-emerald-400 uppercase tracking-wide">Universal Mobile Bundle</h3>
-                            <p className="text-[10px] text-stone-500 italic">Auto-scales to integer multipliers for crisp rendering on Android & iOS retina screens.</p>
+                            <p className="text-[10px] text-stone-500 italic">Auto-scales to integer multipliers for Android & iOS retina screens.</p>
                         </div>
                       </div>
                       
@@ -110,6 +120,34 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                               <div className="text-[10px] fantasy-font text-stone-400">{scale * settings.targetResolution}px</div>
                            </div>
                          ))}
+                      </div>
+
+                      <div className="pt-4 border-t border-emerald-900/30 space-y-3">
+                         <div className="flex items-center justify-between">
+                            <div>
+                               <h4 className="fantasy-font text-[10px] text-emerald-500 uppercase mb-1">Android Adaptive Icons</h4>
+                               <p className="text-[9px] text-stone-500 italic">Generates Foreground + Background layers in mipmap-anydpi-v26.</p>
+                            </div>
+                            <button 
+                               onClick={() => setAdaptiveIcons(!adaptiveIcons)}
+                               className={`px-4 py-2 border rounded fantasy-font text-[9px] transition-all ${adaptiveIcons ? 'bg-emerald-900 border-emerald-500 text-emerald-200' : 'bg-black border-stone-800 text-stone-600'}`}
+                            >
+                               {adaptiveIcons ? 'ENABLED' : 'DISABLED'}
+                            </button>
+                         </div>
+
+                         <div className="flex items-center justify-between border-t border-emerald-900/10 pt-3">
+                            <div>
+                               <h4 className="fantasy-font text-[10px] text-emerald-500 uppercase mb-1">WebP (Android Optimized)</h4>
+                               <p className="text-[9px] text-stone-500 italic">Reduces APK size by using WebP for Android drawables.</p>
+                            </div>
+                            <button 
+                               onClick={() => setUseWebp(!useWebp)}
+                               className={`px-4 py-2 border rounded fantasy-font text-[9px] transition-all ${useWebp ? 'bg-emerald-900 border-emerald-500 text-emerald-200' : 'bg-black border-stone-800 text-stone-600'}`}
+                            >
+                               {useWebp ? 'WEB P' : 'PNG'}
+                            </button>
+                         </div>
                       </div>
                   </div>
                </div>
@@ -126,12 +164,6 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                       <div className="bg-black/80 border border-stone-800 p-3 rounded font-mono text-[10px] text-stone-400 overflow-x-auto whitespace-pre custom-scrollbar">
                           {composePreview}
                       </div>
-                  </div>
-                  <div className="bg-stone-950 p-3 border border-stone-800 rounded">
-                      <h4 className="text-[9px] fantasy-font text-stone-500 uppercase mb-2">Compose Integration</h4>
-                      <p className="text-[9px] text-stone-400 italic leading-tight">
-                        Perfect for UI-heavy games using standard Compose layouting. Best used with the 'Single' asset mode or 'Card' Archetype.
-                      </p>
                   </div>
                </div>
              ) : exportTab === 'code' ? (
@@ -172,11 +204,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
                   onClick={() => handleCopyCode(exportTab === 'code' ? codePreview : composePreview)}
                   className={`flex-1 py-4 fantasy-font text-xs font-bold uppercase transition-all shadow-lg ${exportTab === 'code' ? 'bg-orange-700 text-white border-orange-600 hover:bg-orange-600' : 'bg-sky-700 text-white border-sky-600 hover:bg-sky-600'}`}
                 >
-                  Copy Snippet to Clipboard
+                  Copy Snippet
                 </button>
              ) : (
                 <button 
-                    onClick={() => onExport(exportTab as any)} 
+                    onClick={handleExport} 
                     className="flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
                 >
                     {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : exportTab === 'svg' ? 'Download Vector (.svg)' : `Begin ${exportTab.toUpperCase()} Download`}

@@ -23,7 +23,6 @@ self.onmessage = async (e: MessageEvent) => {
         let targetColors = 256;
         let palette: number[][] | null = null;
 
-        // Custom Palette Priority
         if (settings.paletteLock) {
            if (settings.customPalette && settings.customPalette.length > 0) {
               palette = settings.customPalette.map((c: any) => [c.r, c.g, c.b]);
@@ -65,7 +64,7 @@ self.onmessage = async (e: MessageEvent) => {
       }
 
       case 'EXPORT_MOBILE': {
-        const { art, settings } = payload;
+        const { art, settings, adaptiveIcons, useWebp } = payload;
         const img = await processor.loadImage(art.imageUrl);
         const { cols, rows } = settings;
         const { width: frameW, height: frameH } = processor.getFrameDimensions(settings);
@@ -89,10 +88,10 @@ self.onmessage = async (e: MessageEvent) => {
         const fileName = `${art.category}_${safeName}`;
 
         const androidScales = [
-          { multiplier: 1, folder: 'android/drawable-mdpi' },
-          { multiplier: 2, folder: 'android/drawable-xhdpi' },
-          { multiplier: 3, folder: 'android/drawable-xxhdpi' },
-          { multiplier: 4, folder: 'android/drawable-xxxhdpi' }
+          { multiplier: 1, folder: 'android/res/drawable-mdpi' },
+          { multiplier: 2, folder: 'android/res/drawable-xhdpi' },
+          { multiplier: 3, folder: 'android/res/drawable-xxhdpi' },
+          { multiplier: 4, folder: 'android/res/drawable-xxxhdpi' }
         ];
 
         const iosScales = [
@@ -108,11 +107,60 @@ self.onmessage = async (e: MessageEvent) => {
           sCtx.imageSmoothingEnabled = false; 
           sCtx.drawImage(baseCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
-          const blob = await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+          // Android Scaled Export
           const androidCfg = androidScales.find(s => s.multiplier === i);
-          if (androidCfg) zip.file(`${androidCfg.folder}/${fileName}.png`, blob);
+          if (androidCfg) {
+            const mimeType = useWebp ? 'image/webp' : 'image/png';
+            const ext = useWebp ? 'webp' : 'png';
+            const androidBlob = await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: mimeType });
+            zip.file(`${androidCfg.folder}/${fileName}.${ext}`, androidBlob);
+          }
+
+          // iOS Scaled Export (Always PNG for xcassets standard)
           const iosCfg = iosScales.find(s => s.multiplier === i);
-          if (iosCfg) zip.file(`${iosImagesetPath}/${fileName}${iosCfg.suffix}.png`, blob);
+          if (iosCfg) {
+            const iosBlob = await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+            zip.file(`${iosImagesetPath}/${fileName}${iosCfg.suffix}.png`, iosBlob);
+          }
+        }
+
+        // --- Android Adaptive Icons Polish ---
+        if (adaptiveIcons && (art.category === 'icon_set' || art.category === 'ui_panel' || art.category === 'character' || art.category === 'playing_card')) {
+          const adaptiveXml = `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>`;
+          zip.file(`android/res/mipmap-anydpi-v26/ic_launcher.xml`, adaptiveXml);
+
+          const bgColor = settings.customPalette && settings.customPalette.length > 0 
+            ? `rgb(${settings.customPalette[0].r}, ${settings.customPalette[0].g}, ${settings.customPalette[0].b})`
+            : '#1c1917';
+          
+          const bgCanvas = processor.createCanvas(108, 108);
+          const bgCtx = bgCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+          bgCtx.fillStyle = bgColor;
+          bgCtx.fillRect(0, 0, 108, 108);
+          
+          const launcherMime = useWebp ? 'image/webp' : 'image/png';
+          const launcherExt = useWebp ? 'webp' : 'png';
+          
+          const bgBlob = await (bgCanvas as OffscreenCanvas).convertToBlob({ type: launcherMime });
+          zip.file(`android/res/drawable-nodpi/ic_launcher_background.${launcherExt}`, bgBlob);
+
+          const fgCanvas = processor.createCanvas(108, 108);
+          const fgCtx = fgCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+          fgCtx.imageSmoothingEnabled = false;
+          
+          const iconFrame = processor.processFrame(img, 0, settings, art.style);
+          const fgW = Math.min(72, frameW);
+          const fgH = Math.min(72, frameH);
+          const fgX = (108 - fgW) / 2;
+          const fgY = (108 - fgH) / 2;
+          fgCtx.drawImage(iconFrame, 0, 0, iconFrame.width, iconFrame.height, fgX, fgY, fgW, fgH);
+          
+          const fgBlob = await (fgCanvas as OffscreenCanvas).convertToBlob({ type: launcherMime });
+          zip.file(`android/res/drawable-nodpi/ic_launcher_foreground.${launcherExt}`, fgBlob);
         }
 
         const iosManifest = {
@@ -136,7 +184,6 @@ self.onmessage = async (e: MessageEvent) => {
         const { cols, rows } = settings;
         const { width: frameW, height: frameH } = processor.getFrameDimensions(settings);
         
-        // 1. Generate Full Sheet PNG
         const baseWidth = frameW * cols;
         const baseHeight = frameH * rows;
         const baseCanvas = processor.createCanvas(baseWidth, baseHeight);
@@ -152,15 +199,12 @@ self.onmessage = async (e: MessageEvent) => {
         }
         
         const pngBlob = await (baseCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
-        
-        // 2. Generate JSON Atlas definition
         const frames: any = {};
         const safeName = art.prompt.replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 20) || 'asset';
         const imageName = `${safeName}.png`;
         
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-             // Naming Logic
              let regionName = '';
              if (art.category === 'icon_set') {
                 const index = r * cols + c;
@@ -168,7 +212,6 @@ self.onmessage = async (e: MessageEvent) => {
              } else {
                 let action = 'idle';
                 if (art.actions && art.actions.length > 0) {
-                   // If multi-sheet, assume row maps to action index
                    if (art.type === 'multi-sheet' || (art.actions.length === rows)) {
                       action = art.actions[r % art.actions.length];
                    } else {
@@ -201,9 +244,8 @@ self.onmessage = async (e: MessageEvent) => {
            }
         };
 
-        // 3. Zip it up
         const zip = new JSZip();
-        zip.file(imageName, pngBlob);
+        zip.file(`${safeName}.png`, pngBlob);
         zip.file(`${safeName}.json`, JSON.stringify(atlasJson, null, 2));
         
         const content = await zip.generateAsync({ type: 'blob' });

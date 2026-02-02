@@ -54,7 +54,6 @@ export class PixelForgeOrchestrator {
         gridSize = settings.temporalStability ? { rows: 4, cols: 8 } : { rows: 4, cols: 4 };
         type = 'spritesheet';
       } else {
-        // Multi-Action Sheet: 4 frames per action row
         gridSize = { rows: actions.length, cols: 4 };
         type = 'multi-sheet';
       }
@@ -108,7 +107,8 @@ export class PixelForgeOrchestrator {
   async exportAsset(
     art: GeneratedArt,
     settings: AnimationSettings,
-    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg'
+    mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg',
+    options?: any
   ): Promise<string> {
     switch (mode) {
       case 'png':
@@ -122,7 +122,7 @@ export class PixelForgeOrchestrator {
       case 'aseprite':
         return await exportService.exportAsepriteData(art, settings);
       case 'mobile':
-        return await exportService.exportMobileBundle(art, settings);
+        return await exportService.exportMobileBundle(art, settings, options);
       case 'atlas':
         return await exportService.exportLittleKTAtlas(art, settings);
       default:

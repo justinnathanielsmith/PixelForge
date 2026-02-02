@@ -65,7 +65,6 @@ export class ExportService {
     const finalW = frameW * cols;
     const finalH = frameH * rows;
 
-    // Use a canvas to assemble the processed frames (applying effects)
     const canvas = document.createElement('canvas');
     canvas.width = finalW;
     canvas.height = finalH;
@@ -98,20 +97,17 @@ export class ExportService {
         const a = data[i + 3];
 
         if (a === 0) {
-          // Transparent pixel
           if (currentFill !== null) {
-            // Close previous rect
             rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
             currentFill = null;
             currentOpacity = null;
           }
-          continue; // Skip transparent
+          continue;
         }
 
         const fill = `rgb(${r},${g},${b})`;
         const opacity = a < 255 ? (a / 255).toFixed(3) : null;
 
-        // Check if we can extend the current rect
         if (fill !== currentFill || opacity !== currentOpacity) {
           if (currentFill !== null) {
              rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
@@ -121,7 +117,6 @@ export class ExportService {
           startX = x;
         }
       }
-      // End of row
       if (currentFill !== null) {
         rects += `<rect x="${startX}" y="${y}" width="${finalW - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
       }
@@ -132,8 +127,8 @@ export class ExportService {
     return URL.createObjectURL(blob);
   }
 
-  async exportMobileBundle(art: GeneratedArt, settings: AnimationSettings): Promise<string> {
-    const blob = await this.runWorkerTask('EXPORT_MOBILE', { art, settings });
+  async exportMobileBundle(art: GeneratedArt, settings: AnimationSettings, options?: { adaptiveIcons?: boolean, useWebp?: boolean }): Promise<string> {
+    const blob = await this.runWorkerTask('EXPORT_MOBILE', { art, settings, ...options });
     return URL.createObjectURL(blob);
   }
   
@@ -160,7 +155,6 @@ export class ExportService {
     const { cols, rows, fps } = settings;
     const { width: frameW, height: frameH } = imageProcessingService.getFrameDimensions(settings);
     
-    // Calculate display dimensions maintaining aspect ratio within 512px box
     const ratio = frameW / frameH;
     let displayW, displayH;
     if (frameW > frameH) {
