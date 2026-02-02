@@ -48,7 +48,7 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
-    <CodexSection title="Dimensions & Resolution" icon="📐" defaultOpen={false}>
+    <CodexSection title="Dimensions & Resolution" icon="📐" defaultOpen={true}>
       <div className="space-y-4">
           <div className="space-y-1.5">
               <label className="terminal-font text-[9px] text-stone-500 uppercase flex items-center gap-2">
@@ -151,7 +151,7 @@ export const CodexGrid: React.FC<SettingsSectionProps> = ({ settings, setSetting
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
-    <CodexSection title="Grid Protocol" icon="🕸️" defaultOpen={false}>
+    <CodexSection title="Grid Protocol" icon="🕸️" defaultOpen={true}>
        <div className="grid grid-cols-2 gap-2">
           <button 
               onClick={() => updateSetting('vectorRite', !settings.vectorRite)} 

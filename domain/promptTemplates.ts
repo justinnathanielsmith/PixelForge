@@ -1,3 +1,4 @@
+
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction } from "./entities";
 import { CHROMA_KEY } from "./constants";
 
@@ -129,9 +130,17 @@ export const getLayoutInstruction = (
   
   if (isSpriteSheet && actions.length > 0) {
     if (actions.length === 1) {
+      const action = actions[0];
       const frameCount = temporalStability ? 32 : 16;
       const grid = temporalStability ? "8x4" : "4x4";
-      return `LAYOUT: ${grid} sprite sheet (${frameCount} frames). Depict a ${actions[0].toUpperCase()} loop. Continuous animation flow across cells.`;
+      
+      let nuance = "";
+      if (action === 'talk') nuance = "Focus on facial animation, mouth movement, and slight head bob.";
+      if (action === 'fly') nuance = "Focus on keeping the body suspended/hovering, with wing flaps or jet propulsion active.";
+      if (action === 'run') nuance = "Dynamic leaning pose, high leg lift, fast motion.";
+      if (action === 'hit') nuance = "Reaction pose, flinching, head tilted back, brief recoil.";
+
+      return `LAYOUT: ${grid} sprite sheet (${frameCount} frames). Depict a ${action.toUpperCase()} loop. ${nuance} Continuous animation flow across cells.`;
     } else {
       return `LAYOUT: MULTI-ACTION SPRITE ATLAS.
       - Total of ${actions.length} animation rows.

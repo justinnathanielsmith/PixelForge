@@ -1,7 +1,8 @@
+
 export type PixelStyle = '8-bit' | '16-bit' | 'gameboy' | 'hi-bit';
 export type PixelPerspective = 'side' | 'isometric' | 'top-down';
 export type AssetCategory = 'character' | 'enemy' | 'tileset' | 'tileset_bitmask' | 'prop' | 'background' | 'ui_panel' | 'icon_set' | 'projectile' | 'vfx' | 'playing_card';
-export type AnimationAction = 'idle' | 'walk' | 'jump' | 'attack' | 'death' | 'none';
+export type AnimationAction = 'idle' | 'walk' | 'run' | 'jump' | 'fly' | 'attack' | 'talk' | 'hit' | 'death' | 'none';
 
 export interface SliceData {
   top: number;    // In pixels from the top edge
