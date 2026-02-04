@@ -107,6 +107,8 @@ self.onmessage = async (e: MessageEvent) => {
           sCtx.imageSmoothingEnabled = false; 
           sCtx.drawImage(baseCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
+          let sharedPngBlob: Blob | null = null;
+
           // Android Scaled Export
           const androidCfg = androidScales.find(s => s.multiplier === i);
           if (androidCfg) {
@@ -114,12 +116,16 @@ self.onmessage = async (e: MessageEvent) => {
             const ext = useWebp ? 'webp' : 'png';
             const androidBlob = await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: mimeType });
             zip.file(`${androidCfg.folder}/${fileName}.${ext}`, androidBlob);
+
+            if (mimeType === 'image/png') {
+              sharedPngBlob = androidBlob;
+            }
           }
 
           // iOS Scaled Export (Always PNG for xcassets standard)
           const iosCfg = iosScales.find(s => s.multiplier === i);
           if (iosCfg) {
-            const iosBlob = await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+            const iosBlob = sharedPngBlob || await (scaledCanvas as OffscreenCanvas).convertToBlob({ type: 'image/png' });
             zip.file(`${iosImagesetPath}/${fileName}${iosCfg.suffix}.png`, iosBlob);
           }
         }
