@@ -4,6 +4,15 @@ import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton,
 import { assembleForgePrompt } from "../domain/promptTemplates";
 
 export class PixelGenService {
+  private _ai: GoogleGenAI | null = null;
+
+  private get ai(): GoogleGenAI {
+    if (!this._ai) {
+      this._ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return this._ai;
+  }
+
   async generatePixelArt(
     prompt: string, 
     isSpriteSheet: boolean, 
@@ -17,7 +26,6 @@ export class PixelGenService {
     aspectRatio: string = "1:1",
     inspirationImage?: { data: string, mimeType: string }
   ): Promise<string> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-image-preview';
     
     const basePrompt = assembleForgePrompt({
@@ -43,7 +51,7 @@ export class PixelGenService {
     const contents: Content = { parts };
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await this.ai.models.generateContent({
         model,
         contents,
         config: { 
@@ -72,7 +80,6 @@ export class PixelGenService {
   }
 
   async generateSliceData(imageBase64: string, targetResolution: number): Promise<SliceData> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-preview';
 
     const prompt = `
@@ -92,7 +99,7 @@ export class PixelGenService {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await this.ai.models.generateContent({
         model,
         contents: {
           parts: [
@@ -130,7 +137,6 @@ export class PixelGenService {
   }
 
   async generateNormalMap(imageBase64: string): Promise<string> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-image-preview';
 
     const prompt = `
@@ -151,7 +157,7 @@ export class PixelGenService {
     ];
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await this.ai.models.generateContent({
         model,
         contents: { parts },
         config: { imageConfig: { aspectRatio: "1:1", imageSize: "1K" } }
@@ -171,7 +177,6 @@ export class PixelGenService {
   }
 
   async generateSkeleton(imageBase64: string, category: AssetCategory): Promise<Skeleton> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-preview';
 
     const prompt = `
@@ -193,7 +198,7 @@ export class PixelGenService {
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await this.ai.models.generateContent({
         model,
         contents: {
           parts: [
@@ -249,7 +254,6 @@ export class PixelGenService {
   }
 
   async generatePalette(prompt: string): Promise<{r: number, g: number, b: number}[]> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-flash-preview';
 
     const systemPrompt = `
@@ -260,7 +264,7 @@ export class PixelGenService {
     `;
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await this.ai.models.generateContent({
         model,
         contents: {
           parts: [{ text: `${systemPrompt}\nDESCRIPTION: ${prompt}` }]
