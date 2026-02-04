@@ -78,7 +78,8 @@ export class ImageProcessingService {
     source: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
     frameIndex: number,
     settings: AnimationSettings,
-    style: string
+    style: string,
+    targetCanvas?: HTMLCanvasElement | OffscreenCanvas
   ): HTMLCanvasElement | OffscreenCanvas {
     const { cols, rows } = settings;
     const { width: targetW, height: targetH } = this.getFrameDimensions(settings);
@@ -88,7 +89,15 @@ export class ImageProcessingService {
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    const canvas = this.createCanvas(targetW, targetH);
+    const canvas = targetCanvas || this.createCanvas(targetW, targetH);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    } else if (targetCanvas) {
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+      if (ctx) ctx.clearRect(0, 0, targetW, targetH);
+    }
+
     const ctx = canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     if (!ctx) return canvas;
 
