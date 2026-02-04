@@ -22,6 +22,7 @@ const CodexSection = ({ title, icon, children, defaultOpen = false, className = 
     <div className={`group border border-[#292524] bg-[#0c0a09] rounded overflow-hidden transition-all duration-200 hover:border-[#57534e] ${className}`}>
         <button 
             type="button"
+            aria-expanded={isOpen}
             className="w-full flex items-center justify-between p-3 cursor-pointer hover:bg-[#1c1917] active:bg-[#292524] transition-colors select-none outline-none text-left"
             onClick={() => setIsOpen(!isOpen)}
         >
@@ -95,6 +96,7 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
                   value={settings.zoom} 
                   onChange={(e) => updateSetting('zoom', parseFloat(e.target.value))} 
                   className="accent-amber-600 w-full cursor-pointer" 
+                  aria-label="Vision Scale"
               />
           </div>
 
@@ -104,13 +106,13 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
                       <div className="flex justify-between terminal-font text-[9px] text-stone-500">
                           <span>COLS</span><span className="text-amber-500 font-bold">{settings.cols}</span>
                       </div>
-                      <input type="range" min="1" max="16" value={settings.cols} onChange={(e) => updateSetting('cols', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" />
+                      <input type="range" min="1" max="16" value={settings.cols} onChange={(e) => updateSetting('cols', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Columns" />
                   </div>
                   <div className="space-y-1">
                       <div className="flex justify-between terminal-font text-[9px] text-stone-500">
                           <span>ROWS</span><span className="text-amber-500 font-bold">{settings.rows}</span>
                       </div>
-                      <input type="range" min="1" max="16" value={settings.rows} onChange={(e) => updateSetting('rows', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" />
+                      <input type="range" min="1" max="16" value={settings.rows} onChange={(e) => updateSetting('rows', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Rows" />
                   </div>
               </div>
           )}
@@ -130,7 +132,7 @@ export const CodexChronometry: React.FC<SettingsSectionProps> = ({ settings, set
                   <label className="terminal-font text-[9px] text-stone-500 uppercase">Frame Rate</label>
                   <span className="terminal-font text-xs text-amber-500 font-bold">{settings.fps} FPS</span>
               </div>
-              <input type="range" min="1" max="60" value={settings.fps} onChange={(e) => updateSetting('fps', parseInt(e.target.value))} className="w-full accent-amber-600 cursor-pointer" />
+              <input type="range" min="1" max="60" value={settings.fps} onChange={(e) => updateSetting('fps', parseInt(e.target.value))} className="w-full accent-amber-600 cursor-pointer" aria-label="Frame Rate" />
           </div>
           
           <button
@@ -154,34 +156,39 @@ export const CodexGrid: React.FC<SettingsSectionProps> = ({ settings, setSetting
     <CodexSection title="Grid Protocol" icon="🕸️" defaultOpen={true}>
        <div className="grid grid-cols-2 gap-2">
           <button 
-              onClick={() => updateSetting('vectorRite', !settings.vectorRite)} 
+              onClick={() => updateSetting('vectorRite', !settings.vectorRite)}
+              aria-pressed={settings.vectorRite}
               className={`text-[9px] px-2 py-3 border fantasy-font font-bold uppercase transition-all rounded-sm flex items-center justify-center gap-1 hover:brightness-110 ${settings.vectorRite ? 'bg-sky-900/40 border-sky-500 text-sky-200 shadow-[inset_0_0_10px_rgba(14,165,233,0.2)]' : 'bg-black/40 border-stone-800 text-stone-600 hover:text-stone-400 hover:border-stone-600'}`}
               title="Geometric Silhouette Sharpening"
           >
               Vector Rite
           </button>
           <button 
-              onClick={() => updateSetting('temporalStability', !settings.temporalStability)} 
+              onClick={() => updateSetting('temporalStability', !settings.temporalStability)}
+              aria-pressed={settings.temporalStability}
               className={`text-[9px] px-2 py-3 border fantasy-font font-bold uppercase transition-all rounded-sm flex items-center justify-center gap-1 hover:brightness-110 ${settings.temporalStability ? 'bg-amber-900/40 border-amber-500 text-amber-200 shadow-[inset_0_0_10px_rgba(217,119,6,0.2)]' : 'bg-black/40 border-stone-800 text-stone-600 hover:text-stone-400 hover:border-stone-600'}`}
               title="Strict Temporal Anchoring"
           >
               Consistency
           </button>
           <button 
-              onClick={() => updateSetting('batchMode', !settings.batchMode)} 
+              onClick={() => updateSetting('batchMode', !settings.batchMode)}
+              aria-pressed={settings.batchMode}
               className={`text-[9px] px-2 py-3 border fantasy-font font-bold uppercase transition-all rounded-sm flex items-center justify-center gap-1 hover:brightness-110 ${settings.batchMode ? 'bg-purple-900/40 border-purple-500 text-purple-200 shadow-[inset_0_0_10px_rgba(168,85,247,0.2)]' : 'bg-black/40 border-stone-800 text-stone-600 hover:text-stone-400 hover:border-stone-600'}`}
               title="Generate 4 Variations"
           >
               Breeding
           </button>
           <button 
-              onClick={() => updateSetting('tiledPreview', !settings.tiledPreview)} 
+              onClick={() => updateSetting('tiledPreview', !settings.tiledPreview)}
+              aria-pressed={settings.tiledPreview}
               className={`text-[9px] px-2 py-3 border fantasy-font font-bold uppercase transition-all rounded-sm hover:brightness-110 ${settings.tiledPreview ? 'bg-stone-700 border-stone-400 text-white shadow-md' : 'bg-black/40 border-stone-800 text-stone-600 hover:text-stone-400 hover:border-stone-600'}`}
           >
               Seamless
           </button>
           <button 
-              onClick={() => updateSetting('showGuides', !settings.showGuides)} 
+              onClick={() => updateSetting('showGuides', !settings.showGuides)}
+              aria-pressed={settings.showGuides}
               className={`col-span-2 text-[9px] px-2 py-2 border fantasy-font font-bold uppercase transition-all rounded-sm hover:brightness-110 ${settings.showGuides ? 'bg-stone-700 border-stone-400 text-white' : 'bg-black/40 border-stone-800 text-stone-600 hover:text-stone-400 hover:border-stone-600'}`}
           >
               Show Grid Guides
@@ -220,14 +227,20 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
   return (
     <CodexSection title="Alchemy & Essence" icon="⚗️" defaultOpen={true}>
        <div className="space-y-2 mb-3 pb-3 border-b border-stone-800/50">
-          <div className="flex justify-between items-center group cursor-pointer" onClick={() => updateSetting('autoTransparency', !settings.autoTransparency)}>
+          <button
+              type="button"
+              aria-pressed={settings.autoTransparency}
+              aria-label="Toggle Transparency"
+              className="w-full flex justify-between items-center group cursor-pointer bg-transparent border-none p-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 rounded-sm"
+              onClick={() => updateSetting('autoTransparency', !settings.autoTransparency)}
+          >
               <span className="fantasy-font text-[9px] text-emerald-600 font-bold uppercase group-hover:text-emerald-500 transition-colors">Void Key (Transparency)</span>
               <div 
                   className={`w-8 h-4 rounded-full border relative transition-colors duration-300 ${settings.autoTransparency ? 'bg-emerald-900 border-emerald-500' : 'bg-stone-900 border-stone-700'}`}
               >
                   <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all duration-300 shadow-sm ${settings.autoTransparency ? 'left-4' : 'left-0.5'}`} />
               </div>
-          </div>
+          </button>
           {settings.autoTransparency && (
               <div className="space-y-1 pl-2 border-l-2 border-emerald-900/30">
                    <div className="flex justify-between terminal-font text-[9px] text-stone-500">
@@ -241,6 +254,7 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
                       value={settings.chromaTolerance} 
                       onChange={(e) => updateSetting('chromaTolerance', parseInt(e.target.value))} 
                       className="accent-emerald-600 w-full cursor-pointer" 
+                      aria-label="Transparency Tolerance"
                   />
               </div>
           )}
@@ -251,6 +265,7 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
               <h4 className="text-[9px] fantasy-font text-red-400 uppercase font-bold">Neural Color Ramps</h4>
               <button 
                   onClick={() => updateSetting('paletteLock', !settings.paletteLock)}
+                  aria-pressed={settings.paletteLock}
                   className={`text-[8px] px-2 py-0.5 border fantasy-font font-bold uppercase transition-all rounded-full ${settings.paletteLock ? 'bg-red-900/40 border-red-500 text-red-200 shadow-[0_0_8px_rgba(239,68,68,0.3)]' : 'bg-transparent border-stone-800 text-stone-600 hover:border-stone-600'}`}
               >
                   {settings.paletteLock ? 'LOCKED' : 'UNLOCKED'}
@@ -264,6 +279,7 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
                   onChange={(e) => setPalettePrompt(e.target.value)} 
                   placeholder='e.g. "Toxic Slime"'
                   className="flex-1 bg-black/50 border border-stone-700 text-[10px] p-2 text-stone-300 focus:border-red-500 focus:bg-black outline-none fantasy-input rounded-sm transition-colors"
+                  aria-label="Palette Prompt"
               />
               <button 
                   onClick={handleGeneratePalette} 
@@ -296,13 +312,13 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
               <div className="flex justify-between terminal-font text-[9px] text-stone-500">
               <span>TINT SHIFT</span><span className="text-red-500 font-bold">{settings.hue}°</span>
               </div>
-              <input type="range" min="-180" max="180" value={settings.hue} onChange={(e) => updateSetting('hue', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" />
+              <input type="range" min="-180" max="180" value={settings.hue} onChange={(e) => updateSetting('hue', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Tint Shift" />
           </div>
           <div className="space-y-1">
               <div className="flex justify-between terminal-font text-[9px] text-stone-500">
               <span>VIBRANCE</span><span className="text-red-500 font-bold">{settings.saturation}%</span>
               </div>
-              <input type="range" min="0" max="200" value={settings.saturation} onChange={(e) => updateSetting('saturation', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" />
+              <input type="range" min="0" max="200" value={settings.saturation} onChange={(e) => updateSetting('saturation', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Vibrance" />
           </div>
        </div>
     </CodexSection>
