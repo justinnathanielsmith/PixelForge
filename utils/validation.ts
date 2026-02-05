@@ -9,6 +9,87 @@ const VALID_IDS = {
   TYPE: ['single', 'spritesheet', 'batch', 'multi-sheet']
 };
 
+const DEFAULT_SETTINGS: AnimationSettings = {
+  rows: 4, cols: 4, fps: 8, isPlaying: true, showGuides: false, tiledPreview: false,
+  targetResolution: 32, aspectRatio: '1:1', paletteLock: false, autoTransparency: true, chromaTolerance: 5, batchMode: false, zoom: 1.0,
+  panOffset: { x: 0, y: 0 },
+  onionSkin: false, hue: 0, saturation: 100, contrast: 100, brightness: 100,
+  temporalStability: false,
+  vectorRite: false,
+  gifRepeat: 0,
+  gifDither: false,
+  gifDisposal: 2,
+  customPalette: null
+};
+
+function validateAnimationSettings(data: any): AnimationSettings | null {
+  if (!data || typeof data !== 'object') return null;
+
+  // Start with defaults to ensure all fields are present and typed correctly
+  const settings: AnimationSettings = { ...DEFAULT_SETTINGS };
+
+  // Helper to safely assign number
+  const assignNum = (key: keyof AnimationSettings) => {
+    if (typeof data[key] === 'number' && !isNaN(data[key])) {
+      (settings as any)[key] = data[key];
+    }
+  };
+
+  // Helper to safely assign boolean
+  const assignBool = (key: keyof AnimationSettings) => {
+    if (typeof data[key] === 'boolean') {
+      (settings as any)[key] = data[key];
+    }
+  };
+
+  assignNum('rows');
+  assignNum('cols');
+  assignNum('fps');
+  assignBool('isPlaying');
+  assignBool('showGuides');
+  assignBool('tiledPreview');
+  assignNum('targetResolution');
+
+  if (typeof data.aspectRatio === 'string' && ['1:1', '16:9', '9:16', '4:3', '3:4'].includes(data.aspectRatio)) {
+    settings.aspectRatio = data.aspectRatio;
+  }
+
+  assignBool('paletteLock');
+  assignBool('autoTransparency');
+  assignNum('chromaTolerance');
+  assignBool('batchMode');
+  assignNum('zoom');
+
+  if (data.panOffset && typeof data.panOffset === 'object' &&
+      typeof data.panOffset.x === 'number' && typeof data.panOffset.y === 'number') {
+    settings.panOffset = { x: data.panOffset.x, y: data.panOffset.y };
+  }
+
+  assignBool('onionSkin');
+  assignNum('hue');
+  assignNum('saturation');
+  assignNum('contrast');
+  assignNum('brightness');
+  assignBool('temporalStability');
+  assignBool('vectorRite');
+  assignNum('gifRepeat');
+  assignBool('gifDither');
+  assignNum('gifDisposal');
+
+  if (Array.isArray(data.customPalette)) {
+    const cleanPalette = data.customPalette.filter((c: any) =>
+      c && typeof c === 'object' &&
+      typeof c.r === 'number' && typeof c.g === 'number' && typeof c.b === 'number'
+    ).map((c: any) => ({ r: c.r, g: c.g, b: c.b }));
+
+    if (cleanPalette.length > 0) {
+      settings.customPalette = cleanPalette;
+    }
+  }
+
+  return settings;
+}
+
 export function validateImportedProject(data: any): { history: GeneratedArt[], settings: AnimationSettings | null, prompt: string } {
   if (!data || typeof data !== 'object') throw new Error("Invalid project file.");
   if (!data.history || !Array.isArray(data.history)) throw new Error("Invalid project: Missing history array.");
@@ -49,7 +130,7 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
 
   return {
     history: cleanHistory,
-    settings: data.settings || null, // Settings are complex, passing through but could be sanitized similarly
+    settings: validateAnimationSettings(data.settings),
     prompt: typeof data.lastPrompt === 'string' ? data.lastPrompt : (data.prompt || '')
   };
 }
