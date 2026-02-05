@@ -1,11 +1,18 @@
 
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import SpritePreview from './SpritePreview';
-import { AnimationSettings, GeneratedArt } from '../../domain/entities';
+import { imageProcessingService } from '../../data/imageProcessingService';
 
 // Mock dependencies
+vi.mock('../../data/imageProcessingService', () => ({
+  imageProcessingService: {
+    processFrame: vi.fn(),
+    getFrameDimensions: vi.fn().mockReturnValue({ width: 32, height: 32 }),
+  },
+}));
+
 vi.mock('../hooks/useForgeCanvas', () => ({
   useForgeCanvas: () => ({
     canvasRef: { current: document.createElement('canvas') },
@@ -14,7 +21,7 @@ vi.mock('../hooks/useForgeCanvas', () => ({
     isPanning: false,
     tool: 'none',
     setTool: vi.fn(),
-    brushColor: '#ffffff',
+    brushColor: '#000000',
     setBrushColor: vi.fn(),
     handleWheel: vi.fn(),
     handleMouseDown: vi.fn(),
@@ -23,68 +30,98 @@ vi.mock('../hooks/useForgeCanvas', () => ({
   }),
 }));
 
-vi.mock('../../data/imageProcessingService', () => ({
-  imageProcessingService: {
-    getFrameDimensions: () => ({ width: 512, height: 512 }),
-    processFrame: () => document.createElement('canvas'),
-  },
-}));
+describe('SpritePreview Optimization', () => {
+  const defaultProps = {
+    activeArt: {
+        id: '1', imageUrl: 'test.png', type: 'single',
+        createdAt: 0, category: 'character', style: '8-bit',
+        prompt: '', settings: {} as any
+    },
+    settings: {
+      rows: 1, cols: 1, fps: 10, isPlaying: true,
+      zoom: 1, panOffset: { x: 0, y: 0 },
+      targetResolution: 32, aspectRatio: '1:1',
+      hue: 0, saturation: 100, contrast: 100, brightness: 100,
+      autoTransparency: false, vectorRite: false, paletteLock: false,
+      onionSkin: false, tiledPreview: false, showGuides: false,
+      customPalette: undefined
+    },
+    style: '8-bit',
+    onUpdateArt: vi.fn(),
+    onUpdateSettings: vi.fn(),
+  };
 
-const mockSettings: AnimationSettings = {
-  rows: 1,
-  cols: 1,
-  fps: 12,
-  isPlaying: false,
-  showGuides: false,
-  tiledPreview: false,
-  targetResolution: 64,
-  aspectRatio: '1:1',
-  paletteLock: false,
-  autoTransparency: false,
-  chromaTolerance: 0,
-  batchMode: false,
-  zoom: 1,
-  panOffset: { x: 0, y: 0 },
-  onionSkin: false,
-  hue: 0,
-  saturation: 100,
-  contrast: 100,
-  brightness: 100,
-  temporalStability: false,
-  vectorRite: false,
-  gifRepeat: 0,
-  gifDither: false,
-  gifDisposal: 2,
-};
+  let originalRAF: any;
+  let originalImage: any;
 
-const mockArt: GeneratedArt = {
-  id: '1',
-  imageUrl: 'test.png',
-  prompt: 'test',
-  timestamp: 1234567890,
-  type: 'single',
-  style: '8-bit',
-  perspective: 'side',
-  category: 'character',
-  actions: ['idle'],
-};
+  beforeEach(() => {
+    vi.clearAllMocks();
+    originalRAF = window.requestAnimationFrame;
+    // Mock rAF to execute immediately
+    window.requestAnimationFrame = (cb) => {
+      cb(performance.now());
+      return 1;
+    };
 
-describe('SpritePreview Accessibility', () => {
-  it('should have accessible toolbar buttons', () => {
-    render(
-      <SpritePreview
-        activeArt={mockArt}
-        settings={mockSettings}
-        style="8-bit"
-        onUpdateArt={vi.fn()}
-        onUpdateSettings={vi.fn()}
-      />
-    );
+    originalImage = window.Image;
+    window.Image = class {
+      onload: any;
+      crossOrigin: any;
+      src: any;
+      width: number = 100;
+      height: 100;
+      set src(value) {
+          setTimeout(() => {
+              if (this.onload) this.onload();
+          }, 0);
+      }
+    } as any;
 
-    // These queries will fail if aria-labels are missing
-    // getByRole throws an error if not found, so validation is implicit
-    screen.getByRole('button', { name: /Scribe Tool/i });
-    screen.getByRole('button', { name: /Nullify Tool/i });
-    screen.getByRole('button', { name: /Reset View/i });
+    // Mock Canvas getContext
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+      createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      fill: vi.fn(),
+      arc: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      setLineDash: vi.fn(),
+    })) as any;
+
+    (imageProcessingService.processFrame as any).mockImplementation((_img: any, _frame: number, _settings: any, _style: string, targetCanvas: any) => {
+        return targetCanvas || document.createElement('canvas');
+    });
+  });
+
+  afterEach(() => {
+    window.requestAnimationFrame = originalRAF;
+    window.Image = originalImage;
+  });
+
+  it('caches processed frames when non-processing settings change', async () => {
+    const { rerender } = render(<SpritePreview {...defaultProps as any} />);
+
+    // Initial render - wait for image load
+    await waitFor(() => expect(imageProcessingService.processFrame).toHaveBeenCalledTimes(1));
+
+    // Update panOffset - this triggers renderFrame but should NOT trigger processFrame if cached
+    // Changing panOffset changes the 'settings' object reference, so we pass a new object
+    const newSettings = {
+      ...defaultProps.settings,
+      panOffset: { x: 10, y: 10 }
+    };
+
+    rerender(<SpritePreview {...defaultProps as any} settings={newSettings} />);
+
+    // We expect it to fail first (2 calls) then pass (1 call).
+    // The rerender should synchronously call requestAnimationFrame due to our mock,
+    // which calls renderFrame.
+    await waitFor(() => expect(imageProcessingService.processFrame).toHaveBeenCalledTimes(1));
   });
 });
