@@ -32,6 +32,12 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   const normalMapRef = useRef<HTMLImageElement | null>(null);
   const spacePressed = useRef(false);
 
+  // Performance: Reusable Canvases
+  const lightingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const colorFrameRef = useRef<HTMLCanvasElement | null>(null);
+  const normalFrameRef = useRef<HTMLCanvasElement | null>(null);
+  const checkerboardCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
   // Hook for canvas interactions
   const { 
     canvasRef, containerRef, mousePos, isPanning, tool, setTool, brushColor, setBrushColor,
@@ -90,15 +96,23 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   }, []);
 
   const drawCheckerboard = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const size = 16;
-    ctx.save();
-    for (let y = 0; y < height; y += size) {
-      for (let x = 0; x < width; x += size) {
-        ctx.fillStyle = ((x / size + y / size) % 2 === 0) ? '#1c1917' : '#141210';
-        ctx.fillRect(x, y, size, size);
-      }
+    if (!checkerboardCanvasRef.current || checkerboardCanvasRef.current.width !== width || checkerboardCanvasRef.current.height !== height) {
+       const cvs = checkerboardCanvasRef.current || document.createElement('canvas');
+       checkerboardCanvasRef.current = cvs;
+       cvs.width = width;
+       cvs.height = height;
+       const cCtx = cvs.getContext('2d');
+       if (cCtx) {
+          const size = 16;
+          for (let y = 0; y < height; y += size) {
+             for (let x = 0; x < width; x += size) {
+                cCtx.fillStyle = ((x / size + y / size) % 2 === 0) ? '#1c1917' : '#141210';
+                cCtx.fillRect(x, y, size, size);
+             }
+          }
+       }
     }
-    ctx.restore();
+    ctx.drawImage(checkerboardCanvasRef.current, 0, 0);
   }, []);
 
   const renderFrame = useCallback((frame: number) => {
@@ -140,18 +154,25 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
     // --- NORMAL MAP LIGHTING RENDERER ---
     if (lightingMode && normalMapRef.current && !settings.tiledPreview && !isBatch) {
-       const colorFrame = imageProcessingService.processFrame(img, frame, settings, style);
+       if (!colorFrameRef.current) colorFrameRef.current = document.createElement('canvas');
+       if (!normalFrameRef.current) normalFrameRef.current = document.createElement('canvas');
+
+       const colorFrame = imageProcessingService.processFrame(img, frame, settings, style, colorFrameRef.current);
        const normalSettings = { 
          ...settings, 
          hue: 0, saturation: 100, contrast: 100, brightness: 100, 
          paletteLock: false, vectorRite: false,
          autoTransparency: false 
        };
-       const normalFrame = imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style);
+       const normalFrame = imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrameRef.current);
 
-       const lightingCanvas = document.createElement('canvas');
-       lightingCanvas.width = frameW;
-       lightingCanvas.height = frameH;
+       if (!lightingCanvasRef.current) lightingCanvasRef.current = document.createElement('canvas');
+       const lightingCanvas = lightingCanvasRef.current;
+       if (lightingCanvas.width !== frameW || lightingCanvas.height !== frameH) {
+          lightingCanvas.width = frameW;
+          lightingCanvas.height = frameH;
+       }
+
        const lCtx = lightingCanvas.getContext('2d');
        
        if (lCtx) {
