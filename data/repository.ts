@@ -1,6 +1,7 @@
 
 import { GeneratedArt, PixelForgeState, AnimationSettings } from '../domain/entities';
 import { pixelDB } from './db';
+import { validateImportedProject } from '../utils/validation';
 
 const STORAGE_KEYS = {
   SETTINGS: 'pixelforge_settings_v1',
@@ -64,30 +65,26 @@ export class PixelRepository {
    * Deserializes project data and restores history and settings.
    */
   async importProject(json: string): Promise<{ history: GeneratedArt[], settings: AnimationSettings | null, prompt: string }> {
-    const data = JSON.parse(json);
-    
-    // Validate basic structure
-    if (!data.history || !Array.isArray(data.history)) {
-      throw new Error("Invalid .forge project file.");
-    }
+    const rawData = JSON.parse(json);
+    const { history, settings, prompt } = validateImportedProject(rawData);
 
     // Restore History to IndexedDB
-    for (const art of data.history) {
+    for (const art of history) {
       await pixelDB.putArt(art);
     }
 
     // Restore Settings to IndexedDB
-    if (data.settings) {
-      await pixelDB.putSessionValue(STORAGE_KEYS.SETTINGS, data.settings);
+    if (settings) {
+      await pixelDB.putSessionValue(STORAGE_KEYS.SETTINGS, settings);
     }
-    if (data.lastPrompt) {
-      await pixelDB.putSessionValue(STORAGE_KEYS.PROMPT, data.lastPrompt);
+    if (prompt) {
+      await pixelDB.putSessionValue(STORAGE_KEYS.PROMPT, prompt);
     }
 
     return {
       history: await this.getHistory(),
-      settings: data.settings || null,
-      prompt: data.lastPrompt || ''
+      settings,
+      prompt
     };
   }
 }
