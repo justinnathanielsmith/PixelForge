@@ -34,9 +34,11 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
   // Performance: Reusable Canvases
   const lightingCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const colorFrameRef = useRef<HTMLCanvasElement | null>(null);
-  const normalFrameRef = useRef<HTMLCanvasElement | null>(null);
   const checkerboardCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Cache for processed frames to avoid expensive re-processing
+  const frameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const normalFrameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
 
   // Hook for canvas interactions
   const { 
@@ -48,6 +50,23 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
     imageUrl,
     onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl })
   });
+
+  // Clear frame cache when processing settings change
+  useEffect(() => {
+    frameCache.current.clear();
+  }, [
+    imageUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio,
+    settings.hue, settings.saturation, settings.contrast, settings.brightness,
+    settings.autoTransparency, settings.vectorRite, settings.paletteLock, settings.customPalette,
+    style
+  ]);
+
+  // Clear normal cache when relevant settings change
+  useEffect(() => {
+    normalFrameCache.current.clear();
+  }, [
+    normalMapUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio, style
+  ]);
 
   // Load Main Image
   useEffect(() => {
@@ -154,17 +173,27 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
     // --- NORMAL MAP LIGHTING RENDERER ---
     if (lightingMode && normalMapRef.current && !settings.tiledPreview && !isBatch) {
-       if (!colorFrameRef.current) colorFrameRef.current = document.createElement('canvas');
-       if (!normalFrameRef.current) normalFrameRef.current = document.createElement('canvas');
+       // Get or create cached Color Frame
+       let colorFrame = frameCache.current.get(frame);
+       if (!colorFrame) {
+         colorFrame = document.createElement('canvas');
+         imageProcessingService.processFrame(img, frame, settings, style, colorFrame);
+         frameCache.current.set(frame, colorFrame);
+       }
 
-       const colorFrame = imageProcessingService.processFrame(img, frame, settings, style, colorFrameRef.current);
-       const normalSettings = { 
-         ...settings, 
-         hue: 0, saturation: 100, contrast: 100, brightness: 100, 
-         paletteLock: false, vectorRite: false,
-         autoTransparency: false 
-       };
-       const normalFrame = imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrameRef.current);
+       // Get or create cached Normal Frame
+       let normalFrame = normalFrameCache.current.get(frame);
+       if (!normalFrame) {
+         const normalSettings = {
+           ...settings,
+           hue: 0, saturation: 100, contrast: 100, brightness: 100,
+           paletteLock: false, vectorRite: false,
+           autoTransparency: false
+         };
+         normalFrame = document.createElement('canvas');
+         imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrame);
+         normalFrameCache.current.set(frame, normalFrame);
+       }
 
        if (!lightingCanvasRef.current) lightingCanvasRef.current = document.createElement('canvas');
        const lightingCanvas = lightingCanvasRef.current;
@@ -220,11 +249,24 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
        }
     } else {
        // --- STANDARD RENDERER ---
-       const processedFrame = imageProcessingService.processFrame(img, frame, settings, style);
+       let processedFrame = frameCache.current.get(frame);
+       if (!processedFrame) {
+          processedFrame = document.createElement('canvas');
+          imageProcessingService.processFrame(img, frame, settings, style, processedFrame);
+          frameCache.current.set(frame, processedFrame);
+       }
+
        const totalFrames = settings.rows * settings.cols;
        if (settings.onionSkin && !settings.tiledPreview && totalFrames > 1 && !isBatch) {
           const prevFrameIdx = (frame - 1 + totalFrames) % totalFrames;
-          const prevFrameCanvas = imageProcessingService.processFrame(img, prevFrameIdx, settings, style);
+
+          let prevFrameCanvas = frameCache.current.get(prevFrameIdx);
+          if (!prevFrameCanvas) {
+             prevFrameCanvas = document.createElement('canvas');
+             imageProcessingService.processFrame(img, prevFrameIdx, settings, style, prevFrameCanvas);
+             frameCache.current.set(prevFrameIdx, prevFrameCanvas);
+          }
+
           ctx.globalAlpha = 0.3;
           drawStandardFrame(ctx, prevFrameCanvas, settings, dx, dy, dw, dh);
           ctx.globalAlpha = 1.0;
