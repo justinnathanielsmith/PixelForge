@@ -368,6 +368,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
              onClick={() => setTool(tool === 'pencil' ? 'none' : 'pencil')} 
              className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'pencil' ? 'bg-amber-600 border-amber-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800'}`}
              title="Scribe Tool (Pencil)"
+             aria-label="Scribe Tool (Pencil)"
+             aria-pressed={tool === 'pencil'}
            >
              <span className="text-lg">🖋️</span>
            </button>
@@ -375,6 +377,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
              onClick={() => setTool(tool === 'eraser' ? 'none' : 'eraser')} 
              className={`w-10 h-10 flex items-center justify-center rounded border transition-all ${tool === 'eraser' ? 'bg-red-600 border-red-300 text-black shadow-lg scale-110' : 'bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800'}`}
              title="Nullify Tool (Eraser)"
+             aria-label="Nullify Tool (Eraser)"
+             aria-pressed={tool === 'eraser'}
            >
              <span className="text-lg">🧼</span>
            </button>
@@ -385,6 +389,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                   value={brushColor} 
                   onChange={(e) => setBrushColor(e.target.value)} 
                   className="w-8 h-8 cursor-pointer bg-transparent border-0 p-0 hover:scale-110 transition-transform"
+                  aria-label="Brush Color"
                 />
              </div>
            )}
@@ -392,6 +397,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
              onClick={() => onUpdateSettings({ zoom: 1, panOffset: { x: 0, y: 0 } })} 
              className="w-10 h-10 flex items-center justify-center rounded border bg-stone-900/80 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500 hover:bg-stone-800 transition-all"
              title="Reset View"
+             aria-label="Reset View"
            >
              <span className="text-lg">🎯</span>
            </button>
@@ -441,13 +447,13 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                    {isGenerating ? <span className="animate-spin">⚙</span> : <span>🔮</span>} Alchemist
                 </button>
               ) : (
-                <button onClick={() => setLightingMode(!lightingMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${lightingMode ? 'bg-amber-600 border-amber-300 text-black shadow-[0_0_15px_rgba(217,119,6,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setLightingMode(!lightingMode)} aria-pressed={lightingMode} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${lightingMode ? 'bg-amber-600 border-amber-300 text-black shadow-[0_0_15px_rgba(217,119,6,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>🔥</span> {lightingMode ? 'Quench' : 'Ignite'} Torch
                 </button>
               )}
 
               {sliceData && (
-                <button onClick={() => setSliceMode(!sliceMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${sliceMode ? 'bg-emerald-600 border-emerald-300 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setSliceMode(!sliceMode)} aria-pressed={sliceMode} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 ${sliceMode ? 'bg-emerald-600 border-emerald-300 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>📏</span> 9-Slice Guide
                 </button>
               )}
@@ -457,7 +463,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
                    {isGenerating ? <span className="animate-spin">⚙</span> : <span>🦴</span>} Auto-Rig
                 </button>
               ) : (
-                <button onClick={() => setSkeletonMode(!skeletonMode)} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 hover:scale-105 transition-all ${skeletonMode ? 'bg-sky-600 border-sky-300 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
+                <button onClick={() => setSkeletonMode(!skeletonMode)} aria-pressed={skeletonMode} className={`border px-3 py-1.5 rounded shadow-lg backdrop-blur-md fantasy-font text-[10px] font-bold uppercase flex items-center gap-2 hover:scale-105 transition-all ${skeletonMode ? 'bg-sky-600 border-sky-300 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'bg-stone-900/80 border-stone-600 text-stone-300'}`}>
                    <span>💀</span> Skeleton
                 </button>
               )}
