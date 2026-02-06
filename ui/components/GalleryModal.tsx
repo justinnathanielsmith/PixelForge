@@ -69,7 +69,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
                  Export ({selectedIds.size})
                </button>
              )}
-             <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl md:text-3xl transition-colors p-2 leading-none">×</button>
+             <button onClick={onClose} aria-label="Close Gallery" className="text-stone-500 hover:text-red-400 text-2xl md:text-3xl transition-colors p-2 leading-none">×</button>
           </div>
         </div>
 
@@ -107,6 +107,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
                             onClick={(e) => { e.stopPropagation(); onDelete(art.id); }}
                             className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center"
                             title="Dissolve Entity"
+                            aria-label="Delete Art"
                           >
                              🗑️
                           </button>

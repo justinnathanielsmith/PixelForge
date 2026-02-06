@@ -37,7 +37,7 @@ const CrystalLinkModal: React.FC<CrystalLinkModalProps> = ({ isOpen, onClose, ac
                 <span className="text-xl">💎</span>
                 <h2 className="fantasy-font text-sm text-amber-500 uppercase tracking-widest">Crystal Link</h2>
              </div>
-             <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
+             <button onClick={onClose} aria-label="Close Crystal Link Modal" className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
           </div>
           
           <div className="p-6 flex flex-col items-center gap-6">
