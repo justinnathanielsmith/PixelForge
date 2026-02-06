@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GeneratedArt } from '../../domain/entities';
 import { useToast } from '../context/ToastContext';
 import JSZip from 'jszip';
@@ -13,19 +13,66 @@ interface GalleryModalProps {
   onDelete: (id: string) => void;
 }
 
+interface GalleryItemProps {
+  art: GeneratedArt;
+  isActive: boolean;
+  isSelected: boolean;
+  onSelect: (art: GeneratedArt) => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+// Optimized component using React.memo to prevent re-renders of the entire list when selection changes
+const GalleryItem = React.memo(({ art, isActive, isSelected, onSelect, onToggle, onDelete }: GalleryItemProps) => {
+  return (
+    <div
+      onClick={() => onSelect(art)}
+      className={`relative group cursor-pointer aspect-square bg-[#020202] border-2 transition-all hover:scale-105 ${isActive ? 'border-amber-500 shadow-[0_0_20px_rgba(217,119,6,0.3)]' : 'border-[#292524] hover:border-stone-500'}`}
+    >
+      <img src={art.imageUrl} className="w-full h-full object-contain image-pixelated p-2" style={{ imageRendering: 'pixelated' }} />
+
+      {/* Selection Ring */}
+      <div
+        onClick={(e) => { e.stopPropagation(); onToggle(art.id); }}
+        className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center z-10 ${isSelected ? 'bg-amber-600 border-amber-300' : 'bg-black/60 border-stone-700 opacity-0 group-hover:opacity-100'}`}
+      >
+        {isSelected && <span className="text-[10px] text-black font-bold">✓</span>}
+      </div>
+
+      {/* Metadata Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+          <p className="text-[8px] terminal-font text-stone-400 line-clamp-2 leading-tight mb-1">{art.prompt}</p>
+          <div className="flex justify-between items-center">
+            <span className="text-[7px] fantasy-font text-amber-600 uppercase font-bold">{art.type.split('-')[0]}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(art.id); }}
+              className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center"
+              title="Dissolve Entity"
+              aria-label="Delete Art"
+            >
+                🗑️
+            </button>
+          </div>
+      </div>
+    </div>
+  );
+});
+
 const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, activeArtId, onSelect, onDelete }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { whisper } = useToast();
 
   if (!isOpen) return null;
 
-  const toggleSelection = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
+  // Stable callback using functional update to prevent re-creation on every render, allowing GalleryItem to remain memoized
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const handleBatchExport = async () => {
     if (selectedIds.size === 0) return;
@@ -83,37 +130,15 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
            ) : (
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
                 {history.map(art => (
-                  <div 
+                  <GalleryItem
                     key={art.id}
-                    onClick={() => onSelect(art)}
-                    className={`relative group cursor-pointer aspect-square bg-[#020202] border-2 transition-all hover:scale-105 ${activeArtId === art.id ? 'border-amber-500 shadow-[0_0_20px_rgba(217,119,6,0.3)]' : 'border-[#292524] hover:border-stone-500'}`}
-                  >
-                    <img src={art.imageUrl} className="w-full h-full object-contain image-pixelated p-2" style={{ imageRendering: 'pixelated' }} />
-                    
-                    {/* Selection Ring */}
-                    <div 
-                      onClick={(e) => toggleSelection(art.id, e)}
-                      className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center z-10 ${selectedIds.has(art.id) ? 'bg-amber-600 border-amber-300' : 'bg-black/60 border-stone-700 opacity-0 group-hover:opacity-100'}`}
-                    >
-                      {selectedIds.has(art.id) && <span className="text-[10px] text-black font-bold">✓</span>}
-                    </div>
-
-                    {/* Metadata Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-                       <p className="text-[8px] terminal-font text-stone-400 line-clamp-2 leading-tight mb-1">{art.prompt}</p>
-                       <div className="flex justify-between items-center">
-                          <span className="text-[7px] fantasy-font text-amber-600 uppercase font-bold">{art.type.split('-')[0]}</span>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); onDelete(art.id); }}
-                            className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center"
-                            title="Dissolve Entity"
-                            aria-label="Delete Art"
-                          >
-                             🗑️
-                          </button>
-                       </div>
-                    </div>
-                  </div>
+                    art={art}
+                    isActive={activeArtId === art.id}
+                    isSelected={selectedIds.has(art.id)}
+                    onSelect={onSelect}
+                    onToggle={toggleSelection}
+                    onDelete={onDelete}
+                  />
                 ))}
              </div>
            )}
@@ -130,4 +155,3 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
 };
 
 export default GalleryModal;
-    

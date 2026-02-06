@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Canvas Creation in Render Loop]
 **Learning:** `SpritePreview.tsx` was creating multiple DOM `canvas` elements every frame (60fps) inside `requestAnimationFrame` loop via `renderFrame` and `imageProcessingService.processFrame`. This causes significant GC pressure.
 **Action:** Reuse canvas instances using `useRef` and pass them to processing functions to avoid allocation in hot paths.
+
+## 2024-05-24 - [List Rendering Performance in Modals]
+**Learning:** `GalleryModal` rendered large lists of `GeneratedArt` items without memoization. Passing inline arrow functions to `onClick` caused all items to re-render on any state change (like selection).
+**Action:** Always extract list items into `React.memo` components and use `useCallback` for handlers when rendering large lists, especially in interactive modals.
