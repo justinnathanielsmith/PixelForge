@@ -77,6 +77,7 @@ export const usePixelForge = () => {
       link.href = url;
       link.download = `project_${Date.now()}.forge`;
       link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 100);
       whisper("Project Saved", "The Grimoire has been archived as a .forge file.", "success");
     } catch (err) {
       console.error("Project export failure", err);

@@ -156,6 +156,7 @@ export const useForgeGenerator = ({ settings, addArt, updateArt, updateSettings 
         link.download = mode === 'aseprite' ? `pxl_flux_${activeArt.id}.json` : `pxl_export.${mode === 'video' ? 'webm' : mode}`;
       }
       link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 100);
       whisper("Export Complete", "Asset manifest successfully manifested.", "success");
     } catch (error) {
       console.error("Export failed", error);
