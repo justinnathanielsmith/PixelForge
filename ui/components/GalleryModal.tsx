@@ -62,8 +62,6 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { whisper } = useToast();
 
-  if (!isOpen) return null;
-
   // Stable callback using functional update to prevent re-creation on every render, allowing GalleryItem to remain memoized
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds(prev => {
@@ -73,6 +71,8 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
       return next;
     });
   }, []);
+
+  if (!isOpen) return null;
 
   const handleBatchExport = async () => {
     if (selectedIds.size === 0) return;

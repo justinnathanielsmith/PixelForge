@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePixelForge } from './ui/hooks/usePixelForge.ts';
 import { GenerationState } from './domain/entities.ts';
 import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from './domain/constants.ts';
@@ -38,7 +38,14 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const updateSettings = (s: any) => dispatch({ type: 'UPDATE_SETTINGS', payload: s });
+  const updateSettings = useCallback((s: any) => dispatch({ type: 'UPDATE_SETTINGS', payload: s }), [dispatch]);
+
+  const handleGallerySelect = useCallback((art: any) => {
+    dispatch({ type: 'SET_ACTIVE_ART', payload: art });
+    setShowGallery(false);
+  }, [dispatch]);
+
+  const handleGalleryClose = useCallback(() => setShowGallery(false), []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -303,10 +310,10 @@ const AppContent: React.FC = () => {
 
           <GalleryModal 
             isOpen={showGallery}
-            onClose={() => setShowGallery(false)}
+            onClose={handleGalleryClose}
             history={history}
             activeArtId={activeArt?.id}
-            onSelect={(art) => { dispatch({ type: 'SET_ACTIVE_ART', payload: art }); setShowGallery(false); }}
+            onSelect={handleGallerySelect}
             onDelete={actions.deleteArt}
           />
 

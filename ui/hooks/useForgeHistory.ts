@@ -39,16 +39,19 @@ export const useForgeHistory = () => {
       
       setHistory(prev => {
         const remaining = prev.filter(a => a.id !== id);
-        if (activeArt?.id === id) {
-          setActiveArt(remaining.length > 0 ? remaining[0] : null);
-        }
+        setActiveArt(currentActive => {
+          if (currentActive?.id === id) {
+            return remaining.length > 0 ? remaining[0] : null;
+          }
+          return currentActive;
+        });
         return remaining;
       });
       whisper("Entity Dissolved", "The vision has been returned to the void.", "info");
     } catch (err) {
       whisper("Dissolution Failed", "The entity clings to reality.", "error");
     }
-  }, [activeArt, whisper]);
+  }, [whisper]);
 
   const navigateHistory = useCallback((direction: 'newer' | 'older') => {
     if (!history.length) return;
@@ -69,10 +72,13 @@ export const useForgeHistory = () => {
 
   const setFullHistory = useCallback((newHistory: GeneratedArt[]) => {
     setHistory(newHistory);
-    if (newHistory.length > 0 && !activeArt) {
-      setActiveArt(newHistory[0]);
-    }
-  }, [activeArt]);
+    setActiveArt(prev => {
+      if (!prev && newHistory.length > 0) {
+        return newHistory[0];
+      }
+      return prev;
+    });
+  }, []);
 
   return { 
     history, 

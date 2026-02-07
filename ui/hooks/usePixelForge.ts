@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 import { orchestrator } from '../../domain/pixelForgeOrchestrator';
 import { useToast } from '../context/ToastContext';
 import { PixelForgeState, PixelForgeIntent } from '../../domain/entities';
@@ -103,7 +103,7 @@ export const usePixelForge = () => {
   };
 
   // Dispatch Facade for App compatibility
-  const dispatch = (intent: PixelForgeIntent) => {
+  const dispatch = useCallback((intent: PixelForgeIntent) => {
     switch (intent.type) {
       case 'SET_PROMPT': setPrompt(intent.payload); break;
       case 'SET_SPRITE_SHEET': setIsSpriteSheet(intent.payload); break;
@@ -136,7 +136,21 @@ export const usePixelForge = () => {
         break;
       }
     }
-  };
+  }, [
+    setPrompt,
+    setIsSpriteSheet,
+    setSelectedStyle,
+    setPerspective,
+    setCategory,
+    toggleAction,
+    setActiveArt,
+    updateArt,
+    deleteArt,
+    updateSettings,
+    setInspiration,
+    setIsExporting,
+    setFullHistory
+  ]);
 
   // Actions object for cleaner usage in App
   const actions = useMemo(() => ({
