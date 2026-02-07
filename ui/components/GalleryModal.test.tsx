@@ -51,8 +51,8 @@ describe('GalleryModal', () => {
     render(<GalleryModal {...defaultProps} />);
     expect(screen.getByText('The Great Gallery')).toBeDefined();
     expect(screen.getByText('Viewing 2 Manifestations')).toBeDefined();
-    const images = screen.getAllByRole('img');
-    expect(images).toHaveLength(2);
+    const items = screen.getAllByLabelText(/View .*/);
+    expect(items).toHaveLength(2);
   });
 
   it('renders nothing when closed', () => {
@@ -62,8 +62,30 @@ describe('GalleryModal', () => {
 
   it('calls onSelect when an item is clicked', () => {
     render(<GalleryModal {...defaultProps} />);
-    const images = screen.getAllByRole('img');
-    fireEvent.click(images[0]);
+    const viewButton = screen.getByLabelText(/View test prompt 1/i);
+    fireEvent.click(viewButton);
     expect(defaultProps.onSelect).toHaveBeenCalledWith(mockHistory[0]);
+  });
+
+  it('toggles selection when selection button is clicked', () => {
+    render(<GalleryModal {...defaultProps} />);
+    const selectButtons = screen.getAllByLabelText(/Select for export/i);
+    const firstButton = selectButtons[0];
+
+    expect(firstButton.getAttribute('aria-pressed')).toBe('false');
+
+    fireEvent.click(firstButton);
+
+    // Expect the button to update its state
+    const activeSelectButton = screen.getByLabelText('Deselect');
+    expect(activeSelectButton).toBeTruthy();
+    expect(activeSelectButton.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('calls onDelete when delete button is clicked', () => {
+    render(<GalleryModal {...defaultProps} />);
+    const deleteButtons = screen.getAllByLabelText('Delete Art');
+    fireEvent.click(deleteButtons[0]);
+    expect(defaultProps.onDelete).toHaveBeenCalledWith(mockHistory[0].id);
   });
 });
