@@ -171,7 +171,7 @@ const AutotileModal: React.FC<AutotileModalProps> = ({ isOpen, onClose, activeAr
                <span className="text-[10px] text-stone-500 font-mono">3x3 Blob Connectivity Test</span>
              </div>
            </div>
-           <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
+           <button onClick={onClose} aria-label="Close Autotile Modal" className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
         </div>
 
         {/* Viewport */}
@@ -185,16 +185,18 @@ const AutotileModal: React.FC<AutotileModalProps> = ({ isOpen, onClose, activeAr
         <div className="p-4 border-t border-[#44403c] bg-[#0c0a09] flex gap-4 items-center justify-between">
            <div className="flex gap-4 items-center">
               <div className="space-y-1">
-                 <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest block">Island Zoom</label>
+                 <label htmlFor="island-zoom" className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest block">Island Zoom</label>
                  <input 
+                    id="island-zoom"
                     type="range" min="1" max="6" step="1" 
                     value={scale} onChange={(e) => setScale(parseInt(e.target.value))} 
                     className="w-24 accent-emerald-600"
                  />
               </div>
               <div className="space-y-1">
-                 <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest block">Map Size</label>
+                 <label htmlFor="map-size" className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest block">Map Size</label>
                  <input 
+                    id="map-size"
                     type="range" min="6" max="24" step="1" 
                     value={islandSize} onChange={(e) => setIslandSize(parseInt(e.target.value))} 
                     className="w-24 accent-emerald-600"

@@ -56,13 +56,17 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
        <div className="w-full max-w-2xl fantasy-card bg-stone-900 flex flex-col shadow-2xl border-amber-900/50 max-h-[90vh]">
           <div className="flex items-center justify-between p-4 border-b border-stone-800 bg-stone-950">
              <h2 className="fantasy-font text-sm text-amber-500 uppercase tracking-widest flex items-center gap-2"><span>📦</span> Export Manifest</h2>
-             <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
+             <button onClick={onClose} aria-label="Close Export Modal" className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
           </div>
           
-          <div className="flex bg-stone-950 border-b border-stone-800 overflow-x-auto custom-scrollbar">
+          <div role="tablist" aria-label="Export Formats" className="flex bg-stone-950 border-b border-stone-800 overflow-x-auto custom-scrollbar">
              {(['gif', 'png', 'video', 'aseprite', 'mobile', 'atlas', 'code', 'compose', 'svg'] as const).map(tab => (
                 <button 
                   key={tab} 
+                  role="tab"
+                  aria-selected={exportTab === tab}
+                  aria-controls={`panel-${tab}`}
+                  id={`tab-${tab}`}
                   onClick={() => setExportTab(tab)}
                   className={`px-6 py-3 text-[10px] fantasy-font uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${exportTab === tab ? 'bg-stone-900 text-amber-500 border-t-2 border-amber-600' : 'text-stone-600 hover:text-stone-400'}`}
                 >
@@ -71,7 +75,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
              ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <div role="tabpanel" id={`panel-${exportTab}`} aria-labelledby={`tab-${exportTab}`} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
              {exportTab === 'aseprite' ? (
                <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
                   <div className="bg-sky-950/20 border border-sky-900/40 p-4 rounded space-y-3">
