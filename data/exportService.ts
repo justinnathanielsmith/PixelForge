@@ -82,7 +82,7 @@ export class ExportService {
     }
 
     const { data } = ctx.getImageData(0, 0, finalW, finalH);
-    let rects = '';
+    const rects: string[] = [];
 
     for (let y = 0; y < finalH; y++) {
       let startX = 0;
@@ -98,7 +98,7 @@ export class ExportService {
 
         if (a === 0) {
           if (currentFill !== null) {
-            rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+            rects.push(`<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`);
             currentFill = null;
             currentOpacity = null;
           }
@@ -110,7 +110,7 @@ export class ExportService {
 
         if (fill !== currentFill || opacity !== currentOpacity) {
           if (currentFill !== null) {
-             rects += `<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+             rects.push(`<rect x="${startX}" y="${y}" width="${x - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`);
           }
           currentFill = fill;
           currentOpacity = opacity;
@@ -118,11 +118,11 @@ export class ExportService {
         }
       }
       if (currentFill !== null) {
-        rects += `<rect x="${startX}" y="${y}" width="${finalW - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`;
+        rects.push(`<rect x="${startX}" y="${y}" width="${finalW - startX}" height="1" fill="${currentFill}"${currentOpacity ? ` fill-opacity="${currentOpacity}"` : ''}/>`);
       }
     }
 
-    const svgContent = `<svg width="${finalW}" height="${finalH}" viewBox="0 0 ${finalW} ${finalH}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${rects}</svg>`;
+    const svgContent = `<svg width="${finalW}" height="${finalH}" viewBox="0 0 ${finalW} ${finalH}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${rects.join('')}</svg>`;
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     return URL.createObjectURL(blob);
   }
