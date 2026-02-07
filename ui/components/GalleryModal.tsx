@@ -26,27 +26,35 @@ interface GalleryItemProps {
 const GalleryItem = React.memo(({ art, isActive, isSelected, onSelect, onToggle, onDelete }: GalleryItemProps) => {
   return (
     <div
-      onClick={() => onSelect(art)}
-      className={`relative group cursor-pointer aspect-square bg-[#020202] border-2 transition-all hover:scale-105 ${isActive ? 'border-amber-500 shadow-[0_0_20px_rgba(217,119,6,0.3)]' : 'border-[#292524] hover:border-stone-500'}`}
+      className={`relative group aspect-square bg-[#020202] border-2 transition-all hover:scale-105 focus-within:scale-105 ${isActive ? 'border-amber-500 shadow-[0_0_20px_rgba(217,119,6,0.3)]' : 'border-[#292524] hover:border-stone-500 focus-within:border-stone-500'}`}
     >
-      <img src={art.imageUrl} className="w-full h-full object-contain image-pixelated p-2" style={{ imageRendering: 'pixelated' }} />
+      {/* Primary Action - Invisible Button */}
+      <button
+        onClick={() => onSelect(art)}
+        className="absolute inset-0 w-full h-full cursor-pointer z-0 bg-transparent opacity-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+        aria-label={`View ${art.prompt}`}
+      />
+
+      <img src={art.imageUrl} className="w-full h-full object-contain image-pixelated p-2 pointer-events-none" style={{ imageRendering: 'pixelated' }} alt="" />
 
       {/* Selection Ring */}
-      <div
+      <button
         onClick={(e) => { e.stopPropagation(); onToggle(art.id); }}
-        className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center z-10 ${isSelected ? 'bg-amber-600 border-amber-300' : 'bg-black/60 border-stone-700 opacity-0 group-hover:opacity-100'}`}
+        aria-label={isSelected ? "Deselect" : "Select for export"}
+        aria-pressed={isSelected}
+        className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center z-10 focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected ? 'bg-amber-600 border-amber-300' : 'bg-black/60 border-stone-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'}`}
       >
         {isSelected && <span className="text-[10px] text-black font-bold">✓</span>}
-      </div>
+      </button>
 
       {/* Metadata Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity p-3 flex flex-col justify-end pointer-events-none z-20">
           <p className="text-[8px] terminal-font text-stone-400 line-clamp-2 leading-tight mb-1">{art.prompt}</p>
           <div className="flex justify-between items-center">
             <span className="text-[7px] fantasy-font text-amber-600 uppercase font-bold">{art.type.split('-')[0]}</span>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(art.id); }}
-              className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center"
+              className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center pointer-events-auto focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               title="Dissolve Entity"
               aria-label="Delete Art"
             >
