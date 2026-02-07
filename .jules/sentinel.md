@@ -12,3 +12,8 @@
 **Vulnerability:** The application created blob URLs using `URL.createObjectURL` for file exports but failed to revoke them.
 **Learning:** Browser memory leaks (Blob store) can accumulate if Object URLs are not revoked, potentially leading to performance degradation or denial of service in long-running sessions.
 **Prevention:** Always pair `URL.createObjectURL` with `URL.revokeObjectURL` (typically after usage or in a cleanup effect). Used `setTimeout` to delay revocation slightly ensuring download initialization.
+
+## 2026-02-07 - [Third-Party Data Leak via QR Code]
+**Vulnerability:** The "Crystal Link" feature sent internal artifact IDs and user IP addresses to a third-party service (`api.qrserver.com`) to generate QR codes.
+**Learning:** Using external APIs for simple tasks (like QR generation) can inadvertently leak private user data (IPs, IDs, potential metadata) without consent.
+**Prevention:** Avoid third-party dependencies for sensitive data handling. If a feature (like mobile preview) is incomplete or broken, it's safer to remove it than to leave it in a vulnerable state. Removed the feature until a secure, local implementation is feasible.
