@@ -9,3 +9,7 @@
 ## 2025-02-20 - Modal Close Buttons & Tab Navigation
 **Learning:** Consistently found modal "Close" (×) buttons missing `aria-label`, making them ambiguous to screen readers. Also, custom tab navigations (`div` + `button`s) often lack `role="tablist"`/`tab` semantics.
 **Action:** Standardize `aria-label="Close [Modal Name]"` on all modal close buttons. Enforce `role="tablist"` and `aria-selected` on custom tab components.
+
+## 2025-02-23 - Interactive Card Patterns
+**Learning:** Nested interactive elements (buttons inside clickable divs) violate accessibility and HTML rules.
+**Action:** Use a "stacked" approach: Place a full-size, invisible `<button>` (positioned absolute) behind other interactive elements to handle the primary card action. Ensure focus states are visible via `focus-within` or explicit focus handling.
