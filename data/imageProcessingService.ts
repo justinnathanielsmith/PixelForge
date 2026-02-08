@@ -104,18 +104,22 @@ export class ImageProcessingService {
       (ctx as any).filter = 'none';
     }
 
-    let imageData = ctx.getImageData(0, 0, targetW, targetH);
+    // Performance Optimization: Skip expensive pixel manipulation if not needed
+    const needsPixelManipulation = settings.vectorRite || settings.autoTransparency || settings.paletteLock;
 
-    // Vector-to-Grid Rite: Sharp Silhouette Filter
-    if (settings.vectorRite) {
-      this.applyVectorSharpening(imageData);
-    }
+    if (needsPixelManipulation) {
+      let imageData = ctx.getImageData(0, 0, targetW, targetH);
 
-    // Chroma Key Transparency (Refined HSL Logic)
-    if (settings.autoTransparency) {
-      const { data } = imageData;
+      // Vector-to-Grid Rite: Sharp Silhouette Filter
+      if (settings.vectorRite) {
+        this.applyVectorSharpening(imageData);
+      }
+
+      // Chroma Key Transparency (Refined HSL Logic)
+      if (settings.autoTransparency) {
+        const { data } = imageData;
       
-      for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
@@ -210,10 +214,11 @@ export class ImageProcessingService {
         } catch (e) {
            console.warn("Alchemy error: Palette application failed", e);
         }
+        }
       }
-    }
 
-    ctx.putImageData(imageData, 0, 0);
+      ctx.putImageData(imageData, 0, 0);
+    }
     return canvas;
   }
 
