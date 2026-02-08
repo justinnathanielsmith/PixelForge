@@ -55,7 +55,8 @@ export class ImageProcessingService {
     frameIndex: number,
     settings: AnimationSettings,
     style: string,
-    targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+    targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
+    targetCtx?: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
   ): HTMLCanvasElement | OffscreenCanvas {
     const { cols, rows } = settings;
     const { width: targetW, height: targetH } = this.getFrameDimensions(settings);
@@ -65,16 +66,29 @@ export class ImageProcessingService {
     const sx = (frameIndex % cols) * sw;
     const sy = Math.floor(frameIndex / cols) * sh;
 
-    const canvas = targetCanvas || this.createCanvas(targetW, targetH);
-    if (canvas.width !== targetW || canvas.height !== targetH) {
-      canvas.width = targetW;
-      canvas.height = targetH;
-    } else if (targetCanvas) {
-      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-      if (ctx) ctx.clearRect(0, 0, targetW, targetH);
+    let canvas: HTMLCanvasElement | OffscreenCanvas;
+    let ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = targetCtx || null;
+
+    if (ctx) {
+      canvas = ctx.canvas;
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      } else {
+        ctx.clearRect(0, 0, targetW, targetH);
+      }
+    } else {
+      canvas = targetCanvas || this.createCanvas(targetW, targetH);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      } else if (targetCanvas) {
+        const tempCtx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+        if (tempCtx) tempCtx.clearRect(0, 0, targetW, targetH);
+      }
+      ctx = canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     }
 
-    const ctx = canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     if (!ctx) return canvas;
 
     ctx.imageSmoothingEnabled = false;

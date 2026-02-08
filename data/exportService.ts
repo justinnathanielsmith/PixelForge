@@ -46,10 +46,13 @@ export class ExportService {
 
     ctx.imageSmoothingEnabled = false;
     
+    const sharedCanvas = imageProcessingService.createCanvas(frameW, frameH);
+    const sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const frameIndex = r * cols + c;
-        const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style);
+        const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style, sharedCanvas, sharedCtx);
         ctx.drawImage(frameCanvas, c * frameW, r * frameH);
       }
     }
@@ -73,10 +76,13 @@ export class ExportService {
 
     ctx.imageSmoothingEnabled = false;
     
+    const sharedCanvas = imageProcessingService.createCanvas(frameW, frameH);
+    const sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const frameIndex = r * cols + c;
-        const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style);
+        const frameCanvas = imageProcessingService.processFrame(img, frameIndex, settings, style, sharedCanvas, sharedCtx);
         ctx.drawImage(frameCanvas, c * frameW, r * frameH);
       }
     }

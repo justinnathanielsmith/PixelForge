@@ -36,10 +36,12 @@ self.onmessage = async (e: MessageEvent) => {
            }
         }
 
+        const sharedCanvas = processor.createCanvas(frameW, frameH);
+        const sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
+
         for (let i = 0; i < totalFrames; i++) {
-          const frameCanvas = processor.processFrame(img, i, settings, style);
-          const ctx = frameCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
-          const { data } = ctx.getImageData(0, 0, frameW, frameH);
+          processor.processFrame(img, i, settings, style, sharedCanvas, sharedCtx);
+          const { data } = sharedCtx.getImageData(0, 0, frameW, frameH);
           
           let framePalette = palette;
           if (!framePalette) {
@@ -75,10 +77,13 @@ self.onmessage = async (e: MessageEvent) => {
         const ctx = baseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
         ctx.imageSmoothingEnabled = false;
 
+        const sharedFrameCanvas = processor.createCanvas(frameW, frameH);
+        const sharedFrameCtx = sharedFrameCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
+
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const frameIndex = r * cols + c;
-            const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style);
+            const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style, sharedFrameCanvas, sharedFrameCtx);
             ctx.drawImage(frameCanvas, c * frameW, r * frameH);
           }
         }
@@ -196,10 +201,13 @@ self.onmessage = async (e: MessageEvent) => {
         const ctx = baseCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
         ctx.imageSmoothingEnabled = false;
 
+        const sharedFrameCanvas = processor.createCanvas(frameW, frameH);
+        const sharedFrameCtx = sharedFrameCanvas.getContext('2d', { willReadFrequently: true }) as OffscreenCanvasRenderingContext2D;
+
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const frameIndex = r * cols + c;
-            const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style);
+            const frameCanvas = processor.processFrame(img, frameIndex, settings, art.style, sharedFrameCanvas, sharedFrameCtx);
             ctx.drawImage(frameCanvas, c * frameW, r * frameH);
           }
         }
