@@ -17,3 +17,8 @@
 **Vulnerability:** The "Crystal Link" feature sent internal artifact IDs and user IP addresses to a third-party service (`api.qrserver.com`) to generate QR codes.
 **Learning:** Using external APIs for simple tasks (like QR generation) can inadvertently leak private user data (IPs, IDs, potential metadata) without consent.
 **Prevention:** Avoid third-party dependencies for sensitive data handling. If a feature (like mobile preview) is incomplete or broken, it's safer to remove it than to leave it in a vulnerable state. Removed the feature until a secure, local implementation is feasible.
+
+## 2026-02-08 - [Insecure Environment Variable Handling]
+**Vulnerability:** The application attempted to access `process.env.API_KEY` in client-side code, which is invalid in Vite/browser environments and encourages hardcoding secrets or incorrect build configuration that could leak keys.
+**Learning:** Client-side applications handle environment variables differently than Node.js. Accessing `process.env` directly is a backend pattern that fails or leaks data in frontend code.
+**Prevention:** Always use `import.meta.env` (for Vite) and prefix variables with `VITE_` to explicitly opt-in to exposing them.

@@ -8,7 +8,11 @@ export class PixelGenService {
 
   private get ai(): GoogleGenAI {
     if (!this._ai) {
-      this._ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey && import.meta.env.DEV) {
+        console.warn("VITE_GEMINI_API_KEY is not set. Pixel generation features will fail.");
+      }
+      this._ai = new GoogleGenAI({ apiKey: apiKey || "" });
     }
     return this._ai;
   }
