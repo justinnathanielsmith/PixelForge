@@ -1,4 +1,5 @@
-## 2024-05-23 - Accessibility Anti-Patterns in Settings Panel
+
+## 2025-05-23 - Accessibility Anti-Patterns in Settings Panel
 **Learning:** Found interactive toggles implemented as `div`s with `onClick`, lacking keyboard support and screen reader roles. Also, many form inputs lacked associated labels.
 **Action:** Always check interactive custom components for semantic HTML (`<button>`) and standard ARIA attributes (`aria-pressed`, `aria-label`) rather than just relying on visual cues.
 
@@ -13,3 +14,7 @@
 ## 2025-02-23 - Interactive Card Patterns
 **Learning:** Nested interactive elements (buttons inside clickable divs) violate accessibility and HTML rules.
 **Action:** Use a "stacked" approach: Place a full-size, invisible `<button>` (positioned absolute) behind other interactive elements to handle the primary card action. Ensure focus states are visible via `focus-within` or explicit focus handling.
+
+## 2025-02-26 - Button Groups for Selection
+**Learning:** Grids of buttons used for single-selection (like resolution presets) lacked grouping semantics, making it impossible for screen readers to understand the context or current selection.
+**Action:** Wrap selection button grids in a container with `role="group"` (or `radiogroup`) and `aria-labelledby`. Use `aria-pressed` (or `aria-checked`) on the buttons to indicate state.

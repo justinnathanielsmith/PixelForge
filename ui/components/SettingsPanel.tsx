@@ -52,14 +52,15 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
     <CodexSection title="Dimensions & Resolution" icon="📐" defaultOpen={true}>
       <div className="space-y-4">
           <div className="space-y-1.5">
-              <label className="terminal-font text-[9px] text-stone-500 uppercase flex items-center gap-2">
+              <label id="resolution-label" className="terminal-font text-[9px] text-stone-500 uppercase flex items-center gap-2">
                   Target Resolution <span className="text-[8px] text-stone-600">(Height)</span>
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div role="group" aria-labelledby="resolution-label" className="grid grid-cols-4 gap-1.5">
                   {RESOLUTION_PRESETS.map(res => (
                   <button 
                       key={res} 
                       onClick={() => updateSetting('targetResolution', res)}
+                      aria-pressed={settings.targetResolution === res}
                       className={`py-2 text-[9px] fantasy-font font-bold border transition-all rounded shadow-sm hover:shadow-md ${settings.targetResolution === res ? 'bg-sky-950/80 border-sky-500 text-sky-100 shadow-[0_0_8px_rgba(14,165,233,0.3)]' : 'bg-[#1c1917] border-stone-800 text-stone-500 hover:border-stone-600 hover:text-stone-300'}`}
                   >
                       {res}px
@@ -69,12 +70,13 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
           </div>
 
           <div className="space-y-1.5">
-              <label className="terminal-font text-[9px] text-stone-500 uppercase">Canvas Ratio</label>
-              <div className="grid grid-cols-5 gap-1">
+              <label id="ratio-label" className="terminal-font text-[9px] text-stone-500 uppercase">Canvas Ratio</label>
+              <div role="group" aria-labelledby="ratio-label" className="grid grid-cols-5 gap-1">
                   {['1:1', '16:9', '9:16', '4:3', '3:4'].map(ratio => (
                       <button 
                           key={ratio}
                           onClick={() => updateSetting('aspectRatio', ratio)}
+                          aria-pressed={settings.aspectRatio === ratio}
                           className={`py-1.5 text-[8px] fantasy-font font-bold border rounded transition-all ${settings.aspectRatio === ratio ? 'bg-sky-900 text-white border-sky-500' : 'bg-[#0c0a09] border-stone-800 text-stone-500 hover:text-stone-300 hover:border-stone-600'}`}
                       >
                           {ratio}
