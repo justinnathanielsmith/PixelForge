@@ -43,6 +43,7 @@ describe('ExportService - exportToSvg', () => {
     const width = 2;
     const height = 2;
     vi.mocked(imageProcessingService.getFrameDimensions).mockReturnValue({ width, height });
+    vi.mocked(imageProcessingService.createCanvas).mockReturnValue(document.createElement('canvas'));
     vi.mocked(imageProcessingService.processFrame).mockReturnValue(document.createElement('canvas'));
 
     // Prepare mock data for 2x2 image
