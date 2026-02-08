@@ -10,9 +10,7 @@ import UserGuide from './ui/components/UserGuide.tsx';
 import { Gatekeeper } from './ui/components/Gatekeeper.tsx';
 import ExportModal from './ui/components/ExportModal.tsx';
 import GalleryModal from './ui/components/GalleryModal.tsx';
-import CrystalLinkModal from './ui/components/CrystalLinkModal.tsx';
 import AutotileModal from './ui/components/AutotileModal.tsx';
-import MobileViewer from './ui/components/MobileViewer.tsx';
 import { ToastProvider } from './ui/context/ToastContext.tsx';
 import { ToastContainer } from './ui/components/Toast.tsx';
 
@@ -22,7 +20,6 @@ const AppContent: React.FC = () => {
   const [showGallery, setShowGallery] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [showManifesto, setShowManifesto] = useState(false);
-  const [showCrystalLink, setShowCrystalLink] = useState(false);
   const [showAutotileSandbox, setShowAutotileSandbox] = useState(false);
   
   const { 
@@ -32,7 +29,7 @@ const AppContent: React.FC = () => {
 
   const handleSwitchKey = async () => {
     try {
-      await window.aistudio.openSelectKey();
+      await (window as any).aistudio.openSelectKey();
     } catch (e) {
       console.error("Key selection error", e);
     }
@@ -115,12 +112,10 @@ const AppContent: React.FC = () => {
               <div className="w-px h-6 bg-stone-800 mx-2" />
               <button onClick={() => setShowManifesto(true)} className="text-[9px] fantasy-font text-emerald-500 hover:text-emerald-400 uppercase tracking-widest border border-emerald-900/50 bg-emerald-950/20 px-3 py-1 rounded transition-all">🧪 Lab Manifesto</button>
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
-              <button onClick={() => setShowCrystalLink(true)} className="text-[9px] fantasy-font text-purple-400 hover:text-purple-300 uppercase tracking-widest border border-purple-900/50 bg-purple-950/20 px-3 py-1 rounded transition-all flex items-center gap-1"><span>💎</span> Link</button>
               <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
             <div className="md:hidden flex items-center gap-2">
                <button onClick={() => setShowUserGuide(true)} className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
-               <button onClick={() => setShowCrystalLink(true)} className="p-2 bg-purple-950/20 rounded border border-purple-900/50 text-purple-400">💎</button>
             </div>
           </div>
         </header>
@@ -298,7 +293,6 @@ const AppContent: React.FC = () => {
 
           {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
           {showManifesto && <UpcomingFeatures onClose={() => setShowManifesto(false)} />}
-          {showCrystalLink && <CrystalLinkModal isOpen={showCrystalLink} onClose={() => setShowCrystalLink(false)} activeArt={activeArt} />}
           
           <ExportModal 
             isOpen={showExportModal}
