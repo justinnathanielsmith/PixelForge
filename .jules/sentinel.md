@@ -22,3 +22,8 @@
 **Vulnerability:** The application attempted to access `process.env.API_KEY` in client-side code, which is invalid in Vite/browser environments and encourages hardcoding secrets or incorrect build configuration that could leak keys.
 **Learning:** Client-side applications handle environment variables differently than Node.js. Accessing `process.env` directly is a backend pattern that fails or leaks data in frontend code.
 **Prevention:** Always use `import.meta.env` (for Vite) and prefix variables with `VITE_` to explicitly opt-in to exposing them.
+
+## 2025-02-12 - [AI Output Validation]
+**Vulnerability:** The application blindly parsed and used JSON output from the Gemini AI service (`generateSliceData`, `generateSkeleton`, `generatePalette`). This could allow prompt injection attacks to introduce malicious data structures or logic bombs into the application state.
+**Learning:** LLM outputs are "untrusted user input" and must be validated just like any other external API or user form data. The probabilistic nature of LLMs makes them prone to returning unexpected structures.
+**Prevention:** Implemented strict schema validation functions (`validateSliceData`, etc.) in `utils/validation.ts` that whitelist allowed properties and types. Applied these validators immediately after parsing AI responses.

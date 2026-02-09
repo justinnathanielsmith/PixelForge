@@ -2,6 +2,7 @@
 import { GoogleGenAI, Content, Part, Type } from "@google/genai";
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton, SliceData } from "../domain/entities";
 import { assembleForgePrompt } from "../domain/promptTemplates";
+import { validateSliceData, validateSkeleton, validatePalette } from "../utils/validation";
 
 export class PixelGenService {
   private _ai: GoogleGenAI | null = null;
@@ -78,7 +79,8 @@ export class PixelGenService {
       
       return `data:image/png;base64,${part.inlineData.data}`;
     } catch (error: any) {
-      console.error("FORGE_EXCEPTION:", error);
+      // SECURITY: Sanitize error logs to prevent leaking internal stack traces or API details
+      console.error("FORGE_EXCEPTION: Pixel art generation failed.");
       throw error;
     }
   }
@@ -131,9 +133,15 @@ export class PixelGenService {
       }
 
       const json = JSON.parse(response.text || "{}");
-      return json as SliceData;
+
+      // SECURITY: Validate external JSON to prevent injection or logic errors
+      const validData = validateSliceData(json);
+      if (!validData) throw new Error("Invalid slice data structure received from Oracle.");
+
+      return validData;
     } catch (error) {
-      console.error("SLICE_EXCEPTION:", error);
+      // SECURITY: Sanitize error logs
+      console.error("SLICE_EXCEPTION: Slice generation failed.");
       // Fallback: 25% margins
       const fallback = Math.floor(targetResolution / 4);
       return { top: fallback, bottom: fallback, left: fallback, right: fallback };
@@ -175,7 +183,7 @@ export class PixelGenService {
       if (!part?.inlineData?.data) throw new Error("ALCHEMIST_FAIL: Normal map generation failed.");
       return `data:image/png;base64,${part.inlineData.data}`;
     } catch (error) {
-      console.error("ALCHEMY_EXCEPTION:", error);
+      console.error("ALCHEMY_EXCEPTION: Normal map generation failed.");
       throw error;
     }
   }
@@ -250,9 +258,14 @@ export class PixelGenService {
       }
 
       const json = JSON.parse(response.text || "{}");
-      return json as Skeleton;
+
+      // SECURITY: Validate structure
+      const validData = validateSkeleton(json);
+      if (!validData) throw new Error("Invalid skeleton structure received from Oracle.");
+
+      return validData;
     } catch (error) {
-      console.error("RIGGING_EXCEPTION:", error);
+      console.error("RIGGING_EXCEPTION: Skeleton generation failed.");
       throw error;
     }
   }
@@ -295,9 +308,14 @@ export class PixelGenService {
       }
 
       const json = JSON.parse(response.text || "[]");
-      return json;
+
+      // SECURITY: Validate structure
+      const validData = validatePalette(json);
+      if (!validData) throw new Error("Invalid palette structure received from Oracle.");
+
+      return validData;
     } catch (error) {
-      console.error("PALETTE_EXCEPTION:", error);
+      console.error("PALETTE_EXCEPTION: Palette generation failed.");
       throw error;
     }
   }
