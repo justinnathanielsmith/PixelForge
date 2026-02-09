@@ -1,4 +1,4 @@
-import { GeneratedArt, AnimationSettings } from '../domain/entities';
+import { GeneratedArt, AnimationSettings, SliceData, Skeleton } from '../domain/entities';
 import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from '../domain/constants';
 
 const VALID_IDS = {
@@ -21,6 +21,65 @@ const DEFAULT_SETTINGS: AnimationSettings = {
   gifDisposal: 2,
   customPalette: null
 };
+
+export function validateSliceData(data: any): SliceData | null {
+  if (!data || typeof data !== 'object') return null;
+  // Check strict type existence for all required fields
+  if (typeof data.top === 'number' && !isNaN(data.top) &&
+      typeof data.bottom === 'number' && !isNaN(data.bottom) &&
+      typeof data.left === 'number' && !isNaN(data.left) &&
+      typeof data.right === 'number' && !isNaN(data.right)) {
+    return {
+      top: data.top,
+      bottom: data.bottom,
+      left: data.left,
+      right: data.right
+    };
+  }
+  return null;
+}
+
+export function validateSkeleton(data: any): Skeleton | null {
+  if (!data || typeof data !== 'object') return null;
+  if (!Array.isArray(data.joints) || !Array.isArray(data.bones)) return null;
+
+  const validJoints = data.joints.every((j: any) =>
+    j && typeof j === 'object' &&
+    typeof j.id === 'string' &&
+    typeof j.x === 'number' && !isNaN(j.x) &&
+    typeof j.y === 'number' && !isNaN(j.y) &&
+    typeof j.label === 'string'
+  );
+
+  const validBones = data.bones.every((b: any) =>
+    b && typeof b === 'object' &&
+    typeof b.from === 'string' &&
+    typeof b.to === 'string'
+  );
+
+  if (validJoints && validBones) {
+    // Return a clean copy to strip any extra malicious properties
+    return {
+      joints: data.joints.map((j: any) => ({ id: j.id, x: j.x, y: j.y, label: j.label })),
+      bones: data.bones.map((b: any) => ({ from: b.from, to: b.to }))
+    };
+  }
+  return null;
+}
+
+export function validatePalette(data: any): {r: number, g: number, b: number}[] | null {
+  if (!Array.isArray(data)) return null;
+  const valid = data.every((c: any) =>
+    c && typeof c === 'object' &&
+    typeof c.r === 'number' && !isNaN(c.r) &&
+    typeof c.g === 'number' && !isNaN(c.g) &&
+    typeof c.b === 'number' && !isNaN(c.b)
+  );
+  if (valid) {
+    return data.map((c: any) => ({ r: c.r, g: c.g, b: c.b }));
+  }
+  return null;
+}
 
 function validateAnimationSettings(data: any): AnimationSettings | null {
   if (!data || typeof data !== 'object') return null;
@@ -77,12 +136,8 @@ function validateAnimationSettings(data: any): AnimationSettings | null {
   assignNum('gifDisposal');
 
   if (Array.isArray(data.customPalette)) {
-    const cleanPalette = data.customPalette.filter((c: any) =>
-      c && typeof c === 'object' &&
-      typeof c.r === 'number' && typeof c.g === 'number' && typeof c.b === 'number'
-    ).map((c: any) => ({ r: c.r, g: c.g, b: c.b }));
-
-    if (cleanPalette.length > 0) {
+    const cleanPalette = validatePalette(data.customPalette);
+    if (cleanPalette && cleanPalette.length > 0) {
       settings.customPalette = cleanPalette;
     }
   }
@@ -120,10 +175,21 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
     };
 
     if (typeof normalMapUrl === 'string') art.normalMapUrl = normalMapUrl;
-    // Basic structure checks for complex objects
-    if (skeleton && Array.isArray(skeleton.joints) && Array.isArray(skeleton.bones)) art.skeleton = skeleton;
-    if (sliceData && typeof sliceData.top === 'number') art.sliceData = sliceData;
-    if (gridSize && typeof gridSize.rows === 'number') art.gridSize = gridSize;
+
+    // Validate Complex Objects
+    if (skeleton) {
+      const validSkeleton = validateSkeleton(skeleton);
+      if (validSkeleton) art.skeleton = validSkeleton;
+    }
+
+    if (sliceData) {
+      const validSlice = validateSliceData(sliceData);
+      if (validSlice) art.sliceData = validSlice;
+    }
+
+    if (gridSize && typeof gridSize.rows === 'number' && typeof gridSize.cols === 'number') {
+        art.gridSize = { rows: gridSize.rows, cols: gridSize.cols };
+    }
 
     return art;
   });
