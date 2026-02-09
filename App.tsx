@@ -81,6 +81,7 @@ const AppContent: React.FC = () => {
   }, [actions, animationSettings.isPlaying, dispatch]);
 
   return (
+    <>
     <Gatekeeper>
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
           <div className="aura-orb w-[800px] h-[800px] bg-amber-600/10 -top-[200px] -left-[200px] animate-float-slow" />
@@ -323,8 +324,9 @@ const AppContent: React.FC = () => {
         
         <div className="h-24 md:hidden shrink-0" />
       </div>
-      <ToastContainer />
     </Gatekeeper>
+    <ToastContainer />
+    </>
   );
 };
 

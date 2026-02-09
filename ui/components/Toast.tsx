@@ -31,10 +31,20 @@ const Toast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
     info: 'shadow-md'
   }[toast.type];
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dismiss(toast.id);
+    }
+  };
+
   return (
     <div 
+      role="button"
+      tabIndex={0}
       onClick={() => dismiss(toast.id)}
-      className={`max-w-xs w-full bg-[#1c1917] border-2 ${borderColor} ${glowColor} p-3 cursor-pointer animate-in slide-in-from-right-full fade-in duration-300 relative group overflow-hidden`}
+      onKeyDown={handleKeyDown}
+      className={`max-w-xs w-full bg-[#1c1917] border-2 ${borderColor} ${glowColor} p-3 cursor-pointer animate-in slide-in-from-right-full fade-in duration-300 relative group overflow-hidden text-left`}
     >
       <div className="absolute top-0 left-0 w-1 h-full bg-stone-800 group-hover:bg-amber-600 transition-colors" />
       <div className="flex gap-3">
@@ -46,7 +56,7 @@ const Toast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
           {toast.message && <p className="text-[10px] text-stone-500 leading-tight mt-0.5 line-clamp-2">{toast.message}</p>}
         </div>
       </div>
-      <div className="absolute top-1 right-2 text-[8px] text-stone-700 group-hover:text-stone-500">×</div>
+      <div className="absolute top-1 right-2 text-[8px] text-stone-700 group-hover:text-stone-500" aria-hidden="true">×</div>
     </div>
   );
 };
@@ -55,7 +65,7 @@ export const ToastContainer: React.FC = () => {
   const { toasts } = useToast();
   
   return (
-    <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none" aria-live="polite">
       <div className="pointer-events-auto flex flex-col gap-3">
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} />
