@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { AnimationSettings } from '../../domain/entities';
 import { RESOLUTION_PRESETS } from '../../domain/constants';
 import { useToast } from '../context/ToastContext';
@@ -45,7 +45,7 @@ const CodexSection = ({ title, icon, children, defaultOpen = false, className = 
 
 // --- Exported Components ---
 
-export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -121,9 +121,17 @@ export const CodexDimensions: React.FC<SettingsSectionProps> = ({ settings, setS
       </div>
     </CodexSection>
   );
-};
+}, (prev, next) => (
+  prev.setSettings === next.setSettings &&
+  prev.settings.targetResolution === next.settings.targetResolution &&
+  prev.settings.aspectRatio === next.settings.aspectRatio &&
+  prev.settings.zoom === next.settings.zoom &&
+  prev.settings.batchMode === next.settings.batchMode &&
+  prev.settings.cols === next.settings.cols &&
+  prev.settings.rows === next.settings.rows
+));
 
-export const CodexChronometry: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexChronometry = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -149,9 +157,13 @@ export const CodexChronometry: React.FC<SettingsSectionProps> = ({ settings, set
       </div>
     </CodexSection>
   );
-};
+}, (prev, next) => (
+  prev.setSettings === next.setSettings &&
+  prev.settings.fps === next.settings.fps &&
+  prev.settings.isPlaying === next.settings.isPlaying
+));
 
-export const CodexGrid: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexGrid = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -205,9 +217,16 @@ export const CodexGrid: React.FC<SettingsSectionProps> = ({ settings, setSetting
       )}
     </CodexSection>
   );
-};
+}, (prev, next) => (
+  prev.setSettings === next.setSettings &&
+  prev.settings.vectorRite === next.settings.vectorRite &&
+  prev.settings.temporalStability === next.settings.temporalStability &&
+  prev.settings.batchMode === next.settings.batchMode &&
+  prev.settings.tiledPreview === next.settings.tiledPreview &&
+  prev.settings.showGuides === next.settings.showGuides
+));
 
-export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSettings, onGeneratePalette }) => {
+export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: AlchemySectionProps) => {
   const [palettePrompt, setPalettePrompt] = useState('');
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
   const { whisper } = useToast();
@@ -325,7 +344,16 @@ export const CodexAlchemy: React.FC<AlchemySectionProps> = ({ settings, setSetti
        </div>
     </CodexSection>
   );
-};
+}, (prev, next) => (
+  prev.setSettings === next.setSettings &&
+  prev.onGeneratePalette === next.onGeneratePalette &&
+  prev.settings.autoTransparency === next.settings.autoTransparency &&
+  prev.settings.chromaTolerance === next.settings.chromaTolerance &&
+  prev.settings.paletteLock === next.settings.paletteLock &&
+  prev.settings.customPalette === next.settings.customPalette &&
+  prev.settings.hue === next.settings.hue &&
+  prev.settings.saturation === next.settings.saturation
+));
 
 // Legacy Default Export (optional wrapper, mostly unused in new layout)
 const SettingsPanel: React.FC<AlchemySectionProps> = (props) => {
