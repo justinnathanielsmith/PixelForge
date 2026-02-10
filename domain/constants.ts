@@ -52,6 +52,3 @@ export const EXPORT_CONFIG = {
     aseprite: 'application/json'
   }
 };
-
-export const MAX_PROMPT_LENGTH = 1000;
-export const MAX_HISTORY_ITEMS = 1000;

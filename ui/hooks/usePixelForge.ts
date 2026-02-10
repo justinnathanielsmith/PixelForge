@@ -3,7 +3,6 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { orchestrator } from '../../domain/pixelForgeOrchestrator';
 import { useToast } from '../context/ToastContext';
 import { PixelForgeState, PixelForgeIntent } from '../../domain/entities';
-import { MAX_PROMPT_LENGTH } from '../../domain/constants';
 import { useForgeSettings } from './useForgeSettings';
 import { useForgeHistory } from './useForgeHistory';
 import { useForgeGenerator } from './useForgeGenerator';
@@ -106,9 +105,7 @@ export const usePixelForge = () => {
   // Dispatch Facade for App compatibility
   const dispatch = useCallback((intent: PixelForgeIntent) => {
     switch (intent.type) {
-      case 'SET_PROMPT':
-        setPrompt(intent.payload.slice(0, MAX_PROMPT_LENGTH));
-        break;
+      case 'SET_PROMPT': setPrompt(intent.payload); break;
       case 'SET_SPRITE_SHEET': setIsSpriteSheet(intent.payload); break;
       case 'SET_STYLE': setSelectedStyle(intent.payload); break;
       case 'SET_PERSPECTIVE': setPerspective(intent.payload); break;
@@ -123,7 +120,7 @@ export const usePixelForge = () => {
       case 'SET_EXPORTING': setIsExporting(intent.payload); break;
       case 'PIN_DESIGN': {
         const design = intent.payload;
-        setPrompt(design.prompt.slice(0, MAX_PROMPT_LENGTH));
+        setPrompt(design.prompt);
         setSelectedStyle(design.style);
         setPerspective(design.perspective);
         setCategory(design.category);
@@ -134,7 +131,7 @@ export const usePixelForge = () => {
       case 'IMPORT_PROJECT': {
         const payload = intent.payload;
         setFullHistory(payload.history);
-        setPrompt(payload.prompt.slice(0, MAX_PROMPT_LENGTH));
+        setPrompt(payload.prompt);
         if (payload.settings) updateSettings(payload.settings);
         break;
       }

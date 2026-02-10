@@ -1,5 +1,5 @@
 import { GeneratedArt, AnimationSettings, SliceData, Skeleton } from '../domain/entities';
-import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH, MAX_HISTORY_ITEMS } from '../domain/constants';
+import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from '../domain/constants';
 
 const VALID_IDS = {
   CAT: ASSET_CATEGORIES.map(c => c.id),
@@ -191,21 +191,12 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
         art.gridSize = { rows: gridSize.rows, cols: gridSize.cols };
     }
 
-    // Enforce Prompt Length Limit on individual history items
-    art.prompt = art.prompt.slice(0, MAX_PROMPT_LENGTH);
-
     return art;
   });
 
-  // Enforce History Item Limit to prevent DoS
-  const limitedHistory = cleanHistory.slice(0, MAX_HISTORY_ITEMS);
-
-  let validatedPrompt = typeof data.lastPrompt === 'string' ? data.lastPrompt : (data.prompt || '');
-  validatedPrompt = validatedPrompt.slice(0, MAX_PROMPT_LENGTH);
-
   return {
-    history: limitedHistory,
+    history: cleanHistory,
     settings: validateAnimationSettings(data.settings),
-    prompt: validatedPrompt
+    prompt: typeof data.lastPrompt === 'string' ? data.lastPrompt : (data.prompt || '')
   };
 }
