@@ -1,5 +1,5 @@
 
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useId } from 'react';
 import { AnimationSettings } from '../../domain/entities';
 import { RESOLUTION_PRESETS } from '../../domain/constants';
 import { useToast } from '../context/ToastContext';
@@ -17,12 +17,14 @@ interface AlchemySectionProps extends SettingsSectionProps {
 // --- Shared UI Component ---
 const CodexSection = ({ title, icon, children, defaultOpen = false, className = "" }: { title: string, icon: string, children: React.ReactNode, defaultOpen?: boolean, className?: string }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const sectionId = useId();
 
   return (
     <div className={`group border border-[#292524] bg-[#0c0a09] rounded overflow-hidden transition-all duration-200 hover:border-[#57534e] ${className}`}>
         <button 
             type="button"
             aria-expanded={isOpen}
+            aria-controls={sectionId}
             className="w-full flex items-center justify-between p-3 cursor-pointer hover:bg-[#1c1917] active:bg-[#292524] transition-colors select-none outline-none text-left"
             onClick={() => setIsOpen(!isOpen)}
         >
@@ -35,7 +37,7 @@ const CodexSection = ({ title, icon, children, defaultOpen = false, className = 
        </div>
     </button>
     {isOpen && (
-      <div className="p-3 border-t border-[#292524] bg-[#080706] space-y-4 animate-in slide-in-from-top-1 duration-200">
+      <div id={sectionId} className="p-3 border-t border-[#292524] bg-[#080706] space-y-4 animate-in slide-in-from-top-1 duration-200">
         {children}
       </div>
     )}
@@ -45,7 +47,7 @@ const CodexSection = ({ title, icon, children, defaultOpen = false, className = 
 
 // --- Exported Components ---
 
-const CodexDimensionsBase: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -121,9 +123,7 @@ const CodexDimensionsBase: React.FC<SettingsSectionProps> = ({ settings, setSett
       </div>
     </CodexSection>
   );
-};
-
-export const CodexDimensions = memo(CodexDimensionsBase, (prev, next) => {
+}, (prev, next) => {
   // Only re-render if used settings change. Future settings added to this component must be added here.
   return (
     prev.setSettings === next.setSettings &&
@@ -136,7 +136,7 @@ export const CodexDimensions = memo(CodexDimensionsBase, (prev, next) => {
   );
 });
 
-const CodexChronometryBase: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexChronometry = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -162,9 +162,7 @@ const CodexChronometryBase: React.FC<SettingsSectionProps> = ({ settings, setSet
       </div>
     </CodexSection>
   );
-};
-
-export const CodexChronometry = memo(CodexChronometryBase, (prev, next) => {
+}, (prev, next) => {
   // Only re-render if used settings change. Future settings added to this component must be added here.
   return (
     prev.setSettings === next.setSettings &&
@@ -173,7 +171,7 @@ export const CodexChronometry = memo(CodexChronometryBase, (prev, next) => {
   );
 });
 
-const CodexGridBase: React.FC<SettingsSectionProps> = ({ settings, setSettings }) => {
+export const CodexGrid = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
   return (
@@ -227,9 +225,7 @@ const CodexGridBase: React.FC<SettingsSectionProps> = ({ settings, setSettings }
       )}
     </CodexSection>
   );
-};
-
-export const CodexGrid = memo(CodexGridBase, (prev, next) => {
+}, (prev, next) => {
   // Only re-render if used settings change. Future settings added to this component must be added here.
   return (
     prev.setSettings === next.setSettings &&
@@ -241,7 +237,7 @@ export const CodexGrid = memo(CodexGridBase, (prev, next) => {
   );
 });
 
-const CodexAlchemyBase: React.FC<AlchemySectionProps> = ({ settings, setSettings, onGeneratePalette }) => {
+export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: AlchemySectionProps) => {
   const [palettePrompt, setPalettePrompt] = useState('');
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
   const { whisper } = useToast();
@@ -332,6 +328,8 @@ const CodexAlchemyBase: React.FC<AlchemySectionProps> = ({ settings, setSettings
                   {settings.customPalette.map((c, i) => (
                       <div 
                       key={i} 
+                      role="img"
+                      aria-label={`Color swatch: rgb(${c.r}, ${c.g}, ${c.b})`}
                       className="w-4 h-4 rounded-full border border-black/50 shadow-sm hover:scale-125 transition-transform" 
                       style={{ backgroundColor: `rgb(${c.r}, ${c.g}, ${c.b})` }} 
                       title={`rgb(${c.r}, ${c.g}, ${c.b})`}
@@ -359,9 +357,7 @@ const CodexAlchemyBase: React.FC<AlchemySectionProps> = ({ settings, setSettings
        </div>
     </CodexSection>
   );
-};
-
-export const CodexAlchemy = memo(CodexAlchemyBase, (prev, next) => {
+}, (prev, next) => {
   // Only re-render if used settings change. Future settings added to this component must be added here.
   return (
     prev.setSettings === next.setSettings &&
