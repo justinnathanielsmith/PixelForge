@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePixelForge } from './ui/hooks/usePixelForge.ts';
 import { GenerationState } from './domain/entities.ts';
-import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES } from './domain/constants.ts';
+import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH } from './domain/constants.ts';
 import SpritePreview from './ui/components/SpritePreview.tsx';
 import { CodexDimensions, CodexGrid, CodexChronometry, CodexAlchemy } from './ui/components/SettingsPanel.tsx';
 import UpcomingFeatures from './ui/components/UpcomingFeatures.tsx';
@@ -141,7 +141,7 @@ const AppContent: React.FC = () => {
                           )}
                           <input ref={refs.fileInputRef} type="file" accept="image/*" onChange={actions.handleImageUpload} className="hidden" />
                        </div>
-                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-stone-950" />
+                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} maxLength={MAX_PROMPT_LENGTH} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-stone-950" />
                     </div>
                  </div>
                  

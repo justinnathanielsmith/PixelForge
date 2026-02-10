@@ -27,3 +27,8 @@
 **Vulnerability:** The application blindly parsed and used JSON output from the Gemini AI service (`generateSliceData`, `generateSkeleton`, `generatePalette`). This could allow prompt injection attacks to introduce malicious data structures or logic bombs into the application state.
 **Learning:** LLM outputs are "untrusted user input" and must be validated just like any other external API or user form data. The probabilistic nature of LLMs makes them prone to returning unexpected structures.
 **Prevention:** Implemented strict schema validation functions (`validateSliceData`, etc.) in `utils/validation.ts` that whitelist allowed properties and types. Applied these validators immediately after parsing AI responses.
+
+## 2026-02-14 - [Client-Side Resource Exhaustion via Imports]
+**Vulnerability:** The `importProject` function processed the entire `history` array from an imported file without limits. A malicious file with millions of entries could cause the browser tab to freeze (DoS) during validation or storage.
+**Learning:** Local-first applications that import user data must enforce strict quantity limits (e.g., array length) *before* expensive processing or storage operations to prevent resource exhaustion.
+**Prevention:** Enforced `MAX_HISTORY_ITEMS` limit in `validateImportedProject` by slicing the input array, and `MAX_PROMPT_LENGTH` to cap individual data size.
