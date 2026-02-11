@@ -1,5 +1,5 @@
 import { GeneratedArt, AnimationSettings, SliceData, Skeleton } from '../domain/entities';
-import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH, MAX_HISTORY_ITEMS } from '../domain/constants';
+import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH, MAX_HISTORY_ITEMS, MAX_SKELETON_JOINTS, MAX_SKELETON_BONES, MAX_PALETTE_SIZE } from '../domain/constants';
 
 const VALID_IDS = {
   CAT: ASSET_CATEGORIES.map(c => c.id),
@@ -43,6 +43,8 @@ export function validateSkeleton(data: any): Skeleton | null {
   if (!data || typeof data !== 'object') return null;
   if (!Array.isArray(data.joints) || !Array.isArray(data.bones)) return null;
 
+  if (data.joints.length > MAX_SKELETON_JOINTS || data.bones.length > MAX_SKELETON_BONES) return null;
+
   const validJoints = data.joints.every((j: any) =>
     j && typeof j === 'object' &&
     typeof j.id === 'string' &&
@@ -69,6 +71,8 @@ export function validateSkeleton(data: any): Skeleton | null {
 
 export function validatePalette(data: any): {r: number, g: number, b: number}[] | null {
   if (!Array.isArray(data)) return null;
+  if (data.length > MAX_PALETTE_SIZE) return null;
+
   const valid = data.every((c: any) =>
     c && typeof c === 'object' &&
     typeof c.r === 'number' && !isNaN(c.r) &&
@@ -152,6 +156,7 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
   const cleanHistory = data.history.filter((item: any) => {
     return typeof item.id === 'string' &&
            typeof item.imageUrl === 'string' &&
+           item.imageUrl.startsWith('data:image/') &&
            typeof item.prompt === 'string' &&
            VALID_IDS.STY.includes(item.style) &&
            VALID_IDS.PER.includes(item.perspective) &&
@@ -174,7 +179,9 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
       actions: actions.filter((a:any) => VALID_IDS.ACT.includes(a))
     };
 
-    if (typeof normalMapUrl === 'string') art.normalMapUrl = normalMapUrl;
+    if (typeof normalMapUrl === 'string' && normalMapUrl.startsWith('data:image/')) {
+      art.normalMapUrl = normalMapUrl;
+    }
 
     // Validate Complex Objects
     if (skeleton) {

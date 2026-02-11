@@ -55,3 +55,6 @@ export const EXPORT_CONFIG = {
 
 export const MAX_PROMPT_LENGTH = 1000;
 export const MAX_HISTORY_ITEMS = 1000;
+export const MAX_SKELETON_JOINTS = 64;
+export const MAX_SKELETON_BONES = 64;
+export const MAX_PALETTE_SIZE = 256;

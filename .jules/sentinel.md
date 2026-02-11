@@ -32,3 +32,8 @@
 **Vulnerability:** The `importProject` function processed the entire `history` array from an imported file without limits. A malicious file with millions of entries could cause the browser tab to freeze (DoS) during validation or storage.
 **Learning:** Local-first applications that import user data must enforce strict quantity limits (e.g., array length) *before* expensive processing or storage operations to prevent resource exhaustion.
 **Prevention:** Enforced `MAX_HISTORY_ITEMS` limit in `validateImportedProject` by slicing the input array, and `MAX_PROMPT_LENGTH` to cap individual data size.
+
+## 2026-02-16 - [Deep Import Validation & DoS Prevention]
+**Vulnerability:** The project import function (`validateImportedProject`) lacked limits on nested array sizes (skeletons, palettes) and did not validate URL schemes for image assets.
+**Learning:** Maliciously crafted JSON files could cause client-side Denial of Service (DoS) by exploiting unlimited loops during validation, or perform SSRF/tracking via external image URLs.
+**Prevention:** Enforced strict numeric limits (`MAX_SKELETON_JOINTS`, `MAX_PALETTE_SIZE`) and mandated `data:image/` protocol for all imported assets to prevent external network requests.
