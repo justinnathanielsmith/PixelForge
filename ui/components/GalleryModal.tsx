@@ -68,6 +68,7 @@ const GalleryItem = React.memo(({ art, isActive, isSelected, onSelect, onToggle,
 
 const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, activeArtId, onSelect, onDelete }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
   const { whisper } = useToast();
 
   // Stable callback using functional update to prevent re-creation on every render, allowing GalleryItem to remain memoized
@@ -83,24 +84,35 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
   if (!isOpen) return null;
 
   const handleBatchExport = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 || isExporting) return;
+    setIsExporting(true);
     whisper("Batch Export Started", `Bundling ${selectedIds.size} entities...`, "mana");
-    
-    const zip = new JSZip();
-    const selectedArts = history.filter(a => selectedIds.has(a.id));
-    
-    for (const art of selectedArts) {
-      const response = await fetch(art.imageUrl);
-      const blob = await response.blob();
-      zip.file(`asset_${art.id}.png`, blob);
+
+    try {
+      const zip = new JSZip();
+      const selectedArts = history.filter(a => selectedIds.has(a.id));
+
+      for (const art of selectedArts) {
+        const response = await fetch(art.imageUrl);
+        const blob = await response.blob();
+        zip.file(`asset_${art.id}.png`, blob);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `pxl_forge_batch_${Date.now()}.zip`;
+      link.click();
+
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(link.href), 100);
+      whisper("Export Complete", "Neural bundle manifested as ZIP.", "success");
+    } catch (error) {
+      console.error("Batch export failed", error);
+      whisper("Export Failed", "The ritual was interrupted.", "error");
+    } finally {
+      setIsExporting(false);
     }
-    
-    const content = await zip.generateAsync({ type: 'blob' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(content);
-    link.download = `pxl_forge_batch_${Date.now()}.zip`;
-    link.click();
-    whisper("Export Complete", "Neural bundle manifested as ZIP.", "success");
   };
 
   return (
@@ -119,12 +131,21 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
              {selectedIds.size > 0 && (
                <button 
                  onClick={handleBatchExport}
-                 className="px-3 md:px-6 py-1.5 md:py-2 bg-emerald-800 text-emerald-50 border border-emerald-500 fantasy-font text-[9px] md:text-[10px] font-bold uppercase hover:bg-emerald-700 transition-all rounded shadow-[0_0_15px_rgba(16,185,129,0.2)] animate-in zoom-in-95 whitespace-nowrap"
+                 disabled={isExporting}
+                 aria-busy={isExporting}
+                 className={`px-3 md:px-6 py-1.5 md:py-2 bg-emerald-800 text-emerald-50 border border-emerald-500 fantasy-font text-[9px] md:text-[10px] font-bold uppercase hover:bg-emerald-700 transition-all rounded shadow-[0_0_15px_rgba(16,185,129,0.2)] animate-in zoom-in-95 whitespace-nowrap flex items-center gap-2 ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
                >
-                 Export ({selectedIds.size})
+                 {isExporting ? (
+                   <>
+                     <span className="animate-spin text-emerald-200">⚙</span>
+                     <span>Bundling...</span>
+                   </>
+                 ) : (
+                   `Export (${selectedIds.size})`
+                 )}
                </button>
              )}
-             <button onClick={onClose} aria-label="Close Gallery" className="text-stone-500 hover:text-red-400 text-2xl md:text-3xl transition-colors p-2 leading-none">×</button>
+             <button onClick={onClose} aria-label="Close Gallery" className="text-stone-500 hover:text-red-400 text-2xl md:text-3xl transition-colors p-2 leading-none"><span aria-hidden="true">×</span></button>
           </div>
         </div>
 

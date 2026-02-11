@@ -18,3 +18,7 @@
 ## 2025-02-26 - Button Groups for Selection
 **Learning:** Grids of buttons used for single-selection (like resolution presets) lacked grouping semantics, making it impossible for screen readers to understand the context or current selection.
 **Action:** Wrap selection button grids in a container with `role="group"` (or `radiogroup`) and `aria-labelledby`. Use `aria-pressed` (or `aria-checked`) on the buttons to indicate state.
+
+## 2025-05-24 - Async Button Feedback
+**Learning:** Found critical action buttons (like "Batch Export") lacked visual feedback during processing, leaving users unsure if the action succeeded or failed silently.
+**Action:** Always implement loading states (`disabled` + spinner + text change) on buttons triggering async operations. Ensure `aria-busy` is set for screen readers.

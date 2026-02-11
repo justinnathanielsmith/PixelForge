@@ -24,11 +24,7 @@ const mockHistory: GeneratedArt[] = [
   {
     id: '1', imageUrl: 'test1.png', type: 'single',
     timestamp: 0, category: 'character', style: '8-bit',
-    prompt: 'test prompt 1', actions: [], perspective: 'side',
-    isSpriteSheet: false, selectedStyle: '8-bit', perspective: 'side',
-    category: 'character', selectedActions: [], genState: 'SUCCESS',
-    history: [], activeArt: null, errorMessage: '', isExporting: false,
-    inspiration: null, animationSettings: {} as any
+    prompt: 'test prompt 1', actions: [], perspective: 'side'
   } as any,
   {
     id: '2', imageUrl: 'test2.png', type: 'single',
