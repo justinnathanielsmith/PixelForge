@@ -123,15 +123,18 @@ export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionP
       </div>
     </CodexSection>
   );
-}, (prev, next) => (
-  prev.setSettings === next.setSettings &&
-  prev.settings.targetResolution === next.settings.targetResolution &&
-  prev.settings.aspectRatio === next.settings.aspectRatio &&
-  prev.settings.zoom === next.settings.zoom &&
-  prev.settings.batchMode === next.settings.batchMode &&
-  prev.settings.cols === next.settings.cols &&
-  prev.settings.rows === next.settings.rows
-));
+}, (prev, next) => {
+  // Only re-render if used settings change. Future settings added to this component must be added here.
+  return (
+    prev.setSettings === next.setSettings &&
+    prev.settings.targetResolution === next.settings.targetResolution &&
+    prev.settings.aspectRatio === next.settings.aspectRatio &&
+    prev.settings.zoom === next.settings.zoom &&
+    prev.settings.batchMode === next.settings.batchMode &&
+    prev.settings.cols === next.settings.cols &&
+    prev.settings.rows === next.settings.rows
+  );
+});
 
 export const CodexChronometry = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
@@ -159,11 +162,14 @@ export const CodexChronometry = memo(({ settings, setSettings }: SettingsSection
       </div>
     </CodexSection>
   );
-}, (prev, next) => (
-  prev.setSettings === next.setSettings &&
-  prev.settings.fps === next.settings.fps &&
-  prev.settings.isPlaying === next.settings.isPlaying
-));
+}, (prev, next) => {
+  // Only re-render if used settings change. Future settings added to this component must be added here.
+  return (
+    prev.setSettings === next.setSettings &&
+    prev.settings.fps === next.settings.fps &&
+    prev.settings.isPlaying === next.settings.isPlaying
+  );
+});
 
 export const CodexGrid = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
@@ -219,14 +225,17 @@ export const CodexGrid = memo(({ settings, setSettings }: SettingsSectionProps) 
       )}
     </CodexSection>
   );
-}, (prev, next) => (
-  prev.setSettings === next.setSettings &&
-  prev.settings.vectorRite === next.settings.vectorRite &&
-  prev.settings.temporalStability === next.settings.temporalStability &&
-  prev.settings.batchMode === next.settings.batchMode &&
-  prev.settings.tiledPreview === next.settings.tiledPreview &&
-  prev.settings.showGuides === next.settings.showGuides
-));
+}, (prev, next) => {
+  // Only re-render if used settings change. Future settings added to this component must be added here.
+  return (
+    prev.setSettings === next.setSettings &&
+    prev.settings.vectorRite === next.settings.vectorRite &&
+    prev.settings.temporalStability === next.settings.temporalStability &&
+    prev.settings.batchMode === next.settings.batchMode &&
+    prev.settings.tiledPreview === next.settings.tiledPreview &&
+    prev.settings.showGuides === next.settings.showGuides
+  );
+});
 
 export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: AlchemySectionProps) => {
   const [palettePrompt, setPalettePrompt] = useState('');
@@ -348,16 +357,19 @@ export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: 
        </div>
     </CodexSection>
   );
-}, (prev, next) => (
-  prev.setSettings === next.setSettings &&
-  prev.onGeneratePalette === next.onGeneratePalette &&
-  prev.settings.autoTransparency === next.settings.autoTransparency &&
-  prev.settings.chromaTolerance === next.settings.chromaTolerance &&
-  prev.settings.paletteLock === next.settings.paletteLock &&
-  prev.settings.customPalette === next.settings.customPalette &&
-  prev.settings.hue === next.settings.hue &&
-  prev.settings.saturation === next.settings.saturation
-));
+}, (prev, next) => {
+  // Only re-render if used settings change. Future settings added to this component must be added here.
+  return (
+    prev.setSettings === next.setSettings &&
+    prev.onGeneratePalette === next.onGeneratePalette &&
+    prev.settings.autoTransparency === next.settings.autoTransparency &&
+    prev.settings.chromaTolerance === next.settings.chromaTolerance &&
+    prev.settings.paletteLock === next.settings.paletteLock &&
+    prev.settings.customPalette === next.settings.customPalette &&
+    prev.settings.hue === next.settings.hue &&
+    prev.settings.saturation === next.settings.saturation
+  );
+});
 
 // Legacy Default Export (optional wrapper, mostly unused in new layout)
 const SettingsPanel: React.FC<AlchemySectionProps> = (props) => {
