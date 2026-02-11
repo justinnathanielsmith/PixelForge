@@ -1,6 +1,7 @@
 
 import { describe, it, expect } from 'vitest';
-import { validateSliceData, validateSkeleton, validatePalette } from '../utils/validation';
+import { validateSliceData, validateSkeleton, validatePalette, validateImportedProject } from '../utils/validation';
+import { MAX_SKELETON_JOINTS, MAX_SKELETON_BONES, MAX_PALETTE_SIZE } from '../domain/constants';
 
 describe('Sentinel Security Validation', () => {
 
@@ -63,6 +64,24 @@ describe('Sentinel Security Validation', () => {
       expect(result?.joints[0]).toEqual({ id: 'root', x: 50, y: 50, label: 'Root' });
       expect((result?.joints[0] as any).onClick).toBeUndefined();
     });
+
+    it('should reject skeleton exceeding MAX_SKELETON_JOINTS', () => {
+      const joints = Array(MAX_SKELETON_JOINTS + 1).fill({ id: 'j', x: 0, y: 0, label: 'J' });
+      const input = {
+        joints,
+        bones: []
+      };
+      expect(validateSkeleton(input)).toBeNull();
+    });
+
+    it('should reject skeleton exceeding MAX_SKELETON_BONES', () => {
+      const bones = Array(MAX_SKELETON_BONES + 1).fill({ from: 'a', to: 'b' });
+      const input = {
+        joints: [],
+        bones
+      };
+      expect(validateSkeleton(input)).toBeNull();
+    });
   });
 
   describe('validatePalette', () => {
@@ -83,6 +102,70 @@ describe('Sentinel Security Validation', () => {
     it('should reject non-numeric color values', () => {
       const input = [{ r: 255, g: "0", b: 0 }];
       expect(validatePalette(input)).toBeNull();
+    });
+
+    it('should reject palette exceeding MAX_PALETTE_SIZE', () => {
+      const input = Array(MAX_PALETTE_SIZE + 1).fill({ r: 0, g: 0, b: 0 });
+      expect(validatePalette(input)).toBeNull();
+    });
+  });
+
+  describe('validateImportedProject', () => {
+    const validArt = {
+      id: '123',
+      imageUrl: 'data:image/png;base64,valid',
+      prompt: 'test',
+      timestamp: 1234567890,
+      type: 'single',
+      style: '8-bit',
+      perspective: 'isometric',
+      category: 'character',
+      actions: ['idle']
+    };
+
+    it('should accept valid data URL', () => {
+      const input = {
+        history: [validArt],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history.length).toBe(1);
+    });
+
+    it('should reject http URL in imageUrl', () => {
+      const input = {
+        history: [{ ...validArt, imageUrl: 'http://malicious.com/pixel.png' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history.length).toBe(0);
+    });
+
+    it('should reject javascript URL in imageUrl', () => {
+      const input = {
+        history: [{ ...validArt, imageUrl: 'javascript:alert(1)' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history.length).toBe(0);
+    });
+
+    it('should strip invalid normalMapUrl', () => {
+      const input = {
+        history: [{ ...validArt, normalMapUrl: 'http://malicious.com/normal.png' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history[0].normalMapUrl).toBeUndefined();
+    });
+
+    it('should accept valid normalMapUrl', () => {
+      const input = {
+        history: [{ ...validArt, normalMapUrl: 'data:image/png;base64,normal' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history[0].normalMapUrl).toBe('data:image/png;base64,normal');
     });
   });
 });
