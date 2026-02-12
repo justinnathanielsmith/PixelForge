@@ -7,6 +7,7 @@ import { pixelDB } from '../db';
 vi.mock('../db', () => ({
   pixelDB: {
     putArt: vi.fn(),
+    bulkPutArt: vi.fn(),
     putSessionValue: vi.fn(),
     getAllHistory: vi.fn().mockResolvedValue([]),
     getSessionValue: vi.fn().mockResolvedValue(null),
@@ -42,8 +43,8 @@ describe('PixelRepository Security Validation', () => {
     const json = JSON.stringify(validData);
 
     await repository.importProject(json);
-    expect(pixelDB.putArt).toHaveBeenCalledTimes(1);
-    expect(pixelDB.putArt).toHaveBeenCalledWith(validData.history[0]);
+    expect(pixelDB.bulkPutArt).toHaveBeenCalledTimes(1);
+    expect(pixelDB.bulkPutArt).toHaveBeenCalledWith(validData.history);
   });
 
   it('should reject invalid art objects in history (Vulnerability Fix Check)', async () => {
@@ -65,7 +66,7 @@ describe('PixelRepository Security Validation', () => {
       }
 
       // The crucial check: bad data should NOT reach the database
-      expect(pixelDB.putArt).not.toHaveBeenCalled();
+      expect(pixelDB.bulkPutArt).not.toHaveBeenCalled();
   });
 
   it('should strip unknown fields from history items', async () => {
@@ -89,9 +90,9 @@ describe('PixelRepository Security Validation', () => {
 
     await repository.importProject(json);
 
-    // Should have called putArt, but with sanitized object
-    expect(pixelDB.putArt).toHaveBeenCalled();
-    const calledArg = (pixelDB.putArt as any).mock.calls[0][0];
+    // Should have called bulkPutArt, but with sanitized object
+    expect(pixelDB.bulkPutArt).toHaveBeenCalled();
+    const calledArg = (pixelDB.bulkPutArt as any).mock.calls[0][0][0];
     expect(calledArg).not.toHaveProperty('dangerousScript');
     expect(calledArg).toHaveProperty('id', '123');
   });
