@@ -11,9 +11,10 @@ interface ExportModalProps {
   activeArt: GeneratedArt | null;
   settings: AnimationSettings;
   onExport: (mode: 'gif' | 'video' | 'png' | 'aseprite' | 'mobile' | 'atlas' | 'svg', options?: any) => void;
+  isExporting?: boolean;
 }
 
-const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport }) => {
+const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, settings, onExport, isExporting }) => {
   const [exportTab, setExportTab] = useState<'png' | 'gif' | 'video' | 'aseprite' | 'mobile' | 'atlas' | 'code' | 'compose' | 'svg'>('gif');
   const [adaptiveIcons, setAdaptiveIcons] = useState(true);
   const [useWebp, setUseWebp] = useState(true);
@@ -213,9 +214,18 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
              ) : (
                 <button 
                     onClick={handleExport} 
-                    className="flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+                    disabled={isExporting}
+                    aria-busy={isExporting}
+                    className={`flex-1 py-4 bg-amber-600 text-black fantasy-font text-xs font-bold uppercase transition-all hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.3)] ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    {exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : exportTab === 'svg' ? 'Download Vector (.svg)' : `Begin ${exportTab.toUpperCase()} Download`}
+                    {isExporting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        <span>Exporting...</span>
+                      </span>
+                    ) : (
+                      exportTab === 'aseprite' ? '2. Download Metadata' : exportTab === 'mobile' ? 'Download .ZIP Bundle' : exportTab === 'atlas' ? 'Download Atlas (.zip)' : exportTab === 'svg' ? 'Download Vector (.svg)' : `Begin ${exportTab.toUpperCase()} Download`
+                    )}
                 </button>
              )}
           </div>

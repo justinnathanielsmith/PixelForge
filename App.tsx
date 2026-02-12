@@ -295,13 +295,16 @@ const AppContent: React.FC = () => {
           {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
           {showManifesto && <UpcomingFeatures onClose={() => setShowManifesto(false)} />}
           
-          <ExportModal 
-            isOpen={showExportModal}
-            onClose={() => setShowExportModal(false)}
-            activeArt={activeArt}
-            settings={animationSettings}
-            onExport={actions.exportAsset}
-          />
+          {showExportModal && activeArt && (
+            <ExportModal
+              isOpen={showExportModal}
+              onClose={() => setShowExportModal(false)}
+              activeArt={activeArt}
+              settings={animationSettings}
+              onExport={actions.exportAsset}
+              isExporting={isExporting}
+            />
+          )}
 
           <GalleryModal 
             isOpen={showGallery}
