@@ -39,6 +39,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
   // Cache for processed frames to avoid expensive re-processing
   const frameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const normalFrameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  // Performance: Canvas Pooling to reduce GC
+  const canvasPool = useRef<HTMLCanvasElement[]>([]);
 
   // Hook for canvas interactions
   const { 
@@ -53,6 +55,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
   // Clear frame cache when processing settings change
   useEffect(() => {
+    frameCache.current.forEach(canvas => canvasPool.current.push(canvas));
     frameCache.current.clear();
   }, [
     imageUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio,
@@ -63,6 +66,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
   // Clear normal cache when relevant settings change
   useEffect(() => {
+    normalFrameCache.current.forEach(canvas => canvasPool.current.push(canvas));
     normalFrameCache.current.clear();
   }, [
     normalMapUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio, style
@@ -176,7 +180,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
        // Get or create cached Color Frame
        let colorFrame = frameCache.current.get(frame);
        if (!colorFrame) {
-         colorFrame = document.createElement('canvas');
+         colorFrame = canvasPool.current.pop() || document.createElement('canvas');
          imageProcessingService.processFrame(img, frame, settings, style, colorFrame);
          frameCache.current.set(frame, colorFrame);
        }
@@ -190,7 +194,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
            paletteLock: false, vectorRite: false,
            autoTransparency: false
          };
-         normalFrame = document.createElement('canvas');
+         normalFrame = canvasPool.current.pop() || document.createElement('canvas');
          imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrame);
          normalFrameCache.current.set(frame, normalFrame);
        }
@@ -251,7 +255,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
        // --- STANDARD RENDERER ---
        let processedFrame = frameCache.current.get(frame);
        if (!processedFrame) {
-          processedFrame = document.createElement('canvas');
+          processedFrame = canvasPool.current.pop() || document.createElement('canvas');
           imageProcessingService.processFrame(img, frame, settings, style, processedFrame);
           frameCache.current.set(frame, processedFrame);
        }
@@ -262,7 +266,7 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
 
           let prevFrameCanvas = frameCache.current.get(prevFrameIdx);
           if (!prevFrameCanvas) {
-             prevFrameCanvas = document.createElement('canvas');
+             prevFrameCanvas = canvasPool.current.pop() || document.createElement('canvas');
              imageProcessingService.processFrame(img, prevFrameIdx, settings, style, prevFrameCanvas);
              frameCache.current.set(prevFrameIdx, prevFrameCanvas);
           }

@@ -6,6 +6,8 @@ import gifenc from 'gifenc';
 const { quantize, applyPalette } = gifenc;
 
 export class ImageProcessingService {
+  private _sharpeningBuffer: Uint8ClampedArray | null = null;
+
   async loadImage(src: string): Promise<HTMLImageElement | ImageBitmap> {
     if (typeof window === 'undefined') {
       // Worker environment
@@ -224,7 +226,13 @@ export class ImageProcessingService {
 
   private applyVectorSharpening(imageData: ImageData) {
     const { data, width, height } = imageData;
-    const temp = new Uint8ClampedArray(data);
+
+    // Reuse buffer to avoid allocation pressure
+    if (!this._sharpeningBuffer || this._sharpeningBuffer.length < data.length) {
+      this._sharpeningBuffer = new Uint8ClampedArray(data.length);
+    }
+    this._sharpeningBuffer.set(data);
+    const temp = this._sharpeningBuffer;
     
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
