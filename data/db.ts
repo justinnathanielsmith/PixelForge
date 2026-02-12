@@ -45,6 +45,15 @@ export class PixelDatabase {
     // Limit removed to support hundreds of items as requested
   }
 
+  async bulkPutArt(arts: GeneratedArt[]): Promise<void> {
+    const db = await this.dbPromise;
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    await Promise.all([
+      ...arts.map(art => tx.store.put(art)),
+      tx.done
+    ]);
+  }
+
   async deleteArt(id: string): Promise<void> {
     const db = await this.dbPromise;
     await db.delete(STORE_NAME, id);
