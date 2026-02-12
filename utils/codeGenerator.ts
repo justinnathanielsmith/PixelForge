@@ -65,9 +65,15 @@ export function generateComposeCode(art: GeneratedArt, settings: AnimationSettin
   code += `fun ${componentName}Sprite(\n`;
   code += `    modifier: Modifier = Modifier\n`;
   code += `) {\n`;
+  // SECURITY: Sanitize prompt to prevent code injection in exported Kotlin file
+  const safeDescription = art.prompt.substring(0, 50)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\$/g, '\\$');
+
   code += `    Image(\n`;
   code += `        painter = painterResource(Res.drawable.${baseName}),\n`;
-  code += `        contentDescription = "${art.prompt.substring(0, 50)}",\n`;
+  code += `        contentDescription = "${safeDescription}",\n`;
   code += `        modifier = modifier,\n`;
   code += `        contentScale = ContentScale.Fit\n`;
   code += `    )\n`;
