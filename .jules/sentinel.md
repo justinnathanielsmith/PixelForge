@@ -37,3 +37,8 @@
 **Vulnerability:** The project import function (`validateImportedProject`) lacked limits on nested array sizes (skeletons, palettes) and did not validate URL schemes for image assets.
 **Learning:** Maliciously crafted JSON files could cause client-side Denial of Service (DoS) by exploiting unlimited loops during validation, or perform SSRF/tracking via external image URLs.
 **Prevention:** Enforced strict numeric limits (`MAX_SKELETON_JOINTS`, `MAX_PALETTE_SIZE`) and mandated `data:image/` protocol for all imported assets to prevent external network requests.
+
+## 2026-02-17 - [Kotlin Code Injection in Compose Export]
+**Vulnerability:** The `generateComposeCode` function in `utils/codeGenerator.ts` embedded the user's prompt directly into a Kotlin string literal (`contentDescription`) without escaping. Malicious prompts containing `"` or `${}` could break syntax or inject arbitrary code.
+**Learning:** Code generation templates that accept user input are injection vectors just like SQL or HTML. Sanitization must be context-aware (e.g., escaping `$` for Kotlin/Java strings).
+**Prevention:** Always sanitize and escape user input before interpolating it into code templates. Added `tests/codeGenerator_security.test.ts` to enforce this.
