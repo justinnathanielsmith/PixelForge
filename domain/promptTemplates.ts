@@ -1,6 +1,7 @@
 
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction } from "./entities";
 import { CHROMA_KEY } from "./constants";
+import { sanitizePrompt } from "../utils/validation";
 
 export const getStylePersona = (style: PixelStyle): string => {
   switch (style) {
@@ -179,9 +180,10 @@ export const assembleForgePrompt = (params: {
   const categoryDirective = getCategoryDirective(params.category, perspectiveText);
   const layoutInstruction = getLayoutInstruction(params.category, params.isBatch, params.isSpriteSheet, params.actions, params.temporalStability);
   const strategyDirectives = getCoreDirectives(params.targetRes);
+  const sanitizedPrompt = sanitizePrompt(params.prompt);
 
   return `[PIXEL_FORGE_IMAGEN_3_PRO]
-     PROMPT: "${params.prompt}", professional pixel art, game assets.
+     PROMPT: "${sanitizedPrompt}", professional pixel art, game assets.
      ${stylePersona}
      ${categoryDirective}
      ${layoutInstruction}

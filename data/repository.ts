@@ -69,7 +69,9 @@ export class PixelRepository {
     const { history, settings, prompt } = validateImportedProject(rawData);
 
     // Restore History to IndexedDB
-    await pixelDB.bulkPutArt(history);
+    if (history.length > 0) {
+      await pixelDB.bulkPutArt(history);
+    }
 
     // Restore Settings to IndexedDB
     if (settings) {

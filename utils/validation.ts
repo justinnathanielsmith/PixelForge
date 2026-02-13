@@ -216,3 +216,25 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
     prompt: validatedPrompt
   };
 }
+
+export function sanitizePrompt(input: string): string {
+  if (!input) return "";
+
+  // 1. Enforce length limit
+  let sanitized = input.slice(0, MAX_PROMPT_LENGTH);
+
+  // 2. Remove control characters (except newline/tab/carriage return if needed, but here mostly just stripping invisibles)
+  // \x00-\x1F matches ASCII control characters (0-31)
+  // \x7F matches DEL
+  // \x80-\x9F matches Latin-1 Supplement control characters
+  sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, " ");
+
+  // 3. Escape backslashes to prevent escaping the closing quote of the template
+  sanitized = sanitized.replace(/\\/g, '\\\\');
+
+  // 4. Replace double quotes with single quotes to prevent template breakout
+  sanitized = sanitized.replace(/"/g, "'");
+
+  // 5. Trim whitespace
+  return sanitized.trim();
+}
