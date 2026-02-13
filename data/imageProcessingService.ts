@@ -128,38 +128,59 @@ export class ImageProcessingService {
 
         // Optimization: Skip obviously non-magenta pixels to save cycles
         // Magenta is high Red, low Green, high Blue.
-        if (g > 150 || r < 50 || b < 50) continue; 
+        // Check 1: Green dominance check (if G is greater than R or B, it's not Magenta-dominant)
+        if (g > r || g > b) continue;
 
-        const rNorm = r / 255;
-        const gNorm = g / 255;
-        const bNorm = b / 255;
-        const max = Math.max(rNorm, gNorm, bNorm);
-        const min = Math.min(rNorm, gNorm, bNorm);
-        let h = 0;
-        let s = 0;
-        const l = (max + min) / 2;
+        // Check 2: Brightness/Vividness heuristic (Dark pixels are not vivid magenta)
+        if (r < 50 || b < 50) continue;
 
-        if (max !== min) {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          switch (max) {
-            case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
-            case gNorm: h = (bNorm - rNorm) / d + 2; break;
-            case bNorm: h = (rNorm - gNorm) / d + 4; break;
-          }
-          h /= 6;
+        // Check 3: Legacy whiteness skip (Protect light/white pixels)
+        if (g > 150) continue;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+
+        if (max === min) continue; // Achromatic (Gray/White/Black)
+
+        // Integer-based Lightness Check
+        // l = (max + min) / 2. isBright: l > 0.2 => (max + min) > 102
+        const lSum = max + min;
+        if (lSum <= 102) continue;
+
+        const d = max - min;
+        
+        // Integer-based Saturation Check (isVivid: s > 0.5)
+        let isVivid = false;
+        if (lSum > 255) {
+           // Light half: s = d / (2 - l). s > 0.5 => 2*d > (510 - lSum)
+           if (2 * d > (510 - lSum)) isVivid = true;
+        } else {
+           // Dark half: s = d / l. s > 0.5 => 2*d > lSum
+           if (2 * d > lSum) isVivid = true;
         }
 
-        const hDeg = h * 360;
-        
-        // Strict Magenta Hue Range (280 - 320 degrees)
-        // This protects "neighbor" hues (purples/blues) that are used for shading.
-        // Also verify Saturation/Lightness to ensure we don't nuke dark shadows (low L) or grays (low S).
-        const isMagentaHue = hDeg >= 280 && hDeg <= 320;
-        const isVivid = s > 0.5;
-        const isBright = l > 0.2; // Protect deep shadows
+        if (!isVivid) continue;
 
-        if (isMagentaHue && isVivid && isBright) {
+        // Strict Magenta Hue Range (280 - 320 degrees)
+        // Optimized check without full HSL conversion
+        let isMagentaHue = false;
+
+        // If max is Red (Hue range ~300-360 or 0-60), Magenta side is 300-360.
+        // We want <= 320 degrees.
+        // Formula: h = (g - b) / d + 6 (for normalized).
+        // Condition derived: 3 * (b - g) >= 2 * d
+        if (max === r) {
+           if (b > g && 3 * (b - g) >= 2 * d) isMagentaHue = true;
+        }
+        // If max is Blue (Hue range ~180-300), Magenta side is 240-300.
+        // We want >= 280 degrees.
+        // Formula: h = (r - g) / d + 4.
+        // Condition derived: 3 * (r - g) >= 2 * d
+        else if (max === b) {
+           if (r > g && 3 * (r - g) >= 2 * d) isMagentaHue = true;
+        }
+
+        if (isMagentaHue) {
           data[i + 3] = 0;
         }
       }
