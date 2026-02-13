@@ -130,18 +130,18 @@ const AppContent: React.FC = () => {
               <form onSubmit={actions.generateArt} className="space-y-5 pt-2">
                  <div className="space-y-2">
                     <div className="flex gap-2 h-28">
-                       <div onClick={() => refs.fileInputRef.current?.click()} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-stone-700 bg-stone-950 hover:bg-stone-900 hover:border-amber-600/50'}`}>
+                       <button type="button" onClick={() => refs.fileInputRef.current?.click()} aria-label={inspiration ? "Change reference image" : "Upload reference image"} className={`w-20 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all relative shrink-0 ${inspiration ? 'border-emerald-600 bg-emerald-900/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-stone-700 bg-stone-950 hover:bg-stone-900 hover:border-amber-600/50'}`}>
                           {inspiration ? (
                             <div className="relative w-full h-full p-1 group">
-                              <img src={inspiration.url} className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
+                              <img src={inspiration.url} className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} alt="" />
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><span className="text-[8px] fantasy-font text-white text-center px-1 text-xs">Change</span></div>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center"><span className="fantasy-font text-2xl">🔮</span><span className="text-[7px] fantasy-font text-stone-500 mt-1 uppercase">Oracle</span></div>
                           )}
-                          <input ref={refs.fileInputRef} type="file" accept="image/*" onChange={actions.handleImageUpload} className="hidden" />
-                       </div>
-                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} maxLength={MAX_PROMPT_LENGTH} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-stone-950" />
+                       </button>
+                       <input ref={refs.fileInputRef} type="file" accept="image/*" onChange={actions.handleImageUpload} className="hidden" />
+                       <textarea value={prompt} onChange={(e) => dispatch({ type: 'SET_PROMPT', payload: e.target.value })} maxLength={MAX_PROMPT_LENGTH} placeholder="Inscribe entity description (e.g. 'Undead Lich in dark robes')..." aria-label="Prompt description" className="flex-1 fantasy-input p-3 text-sm resize-none leading-relaxed focus:bg-stone-950" />
                     </div>
                  </div>
                  
@@ -267,8 +267,8 @@ const AppContent: React.FC = () => {
                     <div className="flex-1 text-center terminal-font text-stone-600 uppercase text-[9px] tracking-widest">History is empty...</div>
                   ) : (
                     history.map(art => (
-                      <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-stone-700 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
-                          <img src={art.imageUrl} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+                      <button key={art.id} onClick={() => dispatch({ type: 'SET_ACTIVE_ART', payload: art })} aria-label={`Select art: ${art.prompt}`} className={`w-16 h-16 border-2 rounded shrink-0 overflow-hidden transition-all relative ${activeArt?.id === art.id ? 'border-amber-500 scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)]' : 'border-stone-700 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'}`}>
+                          <img src={art.imageUrl} alt={art.prompt} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
                       </button>
                     ))
                   )}
