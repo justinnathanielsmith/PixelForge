@@ -22,3 +22,7 @@
 ## 2025-05-24 - Async Button Feedback
 **Learning:** Found critical action buttons (like "Batch Export") lacked visual feedback during processing, leaving users unsure if the action succeeded or failed silently.
 **Action:** Always implement loading states (`disabled` + spinner + text change) on buttons triggering async operations. Ensure `aria-busy` is set for screen readers.
+
+## 2025-05-24 - File Upload Accessibility
+**Learning:** Found file upload trigger implemented as a `div` with `onClick`, blocking keyboard access. Critical inputs (Prompt) lacked labels.
+**Action:** Use `<button type="button">` for upload triggers. Ensure primary inputs have `aria-label` if visual labels are absent.
