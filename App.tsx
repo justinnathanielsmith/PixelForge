@@ -113,10 +113,10 @@ const AppContent: React.FC = () => {
               <div className="w-px h-6 bg-stone-800 mx-2" />
               <button onClick={() => setShowManifesto(true)} className="text-[9px] fantasy-font text-emerald-500 hover:text-emerald-400 uppercase tracking-widest border border-emerald-900/50 bg-emerald-950/20 px-3 py-1 rounded transition-all">🧪 Lab Manifesto</button>
               <button onClick={() => setShowUserGuide(true)} className="text-[9px] fantasy-font text-amber-600 hover:text-amber-500 uppercase tracking-widest border border-amber-900/50 bg-amber-950/20 px-3 py-1 rounded transition-all">📜 Grimoire Guide</button>
-              <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
+              <button onClick={handleSwitchKey} aria-label="Change API Key" className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
             <div className="md:hidden flex items-center gap-2">
-               <button onClick={() => setShowUserGuide(true)} className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
+               <button onClick={() => setShowUserGuide(true)} aria-label="Open User Guide" className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
             </div>
           </div>
         </header>
@@ -260,6 +260,7 @@ const AppContent: React.FC = () => {
                     onClick={() => setShowGallery(true)}
                     className="absolute right-2 top-2 z-10 w-6 h-6 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
                     title="Expand Gallery"
+                    aria-label="Expand Gallery"
                   >
                     ↖️
                   </button>

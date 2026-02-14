@@ -77,7 +77,7 @@ const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
                <span className="text-[10px] text-stone-500 font-mono">v1.3.0-stable • Research Roadmap</span>
              </div>
            </div>
-           <button onClick={onClose} className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
+           <button onClick={onClose} aria-label="Close Manifesto" className="text-stone-500 hover:text-red-400 text-2xl leading-none transition-colors">×</button>
         </div>
 
         {/* Content */}
