@@ -37,6 +37,8 @@ const AppContent: React.FC = () => {
 
   const updateSettings = useCallback((s: any) => dispatch({ type: 'UPDATE_SETTINGS', payload: s }), [dispatch]);
 
+  const handleUpdateArt = useCallback((updatedArt: any) => dispatch({ type: 'UPDATE_ART', payload: updatedArt }), [dispatch]);
+
   const handleGallerySelect = useCallback((art: any) => {
     dispatch({ type: 'SET_ACTIVE_ART', payload: art });
     setShowGallery(false);
@@ -227,7 +229,7 @@ const AppContent: React.FC = () => {
                           settings={animationSettings} 
                           style={activeArt.style} 
                           isBatch={activeArt.type === 'batch'}
-                          onUpdateArt={(updatedArt) => dispatch({ type: 'UPDATE_ART', payload: updatedArt })}
+                          onUpdateArt={handleUpdateArt}
                           onUpdateSettings={updateSettings}
                           normalMapUrl={activeArt.normalMapUrl}
                           onGenerateNormalMap={actions.generateNormalMap}
