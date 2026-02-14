@@ -238,3 +238,31 @@ export function sanitizePrompt(input: string): string {
   // 5. Trim whitespace
   return sanitized.trim();
 }
+
+/**
+ * Validates that the file size is within the allowed limit.
+ * @param file The file to check.
+ * @param maxBytes The maximum allowed size in bytes.
+ * @throws Error if the file is too large.
+ */
+export function validateFileSize(file: File, maxBytes: number): void {
+  if (file.size > maxBytes) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const maxMB = (maxBytes / (1024 * 1024)).toFixed(2);
+    throw new Error(`File size (${sizeMB}MB) exceeds the maximum allowed limit of ${maxMB}MB.`);
+  }
+}
+
+/**
+ * Validates that the file MIME type is in the allowed list.
+ * @param file The file to check.
+ * @param allowedTypes The allowed MIME types (e.g. ['image/png', 'application/json']).
+ * @throws Error if the file type is not allowed.
+ */
+export function validateFileMimeType(file: File, allowedTypes: string[]): void {
+  if (!allowedTypes.includes(file.type)) {
+    // Basic sanitization of the reported type for safety in error message
+    const safeType = (file.type || 'unknown').replace(/[^a-zA-Z0-9\/\-\.]/g, '');
+    throw new Error(`File type '${safeType}' is not allowed. Allowed types: ${allowedTypes.join(', ')}`);
+  }
+}
