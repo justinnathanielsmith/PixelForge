@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { AnimationSettings, Skeleton, SliceData, GeneratedArt } from '../../domain/entities';
 import { imageProcessingService } from '../../data/imageProcessingService';
 import { useForgeCanvas } from '../hooks/useForgeCanvas';
@@ -19,7 +19,7 @@ interface SpritePreviewProps {
   isGenerating?: boolean;
 }
 
-const SpritePreview: React.FC<SpritePreviewProps> = ({ 
+const SpritePreview: React.FC<SpritePreviewProps> = memo(({
   activeArt, settings, style, isBatch, onUpdateArt, onUpdateSettings, normalMapUrl, onGenerateNormalMap, skeleton, onGenerateSkeleton, sliceData, isGenerating 
 }) => {
   const imageUrl = activeArt.imageUrl;
@@ -533,6 +533,6 @@ const SpritePreview: React.FC<SpritePreviewProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default SpritePreview;

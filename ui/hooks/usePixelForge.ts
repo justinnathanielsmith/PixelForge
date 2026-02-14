@@ -155,21 +155,25 @@ export const usePixelForge = () => {
     setFullHistory
   ]);
 
+  const handleExportAsset = useCallback((mode: any) => exportAsset(activeArt, mode), [exportAsset, activeArt]);
+  const handleGenerateNormalMap = useCallback(() => generateNormalMap(activeArt), [generateNormalMap, activeArt]);
+  const handleGenerateSkeleton = useCallback(() => generateSkeleton(activeArt), [generateSkeleton, activeArt]);
+
   // Actions object for cleaner usage in App
   const actions = useMemo(() => ({
     generateArt,
     handleImageUpload,
     handleProjectImport,
     exportProject,
-    exportAsset: (mode: any) => exportAsset(activeArt, mode),
-    generateNormalMap: () => generateNormalMap(activeArt),
-    generateSkeleton: () => generateSkeleton(activeArt),
+    exportAsset: handleExportAsset,
+    generateNormalMap: handleGenerateNormalMap,
+    generateSkeleton: handleGenerateSkeleton,
     generatePalette,
     deleteArt,
     navigateHistory
   }), [
-    generateArt, handleImageUpload, handleProjectImport, exportProject, exportAsset, activeArt,
-    generateNormalMap, generateSkeleton, generatePalette, deleteArt, navigateHistory
+    generateArt, handleImageUpload, handleProjectImport, exportProject, handleExportAsset,
+    handleGenerateNormalMap, handleGenerateSkeleton, generatePalette, deleteArt, navigateHistory
   ]);
 
   return {
