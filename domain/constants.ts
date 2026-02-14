@@ -58,3 +58,7 @@ export const MAX_HISTORY_ITEMS = 1000;
 export const MAX_SKELETON_JOINTS = 64;
 export const MAX_SKELETON_BONES = 64;
 export const MAX_PALETTE_SIZE = 256;
+
+// Security limits
+export const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+export const MAX_PROJECT_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024; // 50MB

@@ -3,7 +3,8 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { orchestrator } from '../../domain/pixelForgeOrchestrator';
 import { useToast } from '../context/ToastContext';
 import { PixelForgeState, PixelForgeIntent } from '../../domain/entities';
-import { MAX_PROMPT_LENGTH } from '../../domain/constants';
+import { MAX_PROMPT_LENGTH, MAX_UPLOAD_SIZE_BYTES, MAX_PROJECT_UPLOAD_SIZE_BYTES } from '../../domain/constants';
+import { validateFileSize, validateFileMimeType } from '../../utils/validation';
 import { useForgeSettings } from './useForgeSettings';
 import { useForgeHistory } from './useForgeHistory';
 import { useForgeGenerator } from './useForgeGenerator';
@@ -43,11 +44,25 @@ export const usePixelForge = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    try {
+      validateFileSize(file, MAX_UPLOAD_SIZE_BYTES);
+      validateFileMimeType(file, ['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+    } catch (err: any) {
+      whisper("Oracle Link Error", err.message, "error");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
       setInspiration({ url: URL.createObjectURL(file), data: result.split(',')[1], mimeType: file.type });
       whisper("Oracle Link Established", "Inspiration image channeled successfully.", "mana");
+    };
+    reader.onerror = () => {
+      whisper("Oracle Link Error", "Failed to read the inspiration image.", "error");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     };
     reader.readAsDataURL(file);
   };
@@ -55,6 +70,16 @@ export const usePixelForge = () => {
   const handleProjectImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    try {
+      validateFileSize(file, MAX_PROJECT_UPLOAD_SIZE_BYTES);
+      // Not validating mime type for project files as extensions/MIME types can vary widely
+    } catch (err: any) {
+      whisper("Grimoire Import Error", err.message, "error");
+      if (projectInputRef.current) projectInputRef.current.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -67,6 +92,10 @@ export const usePixelForge = () => {
         console.error("Project import failure", err);
         whisper("Nether-Void Error", "Failed to decode project file.", "error");
       }
+    };
+    reader.onerror = () => {
+       whisper("Grimoire Import Error", "Failed to read the project file.", "error");
+       if (projectInputRef.current) projectInputRef.current.value = "";
     };
     reader.readAsText(file);
   };
