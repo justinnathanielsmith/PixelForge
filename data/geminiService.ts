@@ -2,7 +2,7 @@
 import { GoogleGenAI, Content, Part, Type } from "@google/genai";
 import { PixelStyle, PixelPerspective, AssetCategory, AnimationAction, Skeleton, SliceData } from "../domain/entities";
 import { assembleForgePrompt } from "../domain/promptTemplates";
-import { validateSliceData, validateSkeleton, validatePalette } from "../utils/validation";
+import { validateSliceData, validateSkeleton, validatePalette, sanitizePrompt } from "../utils/validation";
 
 export class PixelGenService {
   private _ai: GoogleGenAI | null = null;
@@ -281,10 +281,11 @@ export class PixelGenService {
     `;
 
     try {
+      const cleanPrompt = sanitizePrompt(prompt);
       const response = await this.ai.models.generateContent({
         model,
         contents: {
-          parts: [{ text: `${systemPrompt}\nDESCRIPTION: ${prompt}` }]
+          parts: [{ text: `${systemPrompt}\nDESCRIPTION: "${cleanPrompt}"` }]
         },
         config: {
           responseMimeType: "application/json",
