@@ -316,9 +316,17 @@ export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: 
               <button 
                   onClick={handleGeneratePalette} 
                   disabled={isGeneratingPalette || !palettePrompt.trim()}
-                  className="px-3 bg-red-900/20 border border-red-800 text-red-400 text-[10px] hover:bg-red-900/40 hover:text-red-200 uppercase font-bold disabled:opacity-50 transition-all rounded-sm"
+                  aria-busy={isGeneratingPalette}
+                  className="px-3 bg-red-900/20 border border-red-800 text-red-400 text-[10px] hover:bg-red-900/40 hover:text-red-200 uppercase font-bold disabled:opacity-50 transition-all rounded-sm flex items-center justify-center gap-2"
               >
-                  Synthesize
+                  {isGeneratingPalette ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Synthesizing...</span>
+                    </>
+                  ) : (
+                    "Synthesize"
+                  )}
               </button>
           </div>
           

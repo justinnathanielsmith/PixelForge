@@ -116,7 +116,7 @@ const AppContent: React.FC = () => {
               <button onClick={handleSwitchKey} className="text-[9px] fantasy-font text-stone-500 hover:text-amber-500 uppercase tracking-widest border border-stone-800 px-3 py-1 rounded transition-all">Key</button>
             </div>
             <div className="md:hidden flex items-center gap-2">
-               <button onClick={() => setShowUserGuide(true)} className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
+               <button onClick={() => setShowUserGuide(true)} aria-label="Open User Guide" className="p-2 bg-amber-950/20 rounded border border-amber-900/50">📜</button>
             </div>
           </div>
         </header>
@@ -260,6 +260,7 @@ const AppContent: React.FC = () => {
                     onClick={() => setShowGallery(true)}
                     className="absolute right-2 top-2 z-10 w-6 h-6 bg-amber-900/60 hover:bg-amber-600 border border-amber-500 text-white flex items-center justify-center rounded shadow-lg transition-all opacity-0 group-hover/history:opacity-100 scale-90 hover:scale-100"
                     title="Expand Gallery"
+                    aria-label="Expand Gallery"
                   >
                     ↖️
                   </button>
