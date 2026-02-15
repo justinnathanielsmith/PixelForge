@@ -46,6 +46,11 @@ const AppContent: React.FC = () => {
 
   const handleGalleryClose = useCallback(() => setShowGallery(false), []);
 
+  // Memoized callback to prevent unnecessary re-renders of SpritePreview
+  const handleUpdateArt = useCallback((updatedArt: any) => {
+    dispatch({ type: 'UPDATE_ART', payload: updatedArt });
+  }, [dispatch]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;

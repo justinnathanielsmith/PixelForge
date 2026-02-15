@@ -535,4 +535,4 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
   );
 });
 
-export default SpritePreview;
+export default React.memo(SpritePreview);
