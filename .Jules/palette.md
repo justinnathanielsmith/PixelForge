@@ -26,3 +26,7 @@
 ## 2025-05-24 - File Upload Accessibility
 **Learning:** Found file upload trigger implemented as a `div` with `onClick`, blocking keyboard access. Critical inputs (Prompt) lacked labels.
 **Action:** Use `<button type="button">` for upload triggers. Ensure primary inputs have `aria-label` if visual labels are absent.
+
+## 2025-05-24 - Verifying Transient Loading States
+**Learning:** Playwright scripts often miss transient loading states (like spinners) because network requests resolve too quickly in test environments.
+**Action:** When verifying loading UI, explicitly mock the network request (e.g., `page.route`) to hang or delay the response, forcing the UI to persist in the loading state for capture.

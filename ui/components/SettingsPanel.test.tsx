@@ -112,4 +112,31 @@ describe('CodexAlchemy Accessibility', () => {
     const blueSwatch = screen.getByRole('img', { name: /Color swatch: rgb\(0, 0, 255\)/i });
     expect(blueSwatch).toBeTruthy();
   });
+
+  it('shows loading state when synthesizing palette', async () => {
+    const setSettings = vi.fn();
+    // Mock a delayed promise
+    const onGeneratePalette = vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+
+    render(<CodexAlchemy settings={mockSettings} setSettings={setSettings} onGeneratePalette={onGeneratePalette} />);
+
+    // Type in the input to enable button
+    const input = screen.getByLabelText('Palette Prompt');
+    fireEvent.change(input, { target: { value: 'Fire' } });
+
+    const button = screen.getByRole('button', { name: /Synthesize/i });
+    expect(button.hasAttribute('disabled')).toBe(false);
+    expect(button.getAttribute('aria-busy')).toBe('false');
+
+    // Click
+    fireEvent.click(button);
+
+    // Should be busy and show loading text
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByText('Synthesizing...')).toBeTruthy();
+
+    // Wait for promise to resolve and state to reset
+    await screen.findByText('Synthesize');
+    expect(button.getAttribute('aria-busy')).toBe('false');
+  });
 });
