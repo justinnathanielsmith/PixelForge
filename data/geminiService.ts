@@ -18,6 +18,34 @@ export class PixelGenService {
     return this._ai;
   }
 
+  /**
+   * Securely handles errors by logging the full details internally but throwing
+   * a sanitized error message to the caller to prevent information leakage.
+   */
+  private _handleError(error: unknown, context: string): never {
+    const originalMessage = error instanceof Error ? error.message : String(error);
+
+    // List of known safe error messages that we explicitly throw and want to show to the user
+    const safeMessages = [
+      "The Oracle refused",
+      "The Scrying Pool returned no imagery",
+      "Invalid slice data structure",
+      "Invalid skeleton structure",
+      "Invalid palette structure",
+      "Palette generation refused"
+    ];
+
+    if (safeMessages.some(msg => originalMessage.includes(msg))) {
+      throw error;
+    }
+
+    // Log the raw error for debugging purposes (never show this to the user)
+    console.error(`FORGE_SECURE_LOG [${context}]:`, error);
+
+    // Throw a generic, sanitized error
+    throw new Error("The Oracle could not complete the ritual.");
+  }
+
   async generatePixelArt(
     prompt: string, 
     isSpriteSheet: boolean, 
@@ -79,9 +107,7 @@ export class PixelGenService {
       
       return `data:image/png;base64,${part.inlineData.data}`;
     } catch (error: any) {
-      // SECURITY: Sanitize error logs to prevent leaking internal stack traces or API details
-      console.error("FORGE_EXCEPTION: Pixel art generation failed.");
-      throw error;
+      this._handleError(error, "PixelGen");
     }
   }
 
@@ -183,8 +209,7 @@ export class PixelGenService {
       if (!part?.inlineData?.data) throw new Error("ALCHEMIST_FAIL: Normal map generation failed.");
       return `data:image/png;base64,${part.inlineData.data}`;
     } catch (error) {
-      console.error("ALCHEMY_EXCEPTION: Normal map generation failed.");
-      throw error;
+      this._handleError(error, "NormalMap");
     }
   }
 
@@ -265,8 +290,7 @@ export class PixelGenService {
 
       return validData;
     } catch (error) {
-      console.error("RIGGING_EXCEPTION: Skeleton generation failed.");
-      throw error;
+      this._handleError(error, "Skeleton");
     }
   }
 
@@ -316,8 +340,7 @@ export class PixelGenService {
 
       return validData;
     } catch (error) {
-      console.error("PALETTE_EXCEPTION: Palette generation failed.");
-      throw error;
+      this._handleError(error, "Palette");
     }
   }
 }
