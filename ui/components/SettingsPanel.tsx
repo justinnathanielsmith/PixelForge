@@ -49,6 +49,9 @@ const CodexSection = ({ title, icon, children, defaultOpen = false, className = 
 
 export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
+  const zoomId = useId();
+  const colsId = useId();
+  const rowsId = useId();
 
   return (
     <CodexSection title="Dimensions & Resolution" icon="📐" defaultOpen={true}>
@@ -89,10 +92,11 @@ export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionP
 
           <div className="space-y-1 bg-black/40 p-3 rounded border border-stone-800 hover:border-stone-700 transition-colors">
               <div className="flex justify-between terminal-font text-[9px] text-stone-500 uppercase tracking-tighter mb-1">
-                  <span>Vision Scale</span>
+                  <label htmlFor={zoomId}>Vision Scale</label>
                   <span className="text-amber-500 font-bold">{settings.zoom.toFixed(2)}x</span>
               </div>
               <input 
+                  id={zoomId}
                   type="range" 
                   min="0.25" 
                   max="4" 
@@ -108,15 +112,15 @@ export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionP
               <div className="grid grid-cols-2 gap-2 bg-black/40 p-3 rounded border border-stone-800 hover:border-stone-700 transition-colors">
                   <div className="space-y-1">
                       <div className="flex justify-between terminal-font text-[9px] text-stone-500">
-                          <span>COLS</span><span className="text-amber-500 font-bold">{settings.cols}</span>
+                          <label htmlFor={colsId}>COLS</label><span className="text-amber-500 font-bold">{settings.cols}</span>
                       </div>
-                      <input type="range" min="1" max="16" value={settings.cols} onChange={(e) => updateSetting('cols', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Columns" />
+                      <input id={colsId} type="range" min="1" max="16" value={settings.cols} onChange={(e) => updateSetting('cols', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Columns" />
                   </div>
                   <div className="space-y-1">
                       <div className="flex justify-between terminal-font text-[9px] text-stone-500">
-                          <span>ROWS</span><span className="text-amber-500 font-bold">{settings.rows}</span>
+                          <label htmlFor={rowsId}>ROWS</label><span className="text-amber-500 font-bold">{settings.rows}</span>
                       </div>
-                      <input type="range" min="1" max="16" value={settings.rows} onChange={(e) => updateSetting('rows', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Rows" />
+                      <input id={rowsId} type="range" min="1" max="16" value={settings.rows} onChange={(e) => updateSetting('rows', parseInt(e.target.value))} className="accent-amber-600 w-full cursor-pointer" aria-label="Grid Rows" />
                   </div>
               </div>
           )}
@@ -138,16 +142,17 @@ export const CodexDimensions = memo(({ settings, setSettings }: SettingsSectionP
 
 export const CodexChronometry = memo(({ settings, setSettings }: SettingsSectionProps) => {
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
+  const fpsId = useId();
 
   return (
     <CodexSection title="Chronometry" icon="⏳" defaultOpen={true}>
       <div className="space-y-4">
           <div className="space-y-1">
               <div className="flex justify-between items-end mb-1">
-                  <label className="terminal-font text-[9px] text-stone-500 uppercase">Frame Rate</label>
+                  <label htmlFor={fpsId} className="terminal-font text-[9px] text-stone-500 uppercase">Frame Rate</label>
                   <span className="terminal-font text-xs text-amber-500 font-bold">{settings.fps} FPS</span>
               </div>
-              <input type="range" min="1" max="60" value={settings.fps} onChange={(e) => updateSetting('fps', parseInt(e.target.value))} className="w-full accent-amber-600 cursor-pointer" aria-label="Frame Rate" />
+              <input id={fpsId} type="range" min="1" max="60" value={settings.fps} onChange={(e) => updateSetting('fps', parseInt(e.target.value))} className="w-full accent-amber-600 cursor-pointer" aria-label="Frame Rate" />
           </div>
           
           <button
@@ -241,6 +246,9 @@ export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: 
   const [palettePrompt, setPalettePrompt] = useState('');
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
   const { whisper } = useToast();
+  const toleranceId = useId();
+  const tintId = useId();
+  const vibranceId = useId();
 
   const updateSetting = (key: keyof AnimationSettings, value: any) => setSettings({ [key]: value });
 
@@ -276,9 +284,10 @@ export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: 
           {settings.autoTransparency && (
               <div className="space-y-1 pl-2 border-l-2 border-emerald-900/30">
                    <div className="flex justify-between terminal-font text-[9px] text-stone-500">
-                      <span>Tolerance</span><span>{settings.chromaTolerance}%</span>
+                      <label htmlFor={toleranceId}>Tolerance</label><span>{settings.chromaTolerance}%</span>
                    </div>
                    <input 
+                      id={toleranceId}
                       type="range" 
                       min="0" 
                       max="50" 
@@ -352,15 +361,15 @@ export const CodexAlchemy = memo(({ settings, setSettings, onGeneratePalette }: 
        <div className="space-y-3 pt-3 border-t border-stone-800/50">
           <div className="space-y-1">
               <div className="flex justify-between terminal-font text-[9px] text-stone-500">
-              <span>TINT SHIFT</span><span className="text-red-500 font-bold">{settings.hue}°</span>
+              <label htmlFor={tintId}>TINT SHIFT</label><span className="text-red-500 font-bold">{settings.hue}°</span>
               </div>
-              <input type="range" min="-180" max="180" value={settings.hue} onChange={(e) => updateSetting('hue', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Tint Shift" />
+              <input id={tintId} type="range" min="-180" max="180" value={settings.hue} onChange={(e) => updateSetting('hue', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Tint Shift" />
           </div>
           <div className="space-y-1">
               <div className="flex justify-between terminal-font text-[9px] text-stone-500">
-              <span>VIBRANCE</span><span className="text-red-500 font-bold">{settings.saturation}%</span>
+              <label htmlFor={vibranceId}>VIBRANCE</label><span className="text-red-500 font-bold">{settings.saturation}%</span>
               </div>
-              <input type="range" min="0" max="200" value={settings.saturation} onChange={(e) => updateSetting('saturation', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Vibrance" />
+              <input id={vibranceId} type="range" min="0" max="200" value={settings.saturation} onChange={(e) => updateSetting('saturation', parseInt(e.target.value))} className="accent-red-600 w-full cursor-pointer" aria-label="Vibrance" />
           </div>
        </div>
     </CodexSection>
