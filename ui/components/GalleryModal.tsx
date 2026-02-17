@@ -40,7 +40,7 @@ const GalleryItem = React.memo(({ art, isActive, isSelected, onSelect, onToggle,
       {/* Selection Ring */}
       <button
         onClick={(e) => { e.stopPropagation(); onToggle(art.id); }}
-        aria-label={isSelected ? "Deselect" : "Select for export"}
+        aria-label={isSelected ? `Deselect ${art.prompt}` : `Select ${art.prompt} for export`}
         aria-pressed={isSelected}
         className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center z-10 focus:outline-none focus:ring-2 focus:ring-amber-500 ${isSelected ? 'bg-amber-600 border-amber-300' : 'bg-black/60 border-stone-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'}`}
       >
@@ -56,7 +56,7 @@ const GalleryItem = React.memo(({ art, isActive, isSelected, onSelect, onToggle,
               onClick={(e) => { e.stopPropagation(); onDelete(art.id); }}
               className="w-6 h-6 bg-red-950/60 text-red-400 border border-red-900 rounded hover:bg-red-800 hover:text-white transition-all flex items-center justify-center pointer-events-auto focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               title="Dissolve Entity"
-              aria-label="Delete Art"
+              aria-label={`Delete ${art.prompt}`}
             >
                 🗑️
             </button>
