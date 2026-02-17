@@ -156,7 +156,10 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
   const cleanHistory = data.history.filter((item: any) => {
     return typeof item.id === 'string' &&
            typeof item.imageUrl === 'string' &&
-           item.imageUrl.startsWith('data:image/') &&
+           (item.imageUrl.startsWith('data:image/png;') ||
+            item.imageUrl.startsWith('data:image/jpeg;') ||
+            item.imageUrl.startsWith('data:image/webp;') ||
+            item.imageUrl.startsWith('data:image/gif;')) &&
            typeof item.prompt === 'string' &&
            VALID_IDS.STY.includes(item.style) &&
            VALID_IDS.PER.includes(item.perspective) &&
@@ -179,7 +182,11 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
       actions: actions.filter((a:any) => VALID_IDS.ACT.includes(a))
     };
 
-    if (typeof normalMapUrl === 'string' && normalMapUrl.startsWith('data:image/')) {
+    if (typeof normalMapUrl === 'string' &&
+        (normalMapUrl.startsWith('data:image/png;') ||
+         normalMapUrl.startsWith('data:image/jpeg;') ||
+         normalMapUrl.startsWith('data:image/webp;') ||
+         normalMapUrl.startsWith('data:image/gif;'))) {
       art.normalMapUrl = normalMapUrl;
     }
 
