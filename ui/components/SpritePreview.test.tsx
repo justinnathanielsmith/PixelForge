@@ -67,7 +67,6 @@ describe('SpritePreview Optimization', () => {
     window.Image = class {
       onload: any;
       crossOrigin: any;
-      src: any;
       width: number = 100;
       height: 100;
       set src(value) {
