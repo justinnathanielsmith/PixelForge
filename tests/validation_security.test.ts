@@ -167,5 +167,23 @@ describe('Sentinel Security Validation', () => {
       const result = validateImportedProject(input);
       expect(result.history[0].normalMapUrl).toBe('data:image/png;base64,normal');
     });
+
+    it('should reject SVG data URL in imageUrl', () => {
+      const input = {
+        history: [{ ...validArt, imageUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxzY3JpcHQ+YWxlcnQoMSk8L3NjcmlwdD48L3N2Zz4=' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history.length).toBe(0);
+    });
+
+    it('should reject SVG data URL in normalMapUrl', () => {
+      const input = {
+        history: [{ ...validArt, normalMapUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxzY3JpcHQ+YWxlcnQoMSk8L3NjcmlwdD48L3N2Zz4=' }],
+        settings: {}
+      };
+      const result = validateImportedProject(input);
+      expect(result.history[0].normalMapUrl).toBeUndefined();
+    });
   });
 });
