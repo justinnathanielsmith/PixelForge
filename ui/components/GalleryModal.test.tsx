@@ -65,7 +65,7 @@ describe('GalleryModal', () => {
 
   it('toggles selection when selection button is clicked', () => {
     render(<GalleryModal {...defaultProps} />);
-    const selectButtons = screen.getAllByLabelText(/Select for export/i);
+    const selectButtons = screen.getAllByLabelText(/Select .* for export/i);
     const firstButton = selectButtons[0];
 
     expect(firstButton.getAttribute('aria-pressed')).toBe('false');
@@ -73,14 +73,14 @@ describe('GalleryModal', () => {
     fireEvent.click(firstButton);
 
     // Expect the button to update its state
-    const activeSelectButton = screen.getByLabelText('Deselect');
+    const activeSelectButton = screen.getByLabelText(/Deselect .*/);
     expect(activeSelectButton).toBeTruthy();
     expect(activeSelectButton.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('calls onDelete when delete button is clicked', () => {
     render(<GalleryModal {...defaultProps} />);
-    const deleteButtons = screen.getAllByLabelText('Delete Art');
+    const deleteButtons = screen.getAllByLabelText(/Delete .*/);
     fireEvent.click(deleteButtons[0]);
     expect(defaultProps.onDelete).toHaveBeenCalledWith(mockHistory[0].id);
   });
