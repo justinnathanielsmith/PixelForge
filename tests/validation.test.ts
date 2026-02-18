@@ -98,4 +98,52 @@ describe('validateImportedProject', () => {
     expect(result.history[0].prompt.length).toBe(MAX_PROMPT_LENGTH);
     expect(result.history[0].prompt).toBe('b'.repeat(MAX_PROMPT_LENGTH));
   });
+
+  it('should reject SVG images in project imports to prevent XSS', () => {
+    const maliciousProject = {
+      history: [
+        {
+          id: '123',
+          imageUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxzY3JpcHQ+YWxlcnQoJ1hTUycpPC9zY3JpcHQ+PC9zdmc+',
+          prompt: 'test',
+          timestamp: 1234567890,
+          type: 'single',
+          style: '8-bit',
+          perspective: 'side',
+          category: 'character',
+          actions: ['idle']
+        }
+      ],
+      settings: {},
+      prompt: 'test'
+    };
+
+    const result = validateImportedProject(maliciousProject);
+    // Expect the malicious item to be filtered out
+    expect(result.history).toHaveLength(0);
+  });
+
+  it('should accept valid raster images', () => {
+    const validProject = {
+      history: [
+        {
+          id: '123',
+          imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          prompt: 'test',
+          timestamp: 1234567890,
+          type: 'single',
+          style: '8-bit',
+          perspective: 'side',
+          category: 'character',
+          actions: ['idle']
+        }
+      ],
+      settings: {},
+      prompt: 'test'
+    };
+
+    const result = validateImportedProject(validProject);
+    expect(result.history).toHaveLength(1);
+    expect(result.history[0].imageUrl).toBe(validProject.history[0].imageUrl);
+  });
 });

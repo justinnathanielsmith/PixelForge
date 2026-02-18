@@ -1,5 +1,5 @@
 import { GeneratedArt, AnimationSettings, SliceData, Skeleton } from '../domain/entities';
-import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH, MAX_HISTORY_ITEMS, MAX_SKELETON_JOINTS, MAX_SKELETON_BONES, MAX_PALETTE_SIZE } from '../domain/constants';
+import { ASSET_CATEGORIES, ANIMATION_ACTIONS, VIEW_PERSPECTIVES, MAX_PROMPT_LENGTH, MAX_HISTORY_ITEMS, MAX_SKELETON_JOINTS, MAX_SKELETON_BONES, MAX_PALETTE_SIZE, ALLOWED_IMPORT_MIME_TYPES } from '../domain/constants';
 
 const VALID_IDS = {
   CAT: ASSET_CATEGORIES.map(c => c.id),
@@ -156,7 +156,7 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
   const cleanHistory = data.history.filter((item: any) => {
     return typeof item.id === 'string' &&
            typeof item.imageUrl === 'string' &&
-           item.imageUrl.startsWith('data:image/') &&
+           ALLOWED_IMPORT_MIME_TYPES.some(type => item.imageUrl.startsWith(`data:${type}`)) &&
            typeof item.prompt === 'string' &&
            VALID_IDS.STY.includes(item.style) &&
            VALID_IDS.PER.includes(item.perspective) &&
@@ -179,7 +179,7 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
       actions: actions.filter((a:any) => VALID_IDS.ACT.includes(a))
     };
 
-    if (typeof normalMapUrl === 'string' && normalMapUrl.startsWith('data:image/')) {
+    if (typeof normalMapUrl === 'string' && ALLOWED_IMPORT_MIME_TYPES.some(type => normalMapUrl.startsWith(`data:${type}`))) {
       art.normalMapUrl = normalMapUrl;
     }
 

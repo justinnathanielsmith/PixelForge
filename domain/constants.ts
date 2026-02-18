@@ -62,3 +62,4 @@ export const MAX_PALETTE_SIZE = 256;
 // Security limits
 export const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const MAX_PROJECT_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+export const ALLOWED_IMPORT_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
