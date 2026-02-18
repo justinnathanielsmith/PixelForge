@@ -50,7 +50,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
     settings,
     updateSettings: onUpdateSettings,
     imageUrl,
-    onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl })
+    onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl }),
+    shouldTrackMouse: lightingMode
   });
 
   // Clear frame cache when processing settings change
