@@ -152,15 +152,15 @@ const AppContent: React.FC = () => {
                       <div className="space-y-1">
                         <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Asset Mode</label>
                         <div className="flex gap-1">
-                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: false })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${!isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SINGLE</button>
-                          <button type="button" onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: true })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SHEET</button>
+                          <button type="button" aria-pressed={!isSpriteSheet} onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: false })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${!isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SINGLE</button>
+                          <button type="button" aria-pressed={isSpriteSheet} onClick={() => dispatch({ type: 'SET_SPRITE_SHEET', payload: true })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all ${isSpriteSheet ? 'bg-amber-600 text-black border-amber-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>SHEET</button>
                         </div>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest text-right block">View Angle</label>
                         <div className="flex gap-1">
                           {VIEW_PERSPECTIVES.map(p => (
-                            <button key={p.id} type="button" onClick={() => dispatch({ type: 'SET_PERSPECTIVE', payload: p.id })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all flex items-center justify-center gap-1 ${perspective === p.id ? 'bg-sky-600 text-black border-sky-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>{p.label}</button>
+                            <button key={p.id} type="button" aria-pressed={perspective === p.id} onClick={() => dispatch({ type: 'SET_PERSPECTIVE', payload: p.id })} className={`flex-1 py-1.5 text-[8px] fantasy-font border rounded transition-all flex items-center justify-center gap-1 ${perspective === p.id ? 'bg-sky-600 text-black border-sky-300' : 'bg-transparent border-stone-800 text-stone-600 hover:text-stone-300'}`}>{p.label}</button>
                           ))}
                         </div>
                       </div>
@@ -169,7 +169,7 @@ const AppContent: React.FC = () => {
                       <label className="text-[9px] fantasy-font text-stone-500 uppercase tracking-widest">Entity Essence</label>
                       <div className="grid grid-cols-5 gap-1">
                         {ASSET_CATEGORIES.map(cat => (
-                          <button key={cat.id} type="button" onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-stone-950 border-stone-800 text-stone-600 hover:border-stone-600'}`}>
+                          <button key={cat.id} type="button" aria-pressed={category === cat.id} onClick={() => dispatch({ type: 'SET_CATEGORY', payload: cat.id })} className={`py-1.5 flex flex-col items-center justify-center border rounded transition-all ${category === cat.id ? 'bg-amber-600 text-black border-amber-300' : 'bg-stone-950 border-stone-800 text-stone-600 hover:border-stone-600'}`}>
                             <span className="text-xs">{cat.icon}</span>
                             <span className="text-[7px] font-bold mt-0.5">{cat.label}</span>
                           </button>
@@ -187,6 +187,7 @@ const AppContent: React.FC = () => {
                             <button 
                               key={act.id} 
                               type="button" 
+                              aria-pressed={selectedActions.includes(act.id)}
                               onClick={() => dispatch({ type: 'TOGGLE_ACTION', payload: act.id })} 
                               className={`py-1.5 text-[8px] fantasy-font border rounded transition-all ${selectedActions.includes(act.id) ? 'bg-red-800 text-red-50 border-red-500 shadow-[0_0_8px_rgba(153,27,27,0.4)]' : 'bg-stone-950 border-stone-800 text-stone-600 hover:border-stone-600'}`}
                             >
