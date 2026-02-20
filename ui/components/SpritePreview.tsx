@@ -39,6 +39,8 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
   // Cache for processed frames to avoid expensive re-processing
   const frameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const normalFrameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const litFrameCache = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const lastLitMousePos = useRef<{x: number, y: number} | null>(null);
   // Performance: Canvas Pooling to reduce GC
   const canvasPool = useRef<HTMLCanvasElement[]>([]);
 
@@ -50,13 +52,17 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
     settings,
     updateSettings: onUpdateSettings,
     imageUrl,
-    onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl })
+    onUpdateImage: (newUrl) => onUpdateArt({ ...activeArt, imageUrl: newUrl }),
+    shouldTrackMouse: lightingMode
   });
 
   // Clear frame cache when processing settings change
   useEffect(() => {
     frameCache.current.forEach(canvas => canvasPool.current.push(canvas));
     frameCache.current.clear();
+    litFrameCache.current.forEach(canvas => canvasPool.current.push(canvas));
+    litFrameCache.current.clear();
+    lastLitMousePos.current = null;
   }, [
     imageUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio,
     settings.hue, settings.saturation, settings.contrast, settings.brightness,
@@ -68,6 +74,9 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
   useEffect(() => {
     normalFrameCache.current.forEach(canvas => canvasPool.current.push(canvas));
     normalFrameCache.current.clear();
+    litFrameCache.current.forEach(canvas => canvasPool.current.push(canvas));
+    litFrameCache.current.clear();
+    lastLitMousePos.current = null;
   }, [
     normalMapUrl, settings.rows, settings.cols, settings.targetResolution, settings.aspectRatio, style
   ]);
@@ -177,79 +186,103 @@ const SpritePreview: React.FC<SpritePreviewProps> = memo(({
 
     // --- NORMAL MAP LIGHTING RENDERER ---
     if (lightingMode && normalMapRef.current && !settings.tiledPreview && !isBatch) {
-       // Get or create cached Color Frame
-       let colorFrame = frameCache.current.get(frame);
-       if (!colorFrame) {
-         colorFrame = canvasPool.current.pop() || document.createElement('canvas');
-         imageProcessingService.processFrame(img, frame, settings, style, colorFrame);
-         frameCache.current.set(frame, colorFrame);
+       // Check if cache needs invalidation due to mouse movement
+       if (!lastLitMousePos.current ||
+           Math.abs(lastLitMousePos.current.x - mousePos.x) > 1 ||
+           Math.abs(lastLitMousePos.current.y - mousePos.y) > 1) {
+          litFrameCache.current.forEach(c => canvasPool.current.push(c));
+          litFrameCache.current.clear();
+          lastLitMousePos.current = { ...mousePos };
        }
 
-       // Get or create cached Normal Frame
-       let normalFrame = normalFrameCache.current.get(frame);
-       if (!normalFrame) {
-         const normalSettings = {
-           ...settings,
-           hue: 0, saturation: 100, contrast: 100, brightness: 100,
-           paletteLock: false, vectorRite: false,
-           autoTransparency: false
-         };
-         normalFrame = canvasPool.current.pop() || document.createElement('canvas');
-         imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrame);
-         normalFrameCache.current.set(frame, normalFrame);
-       }
+       let litFrame = litFrameCache.current.get(frame);
 
-       if (!lightingCanvasRef.current) lightingCanvasRef.current = document.createElement('canvas');
-       const lightingCanvas = lightingCanvasRef.current;
-       if (lightingCanvas.width !== frameW || lightingCanvas.height !== frameH) {
-          lightingCanvas.width = frameW;
-          lightingCanvas.height = frameH;
-       }
-
-       const lCtx = lightingCanvas.getContext('2d');
-       
-       if (lCtx) {
-         lCtx.drawImage(colorFrame as any, 0, 0);
-         const colorData = lCtx.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
-         const normalCtx = (normalFrame as any).getContext('2d');
-         const normalData = normalCtx?.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
-         
-         if (colorData && normalData) {
-            const data = colorData.data;
-            const normals = normalData.data;
-            const relX = mousePos.x - dx;
-            const relY = mousePos.y - dy;
-            const spriteMouseX = (relX / dw) * frameW;
-            const spriteMouseY = (relY / dh) * frameH;
-            
-            const lightColor = { r: 255, g: 245, b: 220 }; 
-            const ambient = 0.25;
-            const zDistance = 30 * (frameW / 64);
-            const falloff = 100 * (frameW / 64); 
-
-            for (let i = 0; i < data.length; i += 4) {
-               if (data[i + 3] < 10) continue; 
-               const px = (i / 4) % lightingCanvas.width;
-               const py = Math.floor((i / 4) / lightingCanvas.width);
-               const nx = (normals[i] / 255) * 2 - 1;
-               const ny = (normals[i + 1] / 255) * 2 - 1;
-               const nz = (normals[i + 2] / 255) * 2 - 1;
-               let lx = spriteMouseX - px;
-               let ly = spriteMouseY - py;
-               let lz = zDistance;
-               const distance = Math.sqrt(lx * lx + ly * ly);
-               const mag = Math.sqrt(lx * lx + ly * ly + lz * lz);
-               lx /= mag; ly /= mag; lz /= mag;
-               const dot = Math.max(0, nx * lx + ny * ly + nz * lz);
-               const attenuation = Math.max(0, 1 - (distance / falloff));
-               const intensity = ambient + (dot * attenuation * 2.0);
-               data[i] = Math.min(255, data[i] * intensity * (lightColor.r / 255));
-               data[i + 1] = Math.min(255, data[i + 1] * intensity * (lightColor.g / 255));
-               data[i + 2] = Math.min(255, data[i + 2] * intensity * (lightColor.b / 255));
-            }
-            lCtx.putImageData(colorData, 0, 0);
+       if (!litFrame) {
+         // Get or create cached Color Frame
+         let colorFrame = frameCache.current.get(frame);
+         if (!colorFrame) {
+           colorFrame = canvasPool.current.pop() || document.createElement('canvas');
+           imageProcessingService.processFrame(img, frame, settings, style, colorFrame);
+           frameCache.current.set(frame, colorFrame);
          }
-         ctx.drawImage(lightingCanvas, 0, 0, lightingCanvas.width, lightingCanvas.height, dx, dy, dw, dh);
+
+         // Get or create cached Normal Frame
+         let normalFrame = normalFrameCache.current.get(frame);
+         if (!normalFrame) {
+           const normalSettings = {
+             ...settings,
+             hue: 0, saturation: 100, contrast: 100, brightness: 100,
+             paletteLock: false, vectorRite: false,
+             autoTransparency: false
+           };
+           normalFrame = canvasPool.current.pop() || document.createElement('canvas');
+           imageProcessingService.processFrame(normalMapRef.current, frame, normalSettings, style, normalFrame);
+           normalFrameCache.current.set(frame, normalFrame);
+         }
+
+         if (!lightingCanvasRef.current) lightingCanvasRef.current = document.createElement('canvas');
+         const lightingCanvas = lightingCanvasRef.current;
+         if (lightingCanvas.width !== frameW || lightingCanvas.height !== frameH) {
+            lightingCanvas.width = frameW;
+            lightingCanvas.height = frameH;
+         }
+
+         const lCtx = lightingCanvas.getContext('2d');
+         
+         if (lCtx) {
+           lCtx.drawImage(colorFrame as any, 0, 0);
+           const colorData = lCtx.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
+           const normalCtx = (normalFrame as any).getContext('2d');
+           const normalData = normalCtx?.getImageData(0, 0, lightingCanvas.width, lightingCanvas.height);
+
+           if (colorData && normalData) {
+              const data = colorData.data;
+              const normals = normalData.data;
+              const relX = mousePos.x - dx;
+              const relY = mousePos.y - dy;
+              const spriteMouseX = (relX / dw) * frameW;
+              const spriteMouseY = (relY / dh) * frameH;
+
+              const lightColor = { r: 255, g: 245, b: 220 };
+              const ambient = 0.25;
+              const zDistance = 30 * (frameW / 64);
+              const falloff = 100 * (frameW / 64);
+
+              for (let i = 0; i < data.length; i += 4) {
+                 if (data[i + 3] < 10) continue;
+                 const px = (i / 4) % lightingCanvas.width;
+                 const py = Math.floor((i / 4) / lightingCanvas.width);
+                 const nx = (normals[i] / 255) * 2 - 1;
+                 const ny = (normals[i + 1] / 255) * 2 - 1;
+                 const nz = (normals[i + 2] / 255) * 2 - 1;
+                 let lx = spriteMouseX - px;
+                 let ly = spriteMouseY - py;
+                 let lz = zDistance;
+                 const distance = Math.sqrt(lx * lx + ly * ly);
+                 const mag = Math.sqrt(lx * lx + ly * ly + lz * lz);
+                 lx /= mag; ly /= mag; lz /= mag;
+                 const dot = Math.max(0, nx * lx + ny * ly + nz * lz);
+                 const attenuation = Math.max(0, 1 - (distance / falloff));
+                 const intensity = ambient + (dot * attenuation * 2.0);
+                 data[i] = Math.min(255, data[i] * intensity * (lightColor.r / 255));
+                 data[i + 1] = Math.min(255, data[i + 1] * intensity * (lightColor.g / 255));
+                 data[i + 2] = Math.min(255, data[i + 2] * intensity * (lightColor.b / 255));
+              }
+              lCtx.putImageData(colorData, 0, 0);
+
+              // Store result in cache
+              litFrame = canvasPool.current.pop() || document.createElement('canvas');
+              litFrame.width = frameW;
+              litFrame.height = frameH;
+              const lfCtx = litFrame.getContext('2d');
+              lfCtx?.drawImage(lightingCanvas, 0, 0);
+              litFrameCache.current.set(frame, litFrame);
+           }
+         }
+       }
+
+       if (litFrame) {
+          ctx.drawImage(litFrame, 0, 0, litFrame.width, litFrame.height, dx, dy, dw, dh);
        }
     } else {
        // --- STANDARD RENDERER ---

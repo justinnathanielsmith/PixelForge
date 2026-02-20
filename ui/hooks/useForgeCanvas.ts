@@ -8,11 +8,12 @@ interface UseForgeCanvasProps {
   updateSettings: (settings: Partial<AnimationSettings>) => void;
   imageUrl?: string;
   onUpdateImage?: (newUrl: string) => void;
+  shouldTrackMouse?: boolean;
 }
 
 export type Tool = 'none' | 'pencil' | 'eraser';
 
-export const useForgeCanvas = ({ settings, updateSettings, imageUrl, onUpdateImage }: UseForgeCanvasProps) => {
+export const useForgeCanvas = ({ settings, updateSettings, imageUrl, onUpdateImage, shouldTrackMouse = false }: UseForgeCanvasProps) => {
   const [mousePos, setMousePos] = useState({ x: 256, y: 256 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
@@ -116,7 +117,10 @@ export const useForgeCanvas = ({ settings, updateSettings, imageUrl, onUpdateIma
 
   const handleMouseMove = useCallback((e: React.MouseEvent, currentFrame: number, imageRef: HTMLImageElement | null) => {
     const { x, y } = getCanvasCoordinates(e);
-    setMousePos({ x, y });
+
+    if (shouldTrackMouse || tool !== 'none' || isPanning) {
+      setMousePos({ x, y });
+    }
 
     if (isPanning) {
         const dx = e.clientX - lastPanPos.x;
@@ -134,7 +138,7 @@ export const useForgeCanvas = ({ settings, updateSettings, imageUrl, onUpdateIma
     if (isDrawing && tool !== 'none' && imageRef) {
       executeDrawAction(x, y, currentFrame, imageRef);
     }
-  }, [isPanning, lastPanPos, settings.panOffset, updateSettings, isDrawing, tool, executeDrawAction]);
+  }, [isPanning, lastPanPos, settings.panOffset, updateSettings, isDrawing, tool, executeDrawAction, shouldTrackMouse]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);

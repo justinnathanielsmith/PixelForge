@@ -31,9 +31,9 @@ describe('App Accessibility', () => {
         inspiration: null,
         animationSettings: { isPlaying: false },
         isSpriteSheet: false,
-        category: 'hero',
+        category: 'character',
         selectedActions: [],
-        perspective: 'iso',
+        perspective: 'isometric',
         isExporting: false,
         errorMessage: null
       },
@@ -69,6 +69,28 @@ describe('App Accessibility', () => {
 
     // 3. Key Button (text is "Key", but we want aria-label="Change API Key")
     expect(screen.getByRole('button', { name: /Change API Key/i })).toBeTruthy();
+  });
+
+  it('Selection buttons should indicate state via aria-pressed', () => {
+    render(<App />);
+
+    // Asset Mode: Single vs Sheet
+    const singleBtn = screen.getByRole('button', { name: /SINGLE/i });
+    const sheetBtn = screen.getByRole('button', { name: /SHEET/i });
+    expect(singleBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(sheetBtn.getAttribute('aria-pressed')).toBe('false');
+
+    // View Angle: ISO should be selected
+    const isoBtn = screen.getByRole('button', { name: /ISO/i });
+    expect(isoBtn.getAttribute('aria-pressed')).toBe('true');
+
+    // Entity Essence: HERO should be selected
+    // Note: The button contains icon and text, name will be "👤 HERO" or similar depending on how accessible name is computed.
+    // The implementation is:
+    // <button ...><span ...>{cat.icon}</span><span ...>{cat.label}</span></button>
+    // accessible name includes both spans.
+    const heroBtn = screen.getByRole('button', { name: /HERO/i });
+    expect(heroBtn.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('UpcomingFeatures should have accessible label for close button', () => {
