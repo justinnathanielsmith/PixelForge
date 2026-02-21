@@ -157,6 +157,10 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
     return typeof item.id === 'string' &&
            typeof item.imageUrl === 'string' &&
            ALLOWED_IMPORT_MIME_TYPES.some(type => item.imageUrl.startsWith(`data:${type}`)) &&
+           (item.imageUrl.startsWith('data:image/png;') ||
+            item.imageUrl.startsWith('data:image/jpeg;') ||
+            item.imageUrl.startsWith('data:image/webp;') ||
+            item.imageUrl.startsWith('data:image/gif;')) &&
            typeof item.prompt === 'string' &&
            VALID_IDS.STY.includes(item.style) &&
            VALID_IDS.PER.includes(item.perspective) &&
