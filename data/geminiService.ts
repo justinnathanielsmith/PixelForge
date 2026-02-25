@@ -6,6 +6,8 @@ import { validateSliceData, validateSkeleton, validatePalette, sanitizePrompt } 
 
 export class PixelGenService {
   private _ai: GoogleGenAI | null = null;
+  private _cache = new Map<string, string>();
+  private readonly CACHE_SIZE = 20;
 
   private get ai(): GoogleGenAI {
     if (!this._ai) {
@@ -59,6 +61,20 @@ export class PixelGenService {
     aspectRatio: string = "1:1",
     inspirationImage?: { data: string, mimeType: string }
   ): Promise<string> {
+    // Generate cache key from all arguments
+    const cacheKey = JSON.stringify([
+      prompt, isSpriteSheet, style, perspective, category, actions,
+      targetRes, isBatch, temporalStability, aspectRatio, inspirationImage
+    ]);
+
+    // Check cache (LRU: move to end if found)
+    if (this._cache.has(cacheKey)) {
+      const cached = this._cache.get(cacheKey)!;
+      this._cache.delete(cacheKey);
+      this._cache.set(cacheKey, cached);
+      return cached;
+    }
+
     const model = 'gemini-3-pro-image-preview';
     
     const basePrompt = assembleForgePrompt({
@@ -105,7 +121,16 @@ export class PixelGenService {
         throw new Error("The Scrying Pool returned no imagery.");
       }
       
-      return `data:image/png;base64,${part.inlineData.data}`;
+      const result = `data:image/png;base64,${part.inlineData.data}`;
+
+      // Store in cache
+      if (this._cache.size >= this.CACHE_SIZE) {
+        const firstKey = this._cache.keys().next().value;
+        if (firstKey) this._cache.delete(firstKey);
+      }
+      this._cache.set(cacheKey, result);
+
+      return result;
     } catch (error: any) {
       this._handleError(error, "PixelGen");
     }
