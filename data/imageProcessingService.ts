@@ -255,6 +255,8 @@ export class ImageProcessingService {
     this._sharpeningBuffer.set(data);
     const temp = this._sharpeningBuffer;
     
+    const rowOffset = width * 4;
+
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         const i = (y * width + x) * 4;
@@ -264,18 +266,27 @@ export class ImageProcessingService {
           if (alpha > 140) {
             data[i + 3] = 255;
             let rSum = 0, gSum = 0, bSum = 0, count = 0;
-            for (let dy = -1; dy <= 1; dy++) {
-              for (let dx = -1; dx <= 1; dx++) {
-                if (dx === 0 && dy === 0) continue;
-                const ni = ((y + dy) * width + (x + dx)) * 4;
-                if (temp[ni + 3] > 220) {
-                  rSum += temp[ni];
-                  gSum += temp[ni + 1];
-                  bSum += temp[ni + 2];
-                  count++;
-                }
-              }
-            }
+
+            // Unrolled neighbor loop for performance
+            let ni = i - rowOffset - 4; // Top Left
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+            ni += 4; // Top Center
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+            ni += 4; // Top Right
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+
+            ni = i - 4; // Left
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+            ni = i + 4; // Right
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+
+            ni = i + rowOffset - 4; // Bottom Left
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+            ni += 4; // Bottom Center
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+            ni += 4; // Bottom Right
+            if (temp[ni + 3] > 220) { rSum += temp[ni]; gSum += temp[ni+1]; bSum += temp[ni+2]; count++; }
+
             if (count > 0) {
               data[i] = Math.round(rSum / count);
               data[i + 1] = Math.round(gSum / count);
@@ -286,31 +297,28 @@ export class ImageProcessingService {
           }
         }
 
-        const isIsolated = this.isPixelIsolated(temp, x, y, width, height);
-        if (isIsolated) {
-          data[i + 3] = 0;
-        }
-      }
-    }
-  }
+        // Optimization: Inline isolation check with short-circuit
+        // If pixel is transparent, it's not relevant for isolation cleanup (or already handled)
+        if (temp[i + 3] !== 0) {
+            let hasNeighbor = false;
+            // Check neighbors (> 100 alpha), break if one found
+            if (temp[i - rowOffset - 4 + 3] > 100 ||
+                temp[i - rowOffset + 3] > 100 ||
+                temp[i - rowOffset + 4 + 3] > 100 ||
+                temp[i - 4 + 3] > 100 ||
+                temp[i + 4 + 3] > 100 ||
+                temp[i + rowOffset - 4 + 3] > 100 ||
+                temp[i + rowOffset + 3] > 100 ||
+                temp[i + rowOffset + 4 + 3] > 100) {
+                hasNeighbor = true;
+            }
 
-  private isPixelIsolated(data: Uint8ClampedArray, x: number, y: number, w: number, h: number): boolean {
-    const i = (y * w + x) * 4;
-    if (data[i + 3] === 0) return false;
-    
-    let neighbors = 0;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-          const ni = (ny * w + nx) * 4;
-          if (data[ni + 3] > 100) neighbors++;
+            if (!hasNeighbor) {
+                data[i + 3] = 0;
+            }
         }
       }
     }
-    return neighbors === 0;
   }
 }
 
