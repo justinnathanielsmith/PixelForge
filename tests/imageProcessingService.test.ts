@@ -105,4 +105,71 @@ describe('ImageProcessingService Optimization', () => {
     expect(mockCtx.getImageData).toHaveBeenCalled();
     expect(mockCtx.putImageData).toHaveBeenCalled();
   });
+
+  describe('Vector Sharpening Logic', () => {
+    it('removes isolated pixels and keeps connected ones', () => {
+      const width = 5;
+      const height = 5;
+      const data = new Uint8ClampedArray(width * height * 4);
+
+      // Helper to set pixel color (index based on x, y)
+      const setPixel = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+        const i = (y * width + x) * 4;
+        data[i] = r;
+        data[i + 1] = g;
+        data[i + 2] = b;
+        data[i + 3] = a;
+      };
+
+      // Connected pair at (1, 1) and (1, 2)
+      setPixel(1, 1, 0, 255, 0, 255); // Green
+      setPixel(1, 2, 0, 255, 0, 255); // Green neighbor
+
+      // Isolated pixel at (3, 1)
+      setPixel(3, 1, 255, 0, 0, 255); // Red
+
+      // Note: (0,0) etc. are transparent (0)
+
+      // Mock getImageData to return our test data
+      mockCtx.getImageData.mockReturnValue({
+        data: data,
+        width,
+        height,
+      });
+
+      // Capture putImageData
+      let resultData: Uint8ClampedArray | null = null;
+      mockCtx.putImageData.mockImplementation((imageData: any) => {
+        resultData = imageData.data;
+      });
+
+      const settings = { ...baseSettings, vectorRite: true };
+
+      // We need to pass a source with correct dimensions so processFrame uses them
+      const source = { width, height } as any;
+
+      imageProcessingService.processFrame(source, 0, settings, '8-bit', mockCanvas, mockCtx);
+
+      expect(mockCtx.putImageData).toHaveBeenCalled();
+
+      // Verify
+      if (resultData) {
+        const res = resultData as Uint8ClampedArray;
+
+        // Connected (1, 1) should be present
+        const i_c1 = (1 * width + 1) * 4;
+        expect(res[i_c1 + 3]).toBe(255);
+
+        // Connected (1, 2) should be present
+        const i_c2 = (2 * width + 1) * 4;
+        expect(res[i_c2 + 3]).toBe(255);
+
+        // Isolated (3, 1) should be removed
+        const i_iso = (1 * width + 3) * 4;
+        expect(res[i_iso + 3]).toBe(0);
+      } else {
+        throw new Error('putImageData was not called');
+      }
+    });
+  });
 });
