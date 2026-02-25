@@ -1,11 +1,14 @@
 
 import React from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface UserGuideProps {
   onClose: () => void;
 }
 
 const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
+  useEscapeKey(onClose);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-3xl fantasy-card bg-[#1c1917] flex flex-col shadow-2xl border-amber-900/50 max-h-[90vh] relative">
