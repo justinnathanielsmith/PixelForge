@@ -105,4 +105,100 @@ describe('ImageProcessingService Optimization', () => {
     expect(mockCtx.getImageData).toHaveBeenCalled();
     expect(mockCtx.putImageData).toHaveBeenCalled();
   });
+
+  it('correctly isolates pixels at boundaries without wrapping', () => {
+    const width = 4;
+    const height = 4;
+    const data = new Uint8ClampedArray(width * height * 4);
+
+    // Set (1,1) to Red Opaque (Index 5 in 1D pixel count)
+    const i = (1 * width + 1) * 4;
+    data[i] = 255;
+    data[i+3] = 255;
+
+    // Neighbors are transparent by default (0)
+
+    mockCtx.getImageData.mockReturnValue({
+        data,
+        width,
+        height
+    });
+
+    const settings = { ...baseSettings, vectorRite: true, targetResolution: 4, aspectRatio: '1:1' };
+    const source = { width: 4, height: 4 } as any;
+
+    imageProcessingService.processFrame(source, 0, settings, '8-bit', undefined, mockCtx);
+
+    expect(mockCtx.putImageData).toHaveBeenCalled();
+    const callArg = mockCtx.putImageData.mock.calls[0][0];
+    const resultData = callArg.data;
+
+    // (1,1) is isolated, so alpha should be 0
+    expect(resultData[i+3]).toBe(0);
+  });
+
+  it('does not wrap checks across rows', () => {
+     const width = 3;
+     const height = 3;
+     const data = new Uint8ClampedArray(width * height * 4);
+
+     // Center (1,1) opaque
+     const center = (1 * width + 1) * 4;
+     data[center+3] = 255;
+
+     // Left neighbor (0,1) opaque
+     const left = (1 * width + 0) * 4;
+     data[left+3] = 255;
+
+     // Right neighbor (2,1) opaque
+     const right = (1 * width + 2) * 4;
+     data[right+3] = 255;
+
+     mockCtx.getImageData.mockReturnValue({
+        data,
+        width,
+        height
+    });
+
+    const settings = { ...baseSettings, vectorRite: true, targetResolution: 3, aspectRatio: '1:1' };
+    const source = { width: 3, height: 3 } as any;
+
+    // Passing mockCtx to ensure we use our mocked context and canvas setup
+    imageProcessingService.processFrame(source, 0, settings, '8-bit', undefined, mockCtx);
+
+    const callArg = mockCtx.putImageData.mock.calls[0][0];
+    const resultData = callArg.data;
+
+    // Center should NOT be isolated because it has left and right neighbors
+    expect(resultData[center+3]).toBe(255);
+  });
+
+  it('skips edge pixels (loop padding) preventing wrapping', () => {
+    const width = 4;
+    const height = 4;
+    const data = new Uint8ClampedArray(width * height * 4);
+
+    // Pixel at (0,1) - Left edge. ISOLATED.
+    // If loop processed it, it would check neighbors.
+    // If wrapping occurred, it might see neighbor at (3,0).
+    const i = (1 * width + 0) * 4;
+    data[i+3] = 255;
+
+    mockCtx.getImageData.mockReturnValue({
+        data,
+        width,
+        height
+    });
+
+    const settings = { ...baseSettings, vectorRite: true, targetResolution: 4, aspectRatio: '1:1' };
+    const source = { width: 4, height: 4 } as any;
+
+    imageProcessingService.processFrame(source, 0, settings, '8-bit', undefined, mockCtx);
+
+    const callArg = mockCtx.putImageData.mock.calls[0][0];
+    const resultData = callArg.data;
+
+    // (0,1) should be UNTOUCHED because loop starts at x=1.
+    expect(resultData[i+3]).toBe(255);
+  });
 });

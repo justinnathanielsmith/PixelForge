@@ -260,6 +260,8 @@ export class ImageProcessingService {
         const i = (y * width + x) * 4;
         const alpha = temp[i + 3];
 
+        if (alpha === 0) continue;
+
         if (alpha > 0 && alpha < 255) {
           if (alpha > 140) {
             data[i + 3] = 255;
@@ -286,31 +288,35 @@ export class ImageProcessingService {
           }
         }
 
-        const isIsolated = this.isPixelIsolated(temp, x, y, width, height);
-        if (isIsolated) {
+        // Optimization: Inline isolation check with early exit
+        let hasNeighbor = false;
+
+        // Check 4 direct neighbors first (up, down, left, right) for speed
+        // Note: Loop bounds (x=1 to w-2, y=1 to h-2) ensure no wrapping or out-of-bounds access
+        const up = ((y - 1) * width + x) * 4;
+        const down = ((y + 1) * width + x) * 4;
+        const left = (y * width + (x - 1)) * 4;
+        const right = (y * width + (x + 1)) * 4;
+
+        if (temp[up + 3] > 100 || temp[down + 3] > 100 || temp[left + 3] > 100 || temp[right + 3] > 100) {
+          hasNeighbor = true;
+        } else {
+          // Check diagonals if direct neighbors were empty
+          const upLeft = ((y - 1) * width + (x - 1)) * 4;
+          const upRight = ((y - 1) * width + (x + 1)) * 4;
+          const downLeft = ((y + 1) * width + (x - 1)) * 4;
+          const downRight = ((y + 1) * width + (x + 1)) * 4;
+
+          if (temp[upLeft + 3] > 100 || temp[upRight + 3] > 100 || temp[downLeft + 3] > 100 || temp[downRight + 3] > 100) {
+            hasNeighbor = true;
+          }
+        }
+
+        if (!hasNeighbor) {
           data[i + 3] = 0;
         }
       }
     }
-  }
-
-  private isPixelIsolated(data: Uint8ClampedArray, x: number, y: number, w: number, h: number): boolean {
-    const i = (y * w + x) * 4;
-    if (data[i + 3] === 0) return false;
-    
-    let neighbors = 0;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-          const ni = (ny * w + nx) * 4;
-          if (data[ni + 3] > 100) neighbors++;
-        }
-      }
-    }
-    return neighbors === 0;
   }
 }
 
