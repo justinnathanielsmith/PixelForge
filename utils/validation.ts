@@ -202,8 +202,8 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
         art.gridSize = { rows: gridSize.rows, cols: gridSize.cols };
     }
 
-    // Enforce Prompt Length Limit on individual history items
-    art.prompt = art.prompt.slice(0, MAX_PROMPT_LENGTH);
+    // Enforce Prompt Length Limit and Sanitize on individual history items
+    art.prompt = sanitizePrompt(art.prompt);
 
     return art;
   });
@@ -212,7 +212,7 @@ export function validateImportedProject(data: any): { history: GeneratedArt[], s
   const limitedHistory = cleanHistory.slice(0, MAX_HISTORY_ITEMS);
 
   let validatedPrompt = typeof data.lastPrompt === 'string' ? data.lastPrompt : (data.prompt || '');
-  validatedPrompt = validatedPrompt.slice(0, MAX_PROMPT_LENGTH);
+  validatedPrompt = sanitizePrompt(validatedPrompt);
 
   return {
     history: limitedHistory,
