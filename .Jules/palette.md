@@ -30,3 +30,6 @@
 ## 2025-05-24 - Verifying Transient Loading States
 **Learning:** Playwright scripts often miss transient loading states (like spinners) because network requests resolve too quickly in test environments.
 **Action:** When verifying loading UI, explicitly mock the network request (e.g., `page.route`) to hang or delay the response, forcing the UI to persist in the loading state for capture.
+## 2024-05-23 - [Modal Keyboard Accessibility]
+**Learning:** Modals conditionally rendered via `return null` still execute hooks, requiring an `isActive` flag for event listeners like `useEscapeKey`.
+**Action:** Always wrap global event listeners in custom hooks with an explicit activation prop when used in components that might be mounted but hidden.

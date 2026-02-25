@@ -4,6 +4,7 @@ import { GeneratedArt, AnimationSettings } from '../../domain/entities';
 import { generateAsepriteMetadata } from '../../utils/asepriteFormatter.ts';
 import { generateKotlinFleksCode, generateComposeCode } from '../../utils/codeGenerator.ts';
 import { useToast } from '../context/ToastContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -49,6 +50,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, activeArt, s
       onExport(exportTab as any);
     }
   };
+
+  useEscapeKey(onClose, isOpen);
 
   if (!isOpen) return null;
 

@@ -1,11 +1,14 @@
 
 import React from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface UpcomingFeaturesProps {
   onClose: () => void;
 }
 
 const UpcomingFeatures: React.FC<UpcomingFeaturesProps> = ({ onClose }) => {
+  useEscapeKey(onClose);
+
   const activeFeatures = [
     { 
       title: "The Armory", 

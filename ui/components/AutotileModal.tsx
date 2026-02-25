@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GeneratedArt, AnimationSettings } from '../../domain/entities';
 import { imageProcessingService } from '../../data/imageProcessingService';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AutotileModalProps {
   isOpen: boolean;
@@ -155,6 +156,8 @@ const AutotileModal: React.FC<AutotileModalProps> = ({ isOpen, onClose, activeAr
 
     renderSandbox();
   }, [isOpen, activeArt, seed, scale, islandSize]);
+
+  useEscapeKey(onClose, isOpen);
 
   if (!isOpen) return null;
 

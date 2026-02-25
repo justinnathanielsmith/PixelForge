@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { GeneratedArt } from '../../domain/entities';
 import { useToast } from '../context/ToastContext';
 import JSZip from 'jszip';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface GalleryModalProps {
   isOpen: boolean;
@@ -80,6 +81,8 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, history, a
       return next;
     });
   }, []);
+
+  useEscapeKey(onClose, isOpen);
 
   if (!isOpen) return null;
 
